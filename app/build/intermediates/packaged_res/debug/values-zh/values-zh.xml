@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="action1">
+        <item>可读可写</item>
+        <item>可读不可写</item>
+        <item>不可读可写</item>
+        <item>不可读不可写</item>
+    </string-array>
+    <string-array name="action2">
+        <item>保留</item>
+        <item>不需要鉴别</item>
+        <item>需要鉴别，不需要安全通信</item>
+        <item>需要鉴别，需要安全通信</item>
+    </string-array>
+    <string-array name="config">
+        <item>存储区属性</item>
+        <item>安全模式</item>
+    </string-array>
+    <string-array name="disconnect_time_array">
+        <item>保持连接</item>
+        <item>1小时后</item>
+        <item>2小时后</item>
+        <item>3小时后</item>
+        <item>4小时后</item>
+        <item>5小时后</item>
+        <item>6小时后</item>
+    </string-array>
+    <array name="fileEndingAudio">
+        <item>.mp3</item>
+        <item>.wav</item>
+        <item>.ogg</item>
+        <item>.midi</item>
+        <item>.wma</item>
+    </array>
+    <array name="fileEndingImage">
+        <item>.png</item>
+        <item>.gif</item>
+        <item>.jpg</item>
+        <item>.jpeg</item>
+        <item>.bmp</item>
+    </array>
+    <array name="fileEndingPackage">
+        <item>.jar</item>
+        <item>.zip</item>
+        <item>.rar</item>
+        <item>.gz</item>
+    </array>
+    <array name="fileEndingVideo">
+        <item>.mp4</item>
+        <item>.rm</item>
+        <item>.mpg</item>
+        <item>.avi</item>
+        <item>.mpeg</item>
+    </array>
+    <array name="fileEndingWebText">
+        <item>.htm</item>
+        <item>.html</item>
+        <item>.php</item>
+    </array>
+    <string-array name="storageArea">
+        <item>标签信息区</item>
+        <item>编码区</item>
+        <item>安全区</item>
+        <item>用户区</item>
+    </string-array>
+    <string-array name="userAreaNumbers">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+        <item>4</item>
+        <item>5</item>
+        <item>6</item>
+        <item>7</item>
+        <item>8</item>
+        <item>9</item>
+        <item>10</item>
+        <item>11</item>
+        <item>12</item>
+        <item>13</item>
+        <item>14</item>
+        <item>15</item>
+    </string-array>
+    <string name="msg_exit">再按一次返回键退出</string>
+    <string name="rfid_mgs_error_0not_write">0扇区的0数据块是不能写入</string>
+    <string name="rfid_mgs_error_config">设备配置错误</string>
+    <string name="rfid_mgs_error_init">初始化失败</string>
+    <string name="rfid_mgs_error_lessthan12">密钥长度应为12位</string>
+    <string name="rfid_mgs_error_nohex">内容请输入十六进制数</string>
+    <string name="rfid_mgs_error_nolockcode">锁定码不能为空</string>
+    <string name="rfid_mgs_error_nopwd">密码不能为空</string>
+    <string name="rfid_mgs_error_not_found">寻卡失败</string>
+    <string name="rfid_mgs_error_not_supper_write">此程序不支持该数据块的写入操作,该数据块是密码控制块</string>
+    <string name="rfid_mgs_error_not_write_null">写入内容不能为空</string>
+    <string name="rfid_mgs_error_veri_fail">密钥验证失败</string>
+    <string name="rfid_mgs_kill_fail">销毁失败</string>
+    <string name="rfid_mgs_kill_succ">销毁成功</string>
+    <string name="rfid_mgs_killpwdtip">不能使用默认密码销毁</string>
+    <string name="rfid_mgs_lock_fail">锁定失败</string>
+    <string name="rfid_mgs_lock_succ">锁定成功</string>
+    <string name="rfid_mgs_lockpwdtip">不能使用默认密码锁定</string>
+    <string name="rfid_mgs_locktip">提示：永久锁定之后，无法解锁；永久解锁后，无法锁定</string>
+    <string name="rfid_msg_1byte_fail">数据应该是一个字节</string>
+    <string name="rfid_msg_confirm_afi">操作之后，该标签的AFI将不能再次修改！, 要锁住AFI吗?</string>
+    <string name="rfid_msg_confirm_dsfid">操作之后，该标签的DSFID将不能再次修改！, 要锁住AFI吗?</string>
+    <string name="rfid_msg_confirm_flase">取消</string>
+    <string name="rfid_msg_confirm_title">确定吗？</string>
+    <string name="rfid_msg_confirm_true">确定</string>
+    <string name="rfid_msg_data">\n数据：</string>
+    <string name="rfid_msg_lock_fail">\n锁定失败</string>
+    <string name="rfid_msg_lock_succ">\n锁定成功</string>
+    <string name="rfid_msg_read_fail">读卡失败</string>
+    <string name="rfid_msg_read_succ">读卡成功</string>
+    <string name="rfid_msg_type">\n卡片类型：</string>
+    <string name="rfid_msg_uid">\nUID：</string>
+    <string name="rfid_msg_write_fail">写卡失败</string>
+    <string name="rfid_msg_write_succ">写卡成功</string>
+    <string name="uhf_msg_addr_must_decimal">地址必须为十进制数据</string>
+    <string name="uhf_msg_addr_must_len8">访问密码的长度必须为8位</string>
+    <string name="uhf_msg_addr_not_null">地址不能为空</string>
+    <string name="uhf_msg_filter_addr_empty">过滤起始地址不能为空</string>
+    <string name="uhf_msg_filter_addr_error">过滤起始地址错误</string>
+    <string name="uhf_msg_filter_data_empty">过滤数据不能为空</string>
+    <string name="uhf_msg_filter_data_nohex">过滤数据必须为十六进制数据</string>
+    <string name="uhf_msg_filter_data_not_match">过滤数据和长度参数不匹配</string>
+    <string name="uhf_msg_filter_len_empty">过滤长度不能为空</string>
+    <string name="uhf_msg_filter_len_error">过滤长度错误</string>
+    <string name="uhf_msg_inventory_fail">识别失败</string>
+    <string name="uhf_msg_inventory_open_fail">开启识别标签失败</string>
+    <string name="uhf_msg_inventory_stop_fail">停止识别标签失败</string>
+    <string name="uhf_msg_len_must_decimal">长度必须为十进制数据</string>
+    <string name="uhf_msg_len_not_null">长度不能为空</string>
+    <string name="uhf_msg_read_data_fail">读取数据失败</string>
+    <string name="uhf_msg_read_frequency_fail">读取频率失败</string>
+    <string name="uhf_msg_read_frequency_succ">读取频率成功</string>
+    <string name="uhf_msg_read_pwm_fail">获取PWM失败</string>
+    <string name="uhf_msg_read_tag_fail">读取标签号失败</string>
+    <string name="uhf_msg_set_frequency_fail">设置频率失败</string>
+    <string name="uhf_msg_set_frequency_succ">设置频率成功</string>
+    <string name="uhf_msg_set_pwm_fail">设置PWM失败</string>
+    <string name="uhf_msg_set_pwm_succ">设置PWM成功</string>
+    <string name="uhf_msg_tag_must_not_null">标签号不能为空</string>
+    <string name="uhf_msg_write_data_not_match">数据和长度参数不匹配</string>
+    <string name="uhf_msg_write_fail">写入数据失败</string>
+    <string name="uhf_msg_write_must_len4">写入数据的字符串长度必须为4位</string>
+    <string name="uhf_msg_write_must_len4x">写入数据的字符串长度必须为4的倍数</string>
+    <string name="uhf_msg_write_must_not_null">写入数据不能为空</string>
+    <string name="uhf_msg_write_succ">写入数据成功</string>
+</resources>

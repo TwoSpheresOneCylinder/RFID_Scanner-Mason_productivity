@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/gray3"
+    android:padding="16dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <!-- Header -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Account Settings"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:padding="16dp"
+            android:background="@drawable/rectangle_bg"
+            android:layout_marginBottom="24dp"
+            android:gravity="center"/>
+
+        <!-- Account Information Card -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Account Information"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="8dp"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp"
+            android:background="@drawable/rectangle_bg"
+            android:layout_marginBottom="24dp">
+
+            <TextView
+                android:id="@+id/tv_account_mason_id"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Mason ID: "
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="8dp"/>
+
+            <TextView
+                android:id="@+id/tv_account_username"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Username: "
+                android:textSize="14sp"
+                android:layout_marginBottom="8dp"/>
+
+        </LinearLayout>
+
+        <!-- Device Information Card -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="RFID Scanner"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="8dp"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp"
+            android:background="@drawable/rectangle_bg"
+            android:layout_marginBottom="24dp">
+
+            <TextView
+                android:id="@+id/tv_account_device_name"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Device: "
+                android:textSize="14sp"
+                android:layout_marginBottom="8dp"/>
+
+            <TextView
+                android:id="@+id/tv_account_device_address"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Address: "
+                android:textSize="12sp"
+                android:textColor="@color/gray2"
+                android:layout_marginBottom="16dp"/>
+
+        </LinearLayout>
+
+        <!-- Preferences Card -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Preferences"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="8dp"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp"
+            android:background="@drawable/rectangle_bg"
+            android:layout_marginBottom="24dp">
+
+            <CheckBox
+                android:id="@+id/cb_save_login"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Remember login credentials"
+                android:textSize="14sp"
+                android:layout_marginBottom="12dp"/>
+
+            <CheckBox
+                android:id="@+id/cb_save_device"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Remember last RFID device"
+                android:textSize="14sp"/>
+
+        </LinearLayout>
+
+        <!-- Action Buttons -->
+        <Button
+            android:id="@+id/btn_reset_profile"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="RESET PROFILE DATA"
+            android:background="@drawable/button_bg"
+            android:backgroundTint="#FF6B6B"
+            android:textColor="@color/white"
+            android:layout_marginBottom="8dp"/>
+        
+        <Button
+            android:id="@+id/btn_account_logout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="LOGOUT"
+            android:background="@drawable/button_bg"
+            android:textColor="@color/white"
+            android:layout_marginBottom="8dp"/>
+
+        <Button
+            android:id="@+id/btn_account_back"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="BACK TO SCANNING"
+            android:background="@drawable/button_bg_gray"
+            android:textColor="@color/white"/>
+
+        <!-- Info Text -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Saved credentials are stored securely on this device only."
+            android:textSize="12sp"
+            android:textColor="@color/gray2"
+            android:gravity="center"
+            android:layout_marginTop="16dp"/>
+
+    </LinearLayout>
+</ScrollView>

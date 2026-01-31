@@ -1,0 +1,422 @@
+[
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-merged_res-41:\\mipmap-hdpi_rfid.jpg.flat",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\mipmap-hdpi\\rfid.jpg"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-merged_res-41:\\drawable_seekbar_bg.xml.flat",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\drawable\\seekbar_bg.xml"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-merged_res-41:\\layout_fragment_uhflock.xml.flat",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\layout\\fragment_uhflock.xml"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-merged_res-41:\\layout_activity_device_list.xml.flat",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\layout\\activity_device_list.xml"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-merged_res-41:\\layout_fragment_uhfset.xml.flat",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\layout\\fragment_uhfset.xml"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-merged_res-41:\\mipmap-xhdpi_ic_launcher.png.flat",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\mipmap-xhdpi\\ic_launcher.png"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-merged_res-41:\\drawable_uponelevel.png.flat",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\drawable\\uponelevel.png"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-merged_res-41:\\drawable_list_item_bg.xml.flat",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\drawable\\list_item_bg.xml"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-merged_res-41:\\mipmap-mdpi_ic_launcher.png.flat",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\mipmap-mdpi\\ic_launcher.png"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-merged_res-41:\\layout_activity_connection.xml.flat",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\layout\\activity_connection.xml"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-merged_res-41:\\layout_device_list.xml.flat",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\layout\\device_list.xml"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-merged_res-41:\\drawable_custom_progress.xml.flat",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\drawable\\custom_progress.xml"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-merged_res-41:\\drawable_phone.png.flat",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\drawable\\phone.png"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-merged_res-41:\\mipmap-xxxhdpi_rfid.jpg.flat",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\mipmap-xxxhdpi\\rfid.jpg"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-merged_res-41:\\layout_activity_main_brick.xml.flat",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\layout\\activity_main_brick.xml"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-merged_res-41:\\layout_fragment_barcode.xml.flat",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\layout\\fragment_barcode.xml"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-merged_res-41:\\mipmap-xxhdpi_ic_launcher.png.flat",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\mipmap-xxhdpi\\ic_launcher.png"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-merged_res-41:\\drawable_usuallib_bg_normal_dialog.xml.flat",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\drawable\\usuallib_bg_normal_dialog.xml"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-merged_res-41:\\layout_fragment_uhf_radar_location.xml.flat",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\layout\\fragment_uhf_radar_location.xml"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-merged_res-41:\\layout_uhf_dialog_lock_code.xml.flat",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\layout\\uhf_dialog_lock_code.xml"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-merged_res-41:\\drawable_button_bg_red.xml.flat",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\drawable\\button_bg_red.xml"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-merged_res-41:\\layout_usuallib_normal_dialog_layout.xml.flat",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\layout\\usuallib_normal_dialog_layout.xml"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-merged_res-41:\\drawable_usuallib_bg_normal_dialog_bottomall_corner_white_f0.xml.flat",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\drawable\\usuallib_bg_normal_dialog_bottomall_corner_white_f0.xml"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-merged_res-41:\\menu_main_menu.xml.flat",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\menu\\main_menu.xml"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-merged_res-41:\\drawable_shape_seekbar_circle.xml.flat",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\drawable\\shape_seekbar_circle.xml"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-merged_res-41:\\mipmap-xhdpi_rfid.jpg.flat",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\mipmap-xhdpi\\rfid.jpg"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-merged_res-41:\\drawable_check_text_color.xml.flat",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\drawable\\check_text_color.xml"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-merged_res-41:\\layout_activity_start.xml.flat",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\layout\\activity_start.xml"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-merged_res-41:\\drawable_image.png.flat",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\drawable\\image.png"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-merged_res-41:\\layout_fragment_authentication.xml.flat",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\layout\\fragment_authentication.xml"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-merged_res-41:\\drawable_card_normal.xml.flat",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\drawable\\card_normal.xml"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-merged_res-41:\\drawable_usuallib_bg_normal_dialog_bottomleft_corner_white_f0.xml.flat",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\drawable\\usuallib_bg_normal_dialog_bottomleft_corner_white_f0.xml"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-merged_res-41:\\drawable_button_bg_gray.xml.flat",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\drawable\\button_bg_gray.xml"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-merged_res-41:\\drawable_button_bg_up.xml.flat",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\drawable\\button_bg_up.xml"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-merged_res-41:\\layout_device_element.xml.flat",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\layout\\device_element.xml"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-merged_res-41:\\layout_dialog_epc_tid_user.xml.flat",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\layout\\dialog_epc_tid_user.xml"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-merged_res-41:\\drawable_button_bg.xml.flat",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\drawable\\button_bg.xml"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-merged_res-41:\\layout_activity_update_mac.xml.flat",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\layout\\activity_update_mac.xml"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-merged_res-41:\\drawable_usuallib_bg_normal_dialog_bottomright_corner_white_fe.xml.flat",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\drawable\\usuallib_bg_normal_dialog_bottomright_corner_white_fe.xml"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-merged_res-41:\\layout_listtag_items.xml.flat",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\layout\\listtag_items.xml"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-merged_res-41:\\layout_fragment_uhfread.xml.flat",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\layout\\fragment_uhfread.xml"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-merged_res-41:\\layout_fragment_uhfread_tag.xml.flat",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\layout\\fragment_uhfread_tag.xml"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-merged_res-41:\\layout_device_address_name_list.xml.flat",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\layout\\device_address_name_list.xml"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-merged_res-41:\\raw_serror.ogg.flat",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\raw\\serror.ogg"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-merged_res-41:\\xml_nfc_tech_filter.xml.flat",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\xml\\nfc_tech_filter.xml"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-merged_res-41:\\layout_fragment_uhf_erase.xml.flat",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\layout\\fragment_uhf_erase.xml"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-merged_res-41:\\layout_dialog_progress.xml.flat",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\layout\\dialog_progress.xml"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-merged_res-41:\\drawable_folder.png.flat",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\drawable\\folder.png"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-merged_res-41:\\drawable_button_bg_up2.xml.flat",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\drawable\\button_bg_up2.xml"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-merged_res-41:\\drawable_card_press.xml.flat",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\drawable\\card_press.xml"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-merged_res-41:\\drawable_bgaprogressbar_bg_left_right_rounded.xml.flat",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\drawable\\bgaprogressbar_bg_left_right_rounded.xml"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-merged_res-41:\\drawable_button_bg_down3.xml.flat",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\drawable\\button_bg_down3.xml"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-merged_res-41:\\drawable_button_bg3.xml.flat",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\drawable\\button_bg3.xml"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-merged_res-41:\\mipmap-hdpi_ic_launcher.png.flat",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\mipmap-hdpi\\ic_launcher.png"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-merged_res-41:\\mipmap-mdpi_rfid.jpg.flat",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\mipmap-mdpi\\rfid.jpg"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-merged_res-41:\\drawable_webtext.png.flat",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\drawable\\webtext.png"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-merged_res-41:\\drawable_selecter_bottomright_coner_fe_f0.xml.flat",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\drawable\\selecter_bottomright_coner_fe_f0.xml"
+    },
+    {
+        "merged": "com.mason.bricktracking.app-merged_res-41:/layout_activity_main_brick.xml.flat",
+        "source": "com.mason.bricktracking.app-main-43:/layout/activity_main_brick.xml"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-merged_res-41:\\drawable_rb_bg.xml.flat",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\drawable\\rb_bg.xml"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-merged_res-41:\\layout_dialog_disconnect_time.xml.flat",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\layout\\dialog_disconnect_time.xml"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-merged_res-41:\\anim_usuallib_actionsheet_dialog_exit.xml.flat",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\anim\\usuallib_actionsheet_dialog_exit.xml"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-merged_res-41:\\drawable_button_bg_down.xml.flat",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\drawable\\button_bg_down.xml"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-merged_res-41:\\drawable_selecter_bottomall_coner_fe_f0.xml.flat",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\drawable\\selecter_bottomall_coner_fe_f0.xml"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-merged_res-41:\\drawable_layer_list_bgaprogressbar_bg_left_right_round.xml.flat",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\drawable\\layer_list_bgaprogressbar_bg_left_right_round.xml"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-merged_res-41:\\layout_title_layout.xml.flat",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\layout\\title_layout.xml"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-merged_res-41:\\drawable_button_bg_up3.xml.flat",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\drawable\\button_bg_up3.xml"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-merged_res-41:\\layout_item_tag.xml.flat",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\layout\\item_tag.xml"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-merged_res-41:\\layout_title_bar.xml.flat",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\layout\\title_bar.xml"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-merged_res-41:\\drawable_button_bg2.xml.flat",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\drawable\\button_bg2.xml"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-merged_res-41:\\layout_rardar_view.xml.flat",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\layout\\rardar_view.xml"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-merged_res-41:\\layout_activity_device_list2.xml.flat",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\layout\\activity_device_list2.xml"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-merged_res-41:\\drawable_video.png.flat",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\drawable\\video.png"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-merged_res-41:\\layout_activity_main.xml.flat",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\layout\\activity_main.xml"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-merged_res-41:\\mipmap-xxhdpi_rfid.jpg.flat",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\mipmap-xxhdpi\\rfid.jpg"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-merged_res-41:\\drawable_rectangle_bg.xml.flat",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\drawable\\rectangle_bg.xml"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-merged_res-41:\\drawable_rectangle_bg2.xml.flat",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\drawable\\rectangle_bg2.xml"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-merged_res-41:\\layout_fragment_btrename.xml.flat",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\layout\\fragment_btrename.xml"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-merged_res-41:\\drawable_usuallib_bg_normal_dialog_bottomright_corner_white_f0.xml.flat",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\drawable\\usuallib_bg_normal_dialog_bottomright_corner_white_f0.xml"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-merged_res-41:\\layout_fragment_uhfencrypt.xml.flat",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\layout\\fragment_uhfencrypt.xml"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-merged_res-41:\\anim_usuallib_top_dialog_exit.xml.flat",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\anim\\usuallib_top_dialog_exit.xml"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-merged_res-41:\\drawable_button_bg_green.xml.flat",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\drawable\\button_bg_green.xml"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-merged_res-41:\\drawable_selecter_bottomleft_coner_fe_f0.xml.flat",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\drawable\\selecter_bottomleft_coner_fe_f0.xml"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-merged_res-41:\\layout_activity_account.xml.flat",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\layout\\activity_account.xml"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-merged_res-41:\\layout_activity_extract_data.xml.flat",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\layout\\activity_extract_data.xml"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-merged_res-41:\\drawable_button_bg_down2.xml.flat",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\drawable\\button_bg_down2.xml"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-merged_res-41:\\anim_usuallib_top_dialog_enter.xml.flat",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\anim\\usuallib_top_dialog_enter.xml"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-merged_res-41:\\layout_fragment_uhfupdata.xml.flat",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\layout\\fragment_uhfupdata.xml"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-merged_res-41:\\anim_usuallib_actionsheet_dialog_enter.xml.flat",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\anim\\usuallib_actionsheet_dialog_enter.xml"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-merged_res-41:\\drawable_usuallib_bg_normal_dialog_bottomall_corner_white_fe.xml.flat",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\drawable\\usuallib_bg_normal_dialog_bottomall_corner_white_fe.xml"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-merged_res-41:\\drawable_usuallib_bg_normal_dialog_bottomleft_corner_white_fe.xml.flat",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\drawable\\usuallib_bg_normal_dialog_bottomleft_corner_white_fe.xml"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-merged_res-41:\\drawable_audio.png.flat",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\drawable\\audio.png"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-merged_res-41:\\drawable_actionbar_back.xml.flat",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\drawable\\actionbar_back.xml"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-merged_res-41:\\layout_listtag_items2.xml.flat",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\layout\\listtag_items2.xml"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-merged_res-41:\\menu_main.xml.flat",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\menu\\main.xml"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-merged_res-41:\\drawable_check_text_color2.xml.flat",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\drawable\\check_text_color2.xml"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-merged_res-41:\\raw_barcodebeep.ogg.flat",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\raw\\barcodebeep.ogg"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-merged_res-41:\\drawable_text.png.flat",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\drawable\\text.png"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-merged_res-41:\\layout_fragment_uhflocation.xml.flat",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\layout\\fragment_uhflocation.xml"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-merged_res-41:\\mipmap-xxxhdpi_ic_launcher.png.flat",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\mipmap-xxxhdpi\\ic_launcher.png"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-merged_res-41:\\layout_fragment_user_data_encrypt.xml.flat",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\layout\\fragment_user_data_encrypt.xml"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-merged_res-41:\\layout_activity_login.xml.flat",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\layout\\activity_login.xml"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-merged_res-41:\\drawable_packed.png.flat",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\drawable\\packed.png"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-merged_res-41:\\layout_fragment_uhfkill.xml.flat",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\layout\\fragment_uhfkill.xml"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-merged_res-41:\\drawable_goroot.png.flat",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\drawable\\goroot.png"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-merged_res-41:\\layout_activity_blue.xml.flat",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\layout\\activity_blue.xml"
+    }
+]

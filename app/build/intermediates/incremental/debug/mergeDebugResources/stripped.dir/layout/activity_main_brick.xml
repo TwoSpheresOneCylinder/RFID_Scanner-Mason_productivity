@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/main_root_layout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:background="@color/gray3">
+
+    <!-- Placement Counter Card -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="24dp"
+        android:background="@drawable/rectangle_bg"
+        android:gravity="center"
+        android:layout_marginBottom="16dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Brick Placements"
+            android:textSize="18sp"
+            android:layout_marginBottom="8dp"/>
+
+        <TextView
+            android:id="@+id/tv_placement_counter"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="0"
+            android:textSize="48sp"
+            android:textStyle="bold"
+            android:textColor="@color/blue1"/>
+        
+        <!-- Mason ID Display -->
+        <TextView
+            android:id="@+id/tv_mason_id"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Mason: --"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:textColor="@color/blue1"
+            android:layout_marginTop="8dp"/>
+    </LinearLayout>
+
+    <!-- Last Brick Scanned with Timestamp -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="12dp"
+        android:background="@drawable/rectangle_bg"
+        android:layout_marginBottom="16dp">
+        
+        <TextView
+            android:id="@+id/tv_last_brick"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Last Brick: None"
+            android:textSize="16sp"
+            android:textStyle="bold"/>
+        
+        <TextView
+            android:id="@+id/tv_last_timestamp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Timestamp: --"
+            android:textSize="12sp"
+            android:textColor="@color/gray2"
+            android:layout_marginTop="4dp"/>
+    </LinearLayout>
+
+    <!-- Sync Status -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="12dp"
+        android:background="@drawable/rectangle_bg"
+        android:layout_marginBottom="16dp">
+
+        <TextView
+            android:id="@+id/tv_sync_status"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Status: Ready"
+            android:textSize="14sp"/>
+
+        <TextView
+            android:id="@+id/tv_unsynced_count"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Unsynced: 0"
+            android:textSize="14sp"/>
+    </LinearLayout>
+
+    <!-- Signal Strength -->
+    <TextView
+        android:id="@+id/tv_gps_status"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Signal: ⬤⬤⬤⬤"
+        android:textSize="16sp"
+        android:padding="12dp"
+        android:background="@drawable/rectangle_bg"
+        android:layout_marginBottom="8dp"
+        android:gravity="center"
+        android:textStyle="bold"
+        android:textColor="@android:color/darker_gray"/>
+
+    <!-- Battery Status -->
+    <TextView
+        android:id="@+id/tv_battery_status"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Scanner Battery: --"
+        android:textSize="16sp"
+        android:padding="12dp"
+        android:background="@drawable/rectangle_bg"
+        android:layout_marginBottom="16dp"
+        android:gravity="center"
+        android:textStyle="bold"
+        android:textColor="@color/blue1"/>
+
+    <!-- Control Buttons -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginBottom="8dp">
+
+        <Button
+            android:id="@+id/btn_start"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="SCAN"
+            android:background="@drawable/button_bg_green"
+            android:textColor="@color/white"
+            android:layout_marginEnd="8dp"/>
+
+        <Button
+            android:id="@+id/btn_stop"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="STOP"
+            android:background="@drawable/button_bg_red"
+            android:textColor="@color/white"/>
+    </LinearLayout>
+
+    <!-- Back Button -->
+    <Button
+        android:id="@+id/btn_back"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="← BACK"
+        android:background="@drawable/button_bg_gray"
+        android:textColor="@color/white"/>
+
+    <!-- Instructions -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Press SCAN to start pulsing scanner.\nScanner pulses ON/OFF until tag is found or you press STOP."
+        android:textSize="12sp"
+        android:textColor="@color/gray2"
+        android:gravity="center"
+        android:layout_marginTop="16dp"/>
+
+</LinearLayout>

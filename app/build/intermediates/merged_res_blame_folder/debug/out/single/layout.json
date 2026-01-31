@@ -1,0 +1,162 @@
+[
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-mergeDebugResources-40:\\layout\\title_bar.xml",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\layout\\title_bar.xml"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-mergeDebugResources-40:\\layout\\dialog_disconnect_time.xml",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\layout\\dialog_disconnect_time.xml"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-mergeDebugResources-40:\\layout\\fragment_barcode.xml",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\layout\\fragment_barcode.xml"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-mergeDebugResources-40:\\layout\\activity_main.xml",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\layout\\activity_main.xml"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-mergeDebugResources-40:\\layout\\listtag_items.xml",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\layout\\listtag_items.xml"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-mergeDebugResources-40:\\layout\\activity_extract_data.xml",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\layout\\activity_extract_data.xml"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-mergeDebugResources-40:\\layout\\activity_connection.xml",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\layout\\activity_connection.xml"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-mergeDebugResources-40:\\layout\\rardar_view.xml",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\layout\\rardar_view.xml"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-mergeDebugResources-40:\\layout\\fragment_uhf_erase.xml",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\layout\\fragment_uhf_erase.xml"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-mergeDebugResources-40:\\layout\\dialog_epc_tid_user.xml",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\layout\\dialog_epc_tid_user.xml"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-mergeDebugResources-40:\\layout\\item_tag.xml",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\layout\\item_tag.xml"
+    },
+    {
+        "merged": "com.mason.bricktracking.app-mergeDebugResources-40:/layout/activity_main_brick.xml",
+        "source": "com.mason.bricktracking.app-main-43:/layout/activity_main_brick.xml"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-mergeDebugResources-40:\\layout\\uhf_dialog_lock_code.xml",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\layout\\uhf_dialog_lock_code.xml"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-mergeDebugResources-40:\\layout\\fragment_btrename.xml",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\layout\\fragment_btrename.xml"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-mergeDebugResources-40:\\layout\\fragment_uhfkill.xml",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\layout\\fragment_uhfkill.xml"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-mergeDebugResources-40:\\layout\\fragment_uhfread_tag.xml",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\layout\\fragment_uhfread_tag.xml"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-mergeDebugResources-40:\\layout\\activity_device_list2.xml",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\layout\\activity_device_list2.xml"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-mergeDebugResources-40:\\layout\\activity_main_brick.xml",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\layout\\activity_main_brick.xml"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-mergeDebugResources-40:\\layout\\activity_account.xml",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\layout\\activity_account.xml"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-mergeDebugResources-40:\\layout\\fragment_uhfset.xml",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\layout\\fragment_uhfset.xml"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-mergeDebugResources-40:\\layout\\activity_update_mac.xml",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\layout\\activity_update_mac.xml"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-mergeDebugResources-40:\\layout\\dialog_progress.xml",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\layout\\dialog_progress.xml"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-mergeDebugResources-40:\\layout\\fragment_authentication.xml",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\layout\\fragment_authentication.xml"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-mergeDebugResources-40:\\layout\\device_address_name_list.xml",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\layout\\device_address_name_list.xml"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-mergeDebugResources-40:\\layout\\fragment_user_data_encrypt.xml",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\layout\\fragment_user_data_encrypt.xml"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-mergeDebugResources-40:\\layout\\fragment_uhf_radar_location.xml",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\layout\\fragment_uhf_radar_location.xml"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-mergeDebugResources-40:\\layout\\fragment_uhflocation.xml",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\layout\\fragment_uhflocation.xml"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-mergeDebugResources-40:\\layout\\activity_login.xml",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\layout\\activity_login.xml"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-mergeDebugResources-40:\\layout\\activity_start.xml",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\layout\\activity_start.xml"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-mergeDebugResources-40:\\layout\\device_list.xml",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\layout\\device_list.xml"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-mergeDebugResources-40:\\layout\\usuallib_normal_dialog_layout.xml",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\layout\\usuallib_normal_dialog_layout.xml"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-mergeDebugResources-40:\\layout\\title_layout.xml",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\layout\\title_layout.xml"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-mergeDebugResources-40:\\layout\\activity_blue.xml",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\layout\\activity_blue.xml"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-mergeDebugResources-40:\\layout\\device_element.xml",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\layout\\device_element.xml"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-mergeDebugResources-40:\\layout\\fragment_uhfencrypt.xml",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\layout\\fragment_uhfencrypt.xml"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-mergeDebugResources-40:\\layout\\activity_device_list.xml",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\layout\\activity_device_list.xml"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-mergeDebugResources-40:\\layout\\fragment_uhfupdata.xml",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\layout\\fragment_uhfupdata.xml"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-mergeDebugResources-40:\\layout\\fragment_uhfread.xml",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\layout\\fragment_uhfread.xml"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-mergeDebugResources-40:\\layout\\fragment_uhflock.xml",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\layout\\fragment_uhflock.xml"
+    },
+    {
+        "merged": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-mergeDebugResources-40:\\layout\\listtag_items2.xml",
+        "source": "C:\\Users\\cange\\.gradle\\daemon\\8.13\\com.mason.bricktracking.app-main-43:\\layout\\listtag_items2.xml"
+    }
+]

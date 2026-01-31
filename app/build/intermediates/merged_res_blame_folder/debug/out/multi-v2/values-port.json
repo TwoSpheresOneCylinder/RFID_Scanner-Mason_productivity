@@ -1,0 +1,19 @@
+{
+    "logs": [
+        {
+            "outputFile": "com.mason.bricktracking.app-mergeDebugResources-39:/values-port/values-port.xml",
+            "map": [
+                {
+                    "source": "C:\\Users\\cange\\.gradle\\caches\\8.13\\transforms\\8ff499dbf465f3aacf4f938438608436\\transformed\\appcompat-1.7.0\\res\\values-port\\values-port.xml",
+                    "from": {
+                        "startLines": "2",
+                        "startColumns": "4",
+                        "startOffsets": "55",
+                        "endColumns": "55",
+                        "endOffsets": "106"
+                    }
+                }
+            ]
+        }
+    ]
+}

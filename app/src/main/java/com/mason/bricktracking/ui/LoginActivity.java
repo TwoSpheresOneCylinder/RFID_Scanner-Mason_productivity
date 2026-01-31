@@ -1,0 +1,155 @@
+package com.mason.bricktracking.ui;
+
+import android.content.Intent;
+import android.os.Bundle;
+import android.text.TextUtils;
+import android.view.Gravity;
+import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.ProgressBar;
+import android.widget.Toast;
+
+import androidx.appcompat.app.AppCompatActivity;
+
+import com.mason.bricktracking.MasonApp;
+import com.mason.bricktracking.R;
+import com.mason.bricktracking.data.remote.ApiClient;
+import com.mason.bricktracking.data.remote.ApiService;
+import com.mason.bricktracking.data.remote.LoginRequest;
+import com.mason.bricktracking.data.remote.LoginResponse;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+
+public class LoginActivity extends AppCompatActivity {
+    
+    private EditText etUsername, etPassword;
+    private Button btnLogin;
+    private ProgressBar progressBar;
+    
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_login);
+        
+        initViews();
+        setupListeners();
+        
+        // Pre-fill saved credentials if available
+        MasonApp app = MasonApp.getInstance();
+        if (app != null && app.hasSavedCredentials()) {
+            String savedUsername = app.getSavedUsername();
+            String savedPassword = app.getSavedPassword();
+            etUsername.setText(savedUsername);
+            etPassword.setText(savedPassword);
+            // User must still press Login button
+        }
+    }
+    
+    private void initViews() {
+        etUsername = findViewById(R.id.et_username);
+        etPassword = findViewById(R.id.et_password);
+        btnLogin = findViewById(R.id.btn_login);
+        progressBar = findViewById(R.id.progress_bar);
+    }
+    
+    private void setupListeners() {
+        btnLogin.setOnClickListener(v -> attemptLogin());
+    }
+    
+    private void attemptLogin() {
+        String username = etUsername.getText().toString().trim();
+        String password = etPassword.getText().toString().trim();
+        
+        // Validate inputs
+        if (TextUtils.isEmpty(username)) {
+            etUsername.setError("Username is required");
+            etUsername.requestFocus();
+            return;
+        }
+        
+        if (TextUtils.isEmpty(password)) {
+            etPassword.setError("Password is required");
+            etPassword.requestFocus();
+            return;
+        }
+        
+        // Show loading
+        setLoading(true);
+        
+        // Create Mason ID from username
+        String masonId = "MASON_" + username.toUpperCase();
+        
+        // Make login API call
+        LoginRequest request = new LoginRequest(username, password);
+        ApiService apiService = ApiClient.getApiService();
+        
+        // Handle case where API service couldn't be initialized
+        if (apiService == null) {
+            setLoading(false);
+            // For development: Allow offline login
+            // Convention: username "admin" is admin
+            boolean isAdmin = username.toLowerCase().contains("admin");
+            MasonApp.getInstance().saveMasonId(masonId, isAdmin);
+            navigateToConnection();
+            return;
+        }
+        
+        Call<LoginResponse> call = apiService.login(request);
+        
+        call.enqueue(new Callback<LoginResponse>() {
+            @Override
+            public void onResponse(Call<LoginResponse> call, Response<LoginResponse> response) {
+                setLoading(false);
+                
+                if (response.isSuccessful() && response.body() != null) {
+                    LoginResponse loginResponse = response.body();
+                    
+                    if (loginResponse.isSuccess()) {
+                        // Save mason ID and admin status
+                        String finalMasonId = loginResponse.getMasonId() != null ? 
+                            loginResponse.getMasonId() : masonId;
+                        
+                        MasonApp.getInstance().saveMasonId(finalMasonId, loginResponse.isAdmin());
+                        
+                        // Save credentials if enabled
+                        MasonApp.getInstance().saveCredentials(username, password);
+                        
+                        navigateToConnection();
+                    }
+                } else {
+                    // Login failed
+                }
+            }
+            
+            @Override
+            public void onFailure(Call<LoginResponse> call, Throwable t) {
+                setLoading(false);
+                
+                // For development: Allow offline login
+                boolean isAdmin = username.toLowerCase().contains("admin");
+                MasonApp.getInstance().saveMasonId(masonId, isAdmin);
+                
+                // Save credentials if enabled
+                MasonApp.getInstance().saveCredentials(username, password);
+                
+                navigateToConnection();
+            }
+        });
+    }
+    
+    private void setLoading(boolean loading) {
+        progressBar.setVisibility(loading ? View.VISIBLE : View.GONE);
+        btnLogin.setEnabled(!loading);
+        etUsername.setEnabled(!loading);
+        etPassword.setEnabled(!loading);
+    }
+    
+    private void navigateToConnection() {
+        Intent intent = new Intent(LoginActivity.this, ConnectionActivity.class);
+        startActivity(intent);
+        finish();
+    }
+}
