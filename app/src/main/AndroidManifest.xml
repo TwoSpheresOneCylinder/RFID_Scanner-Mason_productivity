@@ -23,6 +23,9 @@
     
     <!-- Foreground Service -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     
     <!-- Vibration for haptic feedback -->
     <uses-permission android:name="android.permission.VIBRATE" />
@@ -73,6 +76,23 @@
             android:name=".ui.DeviceListActivity"
             android:exported="false"
             android:theme="@style/Theme.AppCompat.Dialog" />
+        
+        <!-- FileProvider for sharing battery logs -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.provider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
+        
+        <!-- Battery Test Foreground Service -->
+        <service
+            android:name=".service.BatteryTestService"
+            android:exported="false"
+            android:foregroundServiceType="connectedDevice" />
             
     </application>
 

@@ -5,6 +5,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
@@ -24,19 +25,19 @@ public final class ActivityMainBrickBinding implements ViewBinding {
   public final Button btnBack;
 
   @NonNull
+  public final Button btnBatteryTest;
+
+  @NonNull
   public final Button btnStart;
 
   @NonNull
   public final Button btnStop;
 
   @NonNull
+  public final ImageView ivBatteryStatus;
+
+  @NonNull
   public final LinearLayout mainRootLayout;
-
-  @NonNull
-  public final TextView tvBatteryStatus;
-
-  @NonNull
-  public final TextView tvGpsStatus;
 
   @NonNull
   public final TextView tvLastBrick;
@@ -57,18 +58,18 @@ public final class ActivityMainBrickBinding implements ViewBinding {
   public final TextView tvUnsyncedCount;
 
   private ActivityMainBrickBinding(@NonNull LinearLayout rootView, @NonNull Button btnBack,
-      @NonNull Button btnStart, @NonNull Button btnStop, @NonNull LinearLayout mainRootLayout,
-      @NonNull TextView tvBatteryStatus, @NonNull TextView tvGpsStatus,
+      @NonNull Button btnBatteryTest, @NonNull Button btnStart, @NonNull Button btnStop,
+      @NonNull ImageView ivBatteryStatus, @NonNull LinearLayout mainRootLayout,
       @NonNull TextView tvLastBrick, @NonNull TextView tvLastTimestamp, @NonNull TextView tvMasonId,
       @NonNull TextView tvPlacementCounter, @NonNull TextView tvSyncStatus,
       @NonNull TextView tvUnsyncedCount) {
     this.rootView = rootView;
     this.btnBack = btnBack;
+    this.btnBatteryTest = btnBatteryTest;
     this.btnStart = btnStart;
     this.btnStop = btnStop;
+    this.ivBatteryStatus = ivBatteryStatus;
     this.mainRootLayout = mainRootLayout;
-    this.tvBatteryStatus = tvBatteryStatus;
-    this.tvGpsStatus = tvGpsStatus;
     this.tvLastBrick = tvLastBrick;
     this.tvLastTimestamp = tvLastTimestamp;
     this.tvMasonId = tvMasonId;
@@ -110,6 +111,12 @@ public final class ActivityMainBrickBinding implements ViewBinding {
         break missingId;
       }
 
+      id = R.id.btn_battery_test;
+      Button btnBatteryTest = ViewBindings.findChildViewById(rootView, id);
+      if (btnBatteryTest == null) {
+        break missingId;
+      }
+
       id = R.id.btn_start;
       Button btnStart = ViewBindings.findChildViewById(rootView, id);
       if (btnStart == null) {
@@ -122,19 +129,13 @@ public final class ActivityMainBrickBinding implements ViewBinding {
         break missingId;
       }
 
+      id = R.id.iv_battery_status;
+      ImageView ivBatteryStatus = ViewBindings.findChildViewById(rootView, id);
+      if (ivBatteryStatus == null) {
+        break missingId;
+      }
+
       LinearLayout mainRootLayout = (LinearLayout) rootView;
-
-      id = R.id.tv_battery_status;
-      TextView tvBatteryStatus = ViewBindings.findChildViewById(rootView, id);
-      if (tvBatteryStatus == null) {
-        break missingId;
-      }
-
-      id = R.id.tv_gps_status;
-      TextView tvGpsStatus = ViewBindings.findChildViewById(rootView, id);
-      if (tvGpsStatus == null) {
-        break missingId;
-      }
 
       id = R.id.tv_last_brick;
       TextView tvLastBrick = ViewBindings.findChildViewById(rootView, id);
@@ -172,9 +173,9 @@ public final class ActivityMainBrickBinding implements ViewBinding {
         break missingId;
       }
 
-      return new ActivityMainBrickBinding((LinearLayout) rootView, btnBack, btnStart, btnStop,
-          mainRootLayout, tvBatteryStatus, tvGpsStatus, tvLastBrick, tvLastTimestamp, tvMasonId,
-          tvPlacementCounter, tvSyncStatus, tvUnsyncedCount);
+      return new ActivityMainBrickBinding((LinearLayout) rootView, btnBack, btnBatteryTest,
+          btnStart, btnStop, ivBatteryStatus, mainRootLayout, tvLastBrick, tvLastTimestamp,
+          tvMasonId, tvPlacementCounter, tvSyncStatus, tvUnsyncedCount);
     }
     String missingId = rootView.getResources().getResourceName(id);
     throw new NullPointerException("Missing required view with ID: ".concat(missingId));

@@ -1,9 +1,20 @@
 -- Merging decision tree log ---
+provider#androidx.core.content.FileProvider
+INJECTED from C:\Users\cange\Downloads\Block RFID\Vendor Code\MasonBrickTracking\app\src\main\AndroidManifest.xml:78:9-86:20
+	android:grantUriPermissions
+		ADDED from C:\Users\cange\Downloads\Block RFID\Vendor Code\MasonBrickTracking\app\src\main\AndroidManifest.xml:82:13-47
+	android:authorities
+		INJECTED from C:\Users\cange\Downloads\Block RFID\Vendor Code\MasonBrickTracking\app\src\main\AndroidManifest.xml
+		ADDED from C:\Users\cange\Downloads\Block RFID\Vendor Code\MasonBrickTracking\app\src\main\AndroidManifest.xml:80:13-60
+	android:exported
+		ADDED from C:\Users\cange\Downloads\Block RFID\Vendor Code\MasonBrickTracking\app\src\main\AndroidManifest.xml:81:13-37
+	android:name
+		ADDED from C:\Users\cange\Downloads\Block RFID\Vendor Code\MasonBrickTracking\app\src\main\AndroidManifest.xml:79:13-62
 manifest
-ADDED from C:\Users\cange\Downloads\Block RFID\Vendor Code\MasonBrickTracking\app\src\main\AndroidManifest.xml:2:1-79:12
-INJECTED from C:\Users\cange\Downloads\Block RFID\Vendor Code\MasonBrickTracking\app\src\main\AndroidManifest.xml:2:1-79:12
-INJECTED from C:\Users\cange\Downloads\Block RFID\Vendor Code\MasonBrickTracking\app\src\main\AndroidManifest.xml:2:1-79:12
-INJECTED from C:\Users\cange\Downloads\Block RFID\Vendor Code\MasonBrickTracking\app\src\main\AndroidManifest.xml:2:1-79:12
+ADDED from C:\Users\cange\Downloads\Block RFID\Vendor Code\MasonBrickTracking\app\src\main\AndroidManifest.xml:2:1-90:12
+INJECTED from C:\Users\cange\Downloads\Block RFID\Vendor Code\MasonBrickTracking\app\src\main\AndroidManifest.xml:2:1-90:12
+INJECTED from C:\Users\cange\Downloads\Block RFID\Vendor Code\MasonBrickTracking\app\src\main\AndroidManifest.xml:2:1-90:12
+INJECTED from C:\Users\cange\Downloads\Block RFID\Vendor Code\MasonBrickTracking\app\src\main\AndroidManifest.xml:2:1-90:12
 MERGED from [DeviceAPI_ver20250209_release.aar] C:\Users\cange\.gradle\caches\8.13\transforms\673b26018e1260d415261d0fcdc0cd7a\transformed\DeviceAPI_ver20250209_release\AndroidManifest.xml:2:1-15:12
 MERGED from [androidx.databinding:viewbinding:8.1.0] C:\Users\cange\.gradle\caches\8.13\transforms\ce5ba1622d04a04d35e7617a089478cf\transformed\viewbinding-8.1.0\AndroidManifest.xml:2:1-7:12
 MERGED from [com.google.android.material:material:1.12.0] C:\Users\cange\.gradle\caches\8.13\transforms\afdbb9a945590132660f7642088bef05\transformed\material-1.12.0\AndroidManifest.xml:17:1-24:12
@@ -132,8 +143,8 @@ ADDED from C:\Users\cange\Downloads\Block RFID\Vendor Code\MasonBrickTracking\ap
 	android:name
 		ADDED from C:\Users\cange\Downloads\Block RFID\Vendor Code\MasonBrickTracking\app\src\main\AndroidManifest.xml:28:22-63
 application
-ADDED from C:\Users\cange\Downloads\Block RFID\Vendor Code\MasonBrickTracking\app\src\main\AndroidManifest.xml:30:5-77:19
-INJECTED from C:\Users\cange\Downloads\Block RFID\Vendor Code\MasonBrickTracking\app\src\main\AndroidManifest.xml:30:5-77:19
+ADDED from C:\Users\cange\Downloads\Block RFID\Vendor Code\MasonBrickTracking\app\src\main\AndroidManifest.xml:30:5-88:19
+INJECTED from C:\Users\cange\Downloads\Block RFID\Vendor Code\MasonBrickTracking\app\src\main\AndroidManifest.xml:30:5-88:19
 MERGED from [com.google.android.material:material:1.12.0] C:\Users\cange\.gradle\caches\8.13\transforms\afdbb9a945590132660f7642088bef05\transformed\material-1.12.0\AndroidManifest.xml:22:5-20
 MERGED from [com.google.android.material:material:1.12.0] C:\Users\cange\.gradle\caches\8.13\transforms\afdbb9a945590132660f7642088bef05\transformed\material-1.12.0\AndroidManifest.xml:22:5-20
 MERGED from [androidx.constraintlayout:constraintlayout:2.1.4] C:\Users\cange\.gradle\caches\8.13\transforms\879e651184964329b3257e6e5b4925f3\transformed\constraintlayout-2.1.4\AndroidManifest.xml:9:5-20
@@ -234,6 +245,12 @@ ADDED from C:\Users\cange\Downloads\Block RFID\Vendor Code\MasonBrickTracking\ap
 		ADDED from C:\Users\cange\Downloads\Block RFID\Vendor Code\MasonBrickTracking\app\src\main\AndroidManifest.xml:75:13-58
 	android:name
 		ADDED from C:\Users\cange\Downloads\Block RFID\Vendor Code\MasonBrickTracking\app\src\main\AndroidManifest.xml:73:13-50
+meta-data#android.support.FILE_PROVIDER_PATHS
+ADDED from C:\Users\cange\Downloads\Block RFID\Vendor Code\MasonBrickTracking\app\src\main\AndroidManifest.xml:83:13-85:54
+	android:resource
+		ADDED from C:\Users\cange\Downloads\Block RFID\Vendor Code\MasonBrickTracking\app\src\main\AndroidManifest.xml:85:17-51
+	android:name
+		ADDED from C:\Users\cange\Downloads\Block RFID\Vendor Code\MasonBrickTracking\app\src\main\AndroidManifest.xml:84:17-67
 uses-sdk
 INJECTED from C:\Users\cange\Downloads\Block RFID\Vendor Code\MasonBrickTracking\app\src\main\AndroidManifest.xml reason: use-sdk injection requested
 INJECTED from C:\Users\cange\Downloads\Block RFID\Vendor Code\MasonBrickTracking\app\src\main\AndroidManifest.xml

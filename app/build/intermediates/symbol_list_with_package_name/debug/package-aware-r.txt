@@ -3491,6 +3491,7 @@ id btn_R2_export
 id btn_account_back
 id btn_account_logout
 id btn_back
+id btn_battery_test
 id btn_cancel
 id btn_clearList
 id btn_connect
@@ -3702,6 +3703,7 @@ id invisible
 id inward
 id italic
 id item_touch_helper_previous_elevation
+id iv_battery_status
 id jumpToEnd
 id jumpToStart
 id labeled
@@ -4039,11 +4041,9 @@ id tv_account_device_address
 id tv_account_device_name
 id tv_account_mason_id
 id tv_account_username
-id tv_battery_status
 id tv_connection_status
 id tv_count
 id tv_device_name
-id tv_gps_status
 id tv_last_brick
 id tv_last_timestamp
 id tv_mason_id
@@ -6711,4 +6711,5 @@ styleable ViewStubCompat android_id android_layout android_inflatedId
 styleable ViewTransition android_id SharedValue SharedValueId clearsTag duration ifTagNotSet ifTagSet motionInterpolator motionTarget onStateTransition pathMotionArc setsTag transitionDisable upDuration viewTransitionMode
 styleable include constraintSet
 xml device_filter
+xml file_paths
 xml nfc_tech_filter

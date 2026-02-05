@@ -15,11 +15,20 @@ import android.os.Vibrator;
 import android.os.VibratorManager;
 import android.os.Handler;
 import android.os.Looper;
+import android.os.PowerManager;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.Paint;
+import android.graphics.Typeface;
+import android.graphics.Color;
+import android.content.res.AssetManager;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
@@ -36,6 +45,7 @@ import com.mason.bricktracking.MasonApp;
 import com.mason.bricktracking.R;
 import com.mason.bricktracking.data.model.BrickPlacement;
 import com.mason.bricktracking.sync.SyncManager;
+import com.mason.bricktracking.service.BatteryTestService;
 import com.rscja.deviceapi.RFIDWithUHFBLE;
 import com.rscja.deviceapi.entity.UHFTAGInfo;
 import com.rscja.deviceapi.interfaces.ConnectionStatus;
@@ -48,16 +58,27 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.List;
 import java.util.ArrayList;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
+import android.content.Context;
+import android.net.Uri;
+import androidx.core.content.FileProvider;
 
 public class MainActivity extends AppCompatActivity {
     
-    private TextView tvPlacementCounter, tvLastBrick, tvSyncStatus, tvUnsyncedCount, tvGpsStatus, tvMasonId, tvLastTimestamp, tvBatteryStatus;
-    private Button btnStart, btnStop, btnBack;
+    private TextView tvPlacementCounter, tvLastBrick, tvSyncStatus, tvUnsyncedCount, tvMasonId, tvLastTimestamp;
+    private ImageView ivBatteryStatus;
+    private Button btnStart, btnStop, btnBack, btnBatteryTest;
     
     private RFIDWithUHFBLE uhf;
     private SyncManager syncManager;
     private ToneGenerator toneGenerator;
     private Vibrator vibrator;
+    private PowerManager.WakeLock wakeLock;
     
     private boolean isScanning = false;
     private int placementCounter = 0;
@@ -89,6 +110,9 @@ public class MainActivity extends AppCompatActivity {
     
     // Track power level per placement
     private int currentScanPowerLevel = 33; // Full power by default
+    
+    // Battery logging
+    private boolean isBatteryLoggingEnabled = false;
     
     // Helper class to store individual tag reads
     private static class TagRead {
@@ -146,6 +170,11 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main_brick);
         
+        // Keep CPU alive when screen is off so scanning continues
+        PowerManager pm = (PowerManager) getSystemService(POWER_SERVICE);
+        wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "MasonBrickTracking::Scanning");
+        wakeLock.acquire();
+        
         isAdmin = MasonApp.getInstance().isAdmin();
         
         initViews();
@@ -174,18 +203,34 @@ public class MainActivity extends AppCompatActivity {
         fetchInitialCounter();
     }
     
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // Sync button state with service
+        if (BatteryTestService.isRunning()) {
+            isBatteryLoggingEnabled = true;
+            btnBatteryTest.setText("STOP BATTERY TEST");
+            btnBatteryTest.setBackgroundResource(R.drawable.button_bg_red);
+        } else {
+            isBatteryLoggingEnabled = false;
+            btnBatteryTest.setText("START BATTERY TEST");
+            btnBatteryTest.setBackgroundResource(R.drawable.button_bg_gray);
+        }
+        updateBatteryStatus();
+    }
+    
     private void initViews() {
         tvPlacementCounter = findViewById(R.id.tv_placement_counter);
         tvLastBrick = findViewById(R.id.tv_last_brick);
         tvSyncStatus = findViewById(R.id.tv_sync_status);
         tvUnsyncedCount = findViewById(R.id.tv_unsynced_count);
-        tvGpsStatus = findViewById(R.id.tv_gps_status);
         tvMasonId = findViewById(R.id.tv_mason_id);
         tvLastTimestamp = findViewById(R.id.tv_last_timestamp);
-        tvBatteryStatus = findViewById(R.id.tv_battery_status);
+        ivBatteryStatus = findViewById(R.id.iv_battery_status);
         btnStart = findViewById(R.id.btn_start);
         btnStop = findViewById(R.id.btn_stop);
         btnBack = findViewById(R.id.btn_back);
+        btnBatteryTest = findViewById(R.id.btn_battery_test);
         
         btnStop.setEnabled(false);
         
@@ -263,10 +308,6 @@ public class MainActivity extends AppCompatActivity {
                     // GPS check: warn but do NOT block scan
                     if (lastKnownLocation == null) {
                         android.util.Log.w("SCAN_CALLBACK", "No GPS location - accepting scan anyway (GPS optional)");
-                        mainHandler.post(() -> {
-                            tvGpsStatus.setText("Signal: No GPS (scan allowed)");
-                            tvGpsStatus.setTextColor(getResources().getColor(android.R.color.holo_orange_dark));
-                        });
                     }
                     
                     // Start capture window ONLY if not already capturing
@@ -297,8 +338,6 @@ public class MainActivity extends AppCompatActivity {
                 ActivityCompat.requestPermissions(this, 
                     new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION}, 
                     LOCATION_PERMISSION_REQUEST);
-                tvGpsStatus.setText("Signal: Permission Required");
-                tvGpsStatus.setTextColor(getResources().getColor(android.R.color.holo_orange_dark));
                 return;
             }
             
@@ -310,7 +349,6 @@ public class MainActivity extends AppCompatActivity {
                     if (location != null) {
                         lastKnownLocation = location;
                         lastLocationAccuracy = location.getAccuracy();
-                        updateGpsStatus();
                         android.util.Log.d("GPS", String.format("Location: %.6f, %.6f | Accuracy: ±%.1fm", 
                             location.getLatitude(), location.getLongitude(), lastLocationAccuracy));
                     }
@@ -331,51 +369,16 @@ public class MainActivity extends AppCompatActivity {
                 if (location != null) {
                     lastKnownLocation = location;
                     lastLocationAccuracy = location.getAccuracy();
-                    updateGpsStatus();
                     android.util.Log.d("GPS", "Initial location acquired: ±" + lastLocationAccuracy + "m");
-                } else {
-                    tvGpsStatus.setText("Signal: Searching...");
-                    tvGpsStatus.setTextColor(getResources().getColor(android.R.color.darker_gray));
                 }
             }).addOnFailureListener(this, e -> {
                 android.util.Log.e("GPS", "Failed to get location: " + e.getMessage());
-                tvGpsStatus.setText("Signal: Error");
-                tvGpsStatus.setTextColor(getResources().getColor(android.R.color.holo_red_dark));
             });
         } catch (SecurityException e) {
             android.util.Log.e("GPS", "Location permission error: " + e.getMessage());
-            tvGpsStatus.setText("Signal: Permission Denied");
-            tvGpsStatus.setTextColor(getResources().getColor(android.R.color.holo_red_dark));
         } catch (Exception e) {
             android.util.Log.e("GPS", "GPS initialization failed: " + e.getMessage(), e);
-            tvGpsStatus.setText("Signal: Unavailable");
-            tvGpsStatus.setTextColor(getResources().getColor(android.R.color.holo_red_dark));
         }
-    }
-    
-    private void updateGpsStatus() {
-        mainHandler.post(() -> {
-            if (lastKnownLocation == null) {
-                tvGpsStatus.setText("Signal: ○○○○");
-                tvGpsStatus.setTextColor(getResources().getColor(android.R.color.darker_gray));
-            } else if (lastLocationAccuracy <= GOOD_ACCURACY) {
-                // Excellent signal: 4 bars (±10m or better)
-                tvGpsStatus.setText("Signal: ⬤⬤⬤⬤ Excellent");
-                tvGpsStatus.setTextColor(getResources().getColor(android.R.color.holo_green_dark));
-            } else if (lastLocationAccuracy <= MAX_ACCEPTABLE_ACCURACY) {
-                // Good signal: 3 bars (±20m)
-                tvGpsStatus.setText("Signal: ⬤⬤⬤○ Good");
-                tvGpsStatus.setTextColor(getResources().getColor(android.R.color.holo_green_light));
-            } else if (lastLocationAccuracy <= 50f) {
-                // Fair signal: 2 bars (±50m)
-                tvGpsStatus.setText("Signal: ⬤⬤○○ Fair");
-                tvGpsStatus.setTextColor(getResources().getColor(android.R.color.holo_orange_dark));
-            } else {
-                // Poor signal: 1 bar (>50m)
-                tvGpsStatus.setText("Signal: ⬤○○○ Poor");
-                tvGpsStatus.setTextColor(getResources().getColor(android.R.color.holo_red_dark));
-            }
-        });
     }
     
     @Override
@@ -479,6 +482,7 @@ public class MainActivity extends AppCompatActivity {
         btnStart.setOnClickListener(v -> startScanning());
         btnStop.setOnClickListener(v -> stopScanning());
         btnBack.setOnClickListener(v -> goBack());
+        btnBatteryTest.setOnClickListener(v -> toggleBatteryTest());
     }
     
     @Override
@@ -923,6 +927,33 @@ public class MainActivity extends AppCompatActivity {
         startActivity(intent);
     }
     
+    private void toggleBatteryTest() {
+        if (!BatteryTestService.isRunning()) {
+            // Start foreground service
+            isBatteryLoggingEnabled = true;
+            Intent serviceIntent = new Intent(this, BatteryTestService.class);
+            serviceIntent.putExtra("masonId", masonId);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                startForegroundService(serviceIntent);
+            } else {
+                startService(serviceIntent);
+            }
+            btnBatteryTest.setText("STOP BATTERY TEST");
+            btnBatteryTest.setBackgroundResource(R.drawable.button_bg_red);
+            Toast.makeText(this, "Battery test running — works with screen off", Toast.LENGTH_LONG).show();
+            updateBatteryStatus();
+        } else {
+            // Stop foreground service
+            isBatteryLoggingEnabled = false;
+            Intent serviceIntent = new Intent(this, BatteryTestService.class);
+            stopService(serviceIntent);
+            btnBatteryTest.setText("START BATTERY TEST");
+            btnBatteryTest.setBackgroundResource(R.drawable.button_bg_gray);
+            updateBatteryStatus();
+            Toast.makeText(this, "Battery test stopped. Check BatteryLogs folder.", Toast.LENGTH_LONG).show();
+        }
+    }
+    
     private Handler batteryHandler = new Handler(Looper.getMainLooper());
     private Runnable batteryRunnable = new Runnable() {
         @Override
@@ -944,35 +975,96 @@ public class MainActivity extends AppCompatActivity {
         if (uhf != null && uhf.getConnectStatus() == ConnectionStatus.CONNECTED) {
             try {
                 int battery = uhf.getBattery();
-                String icon;
-                int color;
+                String iconFile;
                 
+                // Select icon based on battery percentage
                 if (battery > 75) {
-                    icon = "█████";
-                    color = getResources().getColor(android.R.color.holo_green_dark);
+                    iconFile = "battery_100.png";
                 } else if (battery > 50) {
-                    icon = "████░";
-                    color = getResources().getColor(android.R.color.holo_green_dark);
+                    iconFile = "battery_75.png";
                 } else if (battery > 25) {
-                    icon = "███░░";
-                    color = getResources().getColor(android.R.color.holo_orange_dark);
-                } else if (battery > 10) {
-                    icon = "██░░░";
-                    color = getResources().getColor(android.R.color.holo_orange_dark);
+                    iconFile = "battery_50.png";
                 } else {
-                    icon = "█░░░░";
-                    color = getResources().getColor(android.R.color.holo_red_dark);
+                    iconFile = "battery_25.png";
                 }
                 
-                tvBatteryStatus.setText("Scanner: " + icon + " " + battery + "%");
-                tvBatteryStatus.setTextColor(color);
+                // Load icon from assets and draw percentage on it
+                try {
+                    AssetManager assetManager = getAssets();
+                    Bitmap originalBitmap = BitmapFactory.decodeStream(assetManager.open("BatteryPercentages/" + iconFile));
+                    
+                    // Create mutable copy to draw on
+                    Bitmap mutableBitmap = originalBitmap.copy(Bitmap.Config.ARGB_8888, true);
+                    Canvas canvas = new Canvas(mutableBitmap);
+                    
+                    // Setup paint for text
+                    Paint paint = new Paint();
+                    paint.setColor(Color.WHITE);
+                    paint.setTextSize(mutableBitmap.getHeight() * 0.25f); // 25% of icon height
+                    paint.setTypeface(Typeface.create(Typeface.DEFAULT, Typeface.BOLD));
+                    paint.setAntiAlias(true);
+                    paint.setTextAlign(Paint.Align.CENTER);
+                    
+                    // Draw percentage text in center
+                    String text = battery + "%";
+                    if (isBatteryLoggingEnabled) {
+                        text = battery + "%\n[LOG]";
+                    }
+                    
+                    float x = mutableBitmap.getWidth() / 2f;
+                    float y = (mutableBitmap.getHeight() / 2f) - ((paint.descent() + paint.ascent()) / 2f);
+                    canvas.drawText(battery + "%", x, y, paint);
+                    
+                    // Draw [LOG] indicator if logging
+                    if (isBatteryLoggingEnabled) {
+                        paint.setTextSize(mutableBitmap.getHeight() * 0.12f);
+                        canvas.drawText("[LOG]", x, y + mutableBitmap.getHeight() * 0.2f, paint);
+                    }
+                    
+                    ivBatteryStatus.setImageBitmap(mutableBitmap);
+                } catch (IOException ioException) {
+                    android.util.Log.e("BATTERY", "Failed to load battery icon: " + iconFile, ioException);
+                }
+                
             } catch (Exception e) {
-                tvBatteryStatus.setText("Scanner: ░░░░░ --");
-                tvBatteryStatus.setTextColor(getResources().getColor(android.R.color.darker_gray));
+                ivBatteryStatus.setImageDrawable(null);
             }
         } else {
-            tvBatteryStatus.setText("Scanner: Not Connected");
-            tvBatteryStatus.setTextColor(getResources().getColor(android.R.color.darker_gray));
+            ivBatteryStatus.setImageDrawable(null);
+        }
+    }
+    
+    private void shareBatteryLog() {
+        // Find the most recent log file
+        File logDir = new File(getExternalFilesDir(null), "BatteryLogs");
+        if (!logDir.exists() || logDir.listFiles() == null || logDir.listFiles().length == 0) {
+            Toast.makeText(this, "No log files found", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        
+        // Get the most recent file
+        File[] files = logDir.listFiles();
+        File latest = files[0];
+        for (File f : files) {
+            if (f.lastModified() > latest.lastModified()) {
+                latest = f;
+            }
+        }
+        
+        try {
+            Uri fileUri = FileProvider.getUriForFile(this, 
+                getApplicationContext().getPackageName() + ".provider", 
+                latest);
+            
+            Intent shareIntent = new Intent(Intent.ACTION_SEND);
+            shareIntent.setType("text/csv");
+            shareIntent.putExtra(Intent.EXTRA_STREAM, fileUri);
+            shareIntent.putExtra(Intent.EXTRA_SUBJECT, "RFID Scanner Battery Test Log");
+            shareIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            
+            startActivity(Intent.createChooser(shareIntent, "Share Battery Log"));
+        } catch (Exception e) {
+            Toast.makeText(this, "Failed to share log: " + e.getMessage(), Toast.LENGTH_LONG).show();
         }
     }
     
@@ -990,6 +1082,10 @@ public class MainActivity extends AppCompatActivity {
         }
         // Stop battery monitoring
         stopBatteryMonitoring();
+        // Release wake lock
+        if (wakeLock != null && wakeLock.isHeld()) {
+            wakeLock.release();
+        }
         // Stop location updates
         if (fusedLocationClient != null && locationCallback != null) {
             fusedLocationClient.removeLocationUpdates(locationCallback);

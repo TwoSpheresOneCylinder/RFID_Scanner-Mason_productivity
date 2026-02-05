@@ -7,6 +7,33 @@
     android:padding="16dp"
     android:background="@color/gray3">
 
+    <!-- Scanner Battery (horizontal) -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="10dp"
+        android:background="@drawable/rectangle_bg"
+        android:layout_marginBottom="12dp"
+        android:gravity="center_vertical">
+        
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Scanner Battery"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:textColor="@color/blue1"/>
+        
+        <ImageView
+            android:id="@+id/iv_battery_status"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:scaleType="fitCenter"
+            android:contentDescription="Scanner Battery Level" />
+    </LinearLayout>
+
     <!-- Placement Counter Card -->
     <LinearLayout
         android:layout_width="match_parent"
@@ -97,34 +124,6 @@
             android:textSize="14sp"/>
     </LinearLayout>
 
-    <!-- Signal Strength -->
-    <TextView
-        android:id="@+id/tv_gps_status"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Signal: ⬤⬤⬤⬤"
-        android:textSize="16sp"
-        android:padding="12dp"
-        android:background="@drawable/rectangle_bg"
-        android:layout_marginBottom="8dp"
-        android:gravity="center"
-        android:textStyle="bold"
-        android:textColor="@android:color/darker_gray"/>
-
-    <!-- Battery Status -->
-    <TextView
-        android:id="@+id/tv_battery_status"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Scanner Battery: --"
-        android:textSize="16sp"
-        android:padding="12dp"
-        android:background="@drawable/rectangle_bg"
-        android:layout_marginBottom="16dp"
-        android:gravity="center"
-        android:textStyle="bold"
-        android:textColor="@color/blue1"/>
-
     <!-- Control Buttons -->
     <LinearLayout
         android:layout_width="match_parent"
@@ -151,6 +150,16 @@
             android:background="@drawable/button_bg_red"
             android:textColor="@color/white"/>
     </LinearLayout>
+
+    <!-- Battery Test Button -->
+    <Button
+        android:id="@+id/btn_battery_test"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="START BATTERY TEST"
+        android:background="@drawable/button_bg_gray"
+        android:textColor="@color/white"
+        android:layout_marginBottom="8dp"/>
 
     <!-- Back Button -->
     <Button

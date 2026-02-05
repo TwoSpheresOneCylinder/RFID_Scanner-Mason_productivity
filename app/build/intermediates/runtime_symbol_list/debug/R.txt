@@ -3490,6 +3490,7 @@ int id btn_R2_export 0x7f0900b6
 int id btn_account_back 0x7f0900b7
 int id btn_account_logout 0x7f0900b8
 int id btn_back 0x7f0900b9
+int id btn_battery_test 0x7f090308
 int id btn_cancel 0x7f0900ba
 int id btn_clearList 0x7f0900bb
 int id btn_connect 0x7f0900bc
@@ -3701,6 +3702,7 @@ int id invisible 0x7f090189
 int id inward 0x7f09018a
 int id italic 0x7f09018b
 int id item_touch_helper_previous_elevation 0x7f09018c
+int id iv_battery_status 0x7f090309
 int id jumpToEnd 0x7f09018d
 int id jumpToStart 0x7f09018e
 int id labeled 0x7f09018f
@@ -4038,11 +4040,9 @@ int id tv_account_device_address 0x7f0902da
 int id tv_account_device_name 0x7f0902db
 int id tv_account_mason_id 0x7f0902dc
 int id tv_account_username 0x7f0902dd
-int id tv_battery_status 0x7f090307
 int id tv_connection_status 0x7f0902de
 int id tv_count 0x7f0902df
 int id tv_device_name 0x7f0902e0
-int id tv_gps_status 0x7f0902e1
 int id tv_last_brick 0x7f0902e2
 int id tv_last_timestamp 0x7f0902e3
 int id tv_mason_id 0x7f0902e4
@@ -8650,4 +8650,5 @@ int styleable ViewTransition_viewTransitionMode 14
 int[] styleable include { 0x7f040136 }
 int styleable include_constraintSet 0
 int xml device_filter 0x7f150000
+int xml file_paths 0x7f150002
 int xml nfc_tech_filter 0x7f150001
