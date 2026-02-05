@@ -261,23 +261,23 @@ public class MainActivity extends AppCompatActivity {
             startBatteryMonitoring();
         }
         
-        // Set power level for physical button scanning
+        // Set power level for scanning
         uhf.setPower(currentPowerLevel);
-        android.util.Log.d("RFID_INIT", "Physical scanner button mode enabled - Power: " + currentPowerLevel + " dBm");
+        android.util.Log.d("RFID_INIT", "RFID reader initialized - Power: " + currentPowerLevel + " dBm");
         
-        // Set inventory callback - listens for physical scanner button presses
-        android.util.Log.d("RFID_INIT", "Setting up inventory callback for physical button");
+        // Set inventory callback - receives continuous tag reads after startInventoryTag()
+        android.util.Log.d("RFID_INIT", "Setting up inventory callback for continuous scanning");
         uhf.setInventoryCallback(new IUHFInventoryCallback() {
             @Override
             public void callback(UHFTAGInfo tag) {
-                // Log every callback invocation to verify physical button is working
-                android.util.Log.d("SCAN_CALLBACK", "✓ Physical button pressed - callback triggered | isScanning=" + isScanning);
+                // Log every callback invocation
+                android.util.Log.d("SCAN_CALLBACK", "✓ Tag detected via continuous scan | isScanning=" + isScanning);
                 
                 // Only process tags if scanning session is active
                 if (!isScanning) {
-                    android.util.Log.w("SCAN_CALLBACK", "⚠ Tag detected but scanning not active - PRESS START BUTTON IN APP FIRST");
+                    android.util.Log.w("SCAN_CALLBACK", "⚠ Tag detected but scanning session not active");
                     mainHandler.post(() -> {
-                        tvSyncStatus.setText("Press START Button First");
+                        tvSyncStatus.setText("Press START to Begin");
                         tvSyncStatus.setTextColor(getResources().getColor(android.R.color.holo_orange_dark));
                     });
                     return;
@@ -311,7 +311,7 @@ public class MainActivity extends AppCompatActivity {
                     }
                     
                     // Start capture window ONLY if not already capturing
-                    // This allows a single button press to accumulate all reads in one 350ms window
+                    // Accumulates all reads in one 350ms window for best-candidate selection
                     if (!isCapturing) {
                         startCaptureWindow();
                     }
@@ -530,15 +530,15 @@ public class MainActivity extends AppCompatActivity {
         isPulsing = false;
         btnStart.setEnabled(false);
         btnStop.setEnabled(true);
-        tvSyncStatus.setText("Ready - Press Scanner Button");
-        tvSyncStatus.setTextColor(getResources().getColor(android.R.color.holo_green_dark));
+        tvSyncStatus.setText("Scanning...");
+        tvSyncStatus.setTextColor(getResources().getColor(android.R.color.holo_blue_dark));
         
         // Initialize new build session
         currentBuildSessionId = UUID.randomUUID().toString();
         currentEventSeq = 0;
         android.util.Log.d("BUILD_SESSION", "Started new session: " + currentBuildSessionId);
         
-        // Apply power level for physical button scanning and track it
+        // Apply power level and track it
         currentScanPowerLevel = currentPowerLevel;
         boolean powerSet = uhf.setPower(currentPowerLevel);
         if (!powerSet) {
@@ -547,19 +547,17 @@ public class MainActivity extends AppCompatActivity {
             android.util.Log.d("SCAN", "Power level set to: " + currentScanPowerLevel + " dBm for this session");
         }
         
-        // Start inventory mode to enable physical button scanning
-        // The reader will call our callback when the button is pressed and tags are detected
-        android.util.Log.d("SCAN", "Attempting to start inventory mode for physical button...");
+        // Start continuous inventory mode - reader will scan tags automatically
+        android.util.Log.d("SCAN", "Starting continuous inventory scanning...");
         boolean started = uhf.startInventoryTag();
         android.util.Log.d("SCAN", "startInventoryTag() returned: " + started);
         if (started) {
-            android.util.Log.d("SCAN", "✓ Physical button scanning enabled - Press physical button on reader now");
+            android.util.Log.d("SCAN", "✓ Continuous scanning active - tags will be read automatically");
         } else {
-            android.util.Log.e("SCAN", "✗ Failed to enable physical button scanning - Check reader connection");
+            android.util.Log.e("SCAN", "✗ Failed to start scanning - Check reader connection");
         }
         
-        // Session active - physical button will trigger reads
-        android.util.Log.d("SCAN", "Scanning session started - use physical scanner button to read tags");
+        android.util.Log.d("SCAN", "Scanning session started - continuous inventory active");
     }
     
     private void stopScanning() {
@@ -567,9 +565,9 @@ public class MainActivity extends AppCompatActivity {
     }
     
     private void stopScanning(boolean clearAdminData) {
-        // Stop inventory mode - disables physical button scanning
+        // Stop continuous inventory scanning
         uhf.stopInventory();
-        android.util.Log.d("SCAN", "Physical button scanning disabled");
+        android.util.Log.d("SCAN", "Continuous scanning stopped");
         
         isScanning = false;
         isPulsing = false;
@@ -615,8 +613,7 @@ public class MainActivity extends AppCompatActivity {
         captureWindowTimeout = () -> processCaptureWindow();
         captureWindowHandler.postDelayed(captureWindowTimeout, captureWindowMs);
         
-        // Log for press alignment verification: if you see this during idle, window is NOT press-aligned
-        android.util.Log.d("CAPTURE_WINDOW", "Started capture window (" + captureWindowMs + "ms) | VERIFY: Should only appear when button pressed");
+        android.util.Log.d("CAPTURE_WINDOW", "Started capture window (" + captureWindowMs + "ms)");
     }
     
     // Process capture window and select best candidate
@@ -625,10 +622,10 @@ public class MainActivity extends AppCompatActivity {
         
         synchronized (captureWindow) {
             if (captureWindow.isEmpty()) {
-                android.util.Log.d("CAPTURE_WINDOW", "Window empty - no tags captured");
+                android.util.Log.d("CAPTURE_WINDOW", "Window empty - no tags in range");
                 mainHandler.post(() -> {
-                    tvSyncStatus.setText("Ready - Press Scanner Button");
-                    tvSyncStatus.setTextColor(getResources().getColor(android.R.color.holo_green_dark));
+                    tvSyncStatus.setText("Scanning...");
+                    tvSyncStatus.setTextColor(getResources().getColor(android.R.color.holo_blue_dark));
                 });
                 return;
             }
@@ -878,10 +875,10 @@ public class MainActivity extends AppCompatActivity {
             
             // Auto-sync happens automatically in addPlacement() when threshold is reached
             
-            // Update status - ready for next physical button press
+            // Update status - continue scanning
             if (isScanning) {
-                tvSyncStatus.setText("Ready - Press Scanner Button");
-                tvSyncStatus.setTextColor(getResources().getColor(android.R.color.holo_green_dark));
+                tvSyncStatus.setText("Scanning...");
+                tvSyncStatus.setTextColor(getResources().getColor(android.R.color.holo_blue_dark));
             }
         });
     }
