@@ -5,6 +5,9 @@ public class LoginResponse {
     private String message;
     private String masonId;
     private boolean isAdmin;
+    private boolean isSuperAdmin;
+    private boolean isCompanyAdmin;
+    private String role;
     private String token;
     private Company company;
     
@@ -38,6 +41,30 @@ public class LoginResponse {
 
     public void setAdmin(boolean admin) {
         isAdmin = admin;
+    }
+
+    public boolean isSuperAdmin() {
+        return isSuperAdmin;
+    }
+
+    public void setSuperAdmin(boolean superAdmin) {
+        isSuperAdmin = superAdmin;
+    }
+
+    public boolean isCompanyAdmin() {
+        return isCompanyAdmin;
+    }
+
+    public void setCompanyAdmin(boolean companyAdmin) {
+        isCompanyAdmin = companyAdmin;
+    }
+
+    public String getRole() {
+        return role != null ? role : "user";
+    }
+
+    public void setRole(String role) {
+        this.role = role;
     }
 
     public String getToken() {

@@ -244,6 +244,9 @@
                     localStorage.setItem('dashboard_user', data.username || username);
                     localStorage.setItem('dashboard_masonId', data.masonId || '');
                     localStorage.setItem('dashboard_isAdmin', data.isAdmin ? 'true' : 'false');
+                    localStorage.setItem('dashboard_role', data.role || 'user');
+                    localStorage.setItem('dashboard_isSuperAdmin', data.isSuperAdmin ? 'true' : 'false');
+                    localStorage.setItem('dashboard_isCompanyAdmin', data.isCompanyAdmin ? 'true' : 'false');
                     if (data.company) {
                         localStorage.setItem('dashboard_company', JSON.stringify(data.company));
                     }

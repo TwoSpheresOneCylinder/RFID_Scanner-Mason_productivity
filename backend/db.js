@@ -77,6 +77,7 @@ function createTables(resolve, reject) {
                 password TEXT NOT NULL,
                 mason_id TEXT UNIQUE NOT NULL,
                 company_id INTEGER,
+                role TEXT NOT NULL DEFAULT 'user',
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (company_id) REFERENCES companies(id)
             )
@@ -95,6 +96,18 @@ function createTables(resolve, reject) {
                         console.log('✓ Migrated users table: added company_id column');
                     }
                 });
+                // Migrate: add role column if missing (existing DBs)
+                db.run(`ALTER TABLE users ADD COLUMN role TEXT NOT NULL DEFAULT 'user'`, (alterErr) => {
+                    if (alterErr && !alterErr.message.includes('duplicate column')) {
+                        console.error('Warning: Could not add role column:', alterErr.message);
+                    } else if (!alterErr) {
+                        console.log('✓ Migrated users table: added role column');
+                        // Set existing admin user to super_admin role
+                        db.run(`UPDATE users SET role = 'super_admin' WHERE mason_id = 'MASON_ADMIN' OR username = 'admin'`);
+                    }
+                });
+                // Seed default super admin accounts
+                seedDefaultSuperAdmins();
                 checkComplete();
             }
         });
@@ -255,6 +268,49 @@ function seedDefaultCompanies() {
     });
 }
 
+// Seed default super admin accounts on startup
+function seedDefaultSuperAdmins() {
+    const defaultAdmins = [
+        { username: 'cstreb', mason_id: 'CHUCK' },   // promote existing user only
+        { username: 'developer', mason_id: 'DEV' }   // promote existing user only
+    ];
+
+    defaultAdmins.forEach(admin => {
+        if (admin.password) {
+            // Full seed: create if missing, set role to super_admin
+            db.get(`SELECT id FROM users WHERE mason_id = ?`, [admin.mason_id], async (err, row) => {
+                if (err) return;
+                if (!row) {
+                    // Look up company id from code
+                    db.get(`SELECT id FROM companies WHERE code = ?`, [admin.company_code || 'CR'], async (err2, company) => {
+                        if (err2) return;
+                        const bcrypt = require('bcryptjs');
+                        const hash = await bcrypt.hash(admin.password, 10);
+                        db.run(
+                            `INSERT OR IGNORE INTO users (username, password, mason_id, role, company_id) VALUES (?, ?, ?, 'super_admin', ?)`,
+                            [admin.username, hash, admin.mason_id, company ? company.id : null],
+                            (insertErr) => {
+                                if (!insertErr) {
+                                    console.log(`✓ Default super admin seeded: ${admin.username}`);
+                                }
+                            }
+                        );
+                    });
+                } else {
+                    // Already exists — ensure role is super_admin
+                    db.run(`UPDATE users SET role = 'super_admin' WHERE mason_id = ?`, [admin.mason_id]);
+                }
+            });
+        } else {
+            // Promote-only: just set role if user exists
+            db.run(`UPDATE users SET role = 'super_admin' WHERE mason_id = ?`, [admin.mason_id], function(err) {
+                if (!err && this.changes > 0) {
+                    console.log(`✓ Promoted existing user to super admin: ${admin.username}`);
+                }
+            });
+        }
+    });
+}
 
 
 // ============================================
@@ -267,7 +323,7 @@ const dbUsers = {
     authenticate: async (username, password) => {
         return new Promise((resolve, reject) => {
             db.get(
-                `SELECT u.*, c.name as company_name, c.code as company_code, c.id as comp_id
+                `SELECT u.*, u.role, c.name as company_name, c.code as company_code, c.id as comp_id
                  FROM users u LEFT JOIN companies c ON u.company_id = c.id
                  WHERE u.username = ?`,
                 [username],
@@ -294,7 +350,7 @@ const dbUsers = {
     getAll: () => {
         return new Promise((resolve, reject) => {
             db.all(
-                `SELECT u.*, c.name as company_name, c.code as company_code
+                `SELECT u.*, u.role, c.name as company_name, c.code as company_code
                  FROM users u LEFT JOIN companies c ON u.company_id = c.id`,
                 (err, rows) => {
                     if (err) reject(err);
@@ -304,11 +360,11 @@ const dbUsers = {
         });
     },
 
-    // Get all users for dropdown (username + mason_id + company)
+    // Get all users for dropdown (username + mason_id + company + role)
     listAll: () => {
         return new Promise((resolve, reject) => {
             db.all(
-                `SELECT u.username, u.mason_id, c.name as company_name, c.code as company_code
+                `SELECT u.username, u.mason_id, u.role, u.company_id, c.name as company_name, c.code as company_code
                  FROM users u LEFT JOIN companies c ON u.company_id = c.id
                  ORDER BY c.name ASC, u.username ASC`,
                 (err, rows) => {
@@ -345,6 +401,57 @@ const dbUsers = {
                 function(err) {
                     if (err) reject(err);
                     else resolve(this.changes);
+                }
+            );
+        });
+    },
+
+    // List users filtered by company (for company admins)
+    listByCompany: (companyId) => {
+        return new Promise((resolve, reject) => {
+            db.all(
+                `SELECT u.username, u.mason_id, u.role, u.company_id, c.name as company_name, c.code as company_code
+                 FROM users u LEFT JOIN companies c ON u.company_id = c.id
+                 WHERE u.company_id = ?
+                 ORDER BY u.username ASC`,
+                [companyId],
+                (err, rows) => {
+                    if (err) reject(err);
+                    else resolve(rows || []);
+                }
+            );
+        });
+    },
+
+    // Update a user's role (super_admin or company_admin can do this)
+    updateRole: async (masonId, role) => {
+        const validRoles = ['user', 'company_admin', 'super_admin'];
+        if (!validRoles.includes(role)) {
+            throw new Error(`Invalid role: ${role}. Must be one of: ${validRoles.join(', ')}`);
+        }
+        return new Promise((resolve, reject) => {
+            db.run(
+                `UPDATE users SET role = ? WHERE mason_id = ?`,
+                [role, masonId],
+                function(err) {
+                    if (err) reject(err);
+                    else resolve(this.changes);
+                }
+            );
+        });
+    },
+
+    // Get a single user by mason_id
+    getByMasonId: (masonId) => {
+        return new Promise((resolve, reject) => {
+            db.get(
+                `SELECT u.username, u.mason_id, u.role, u.company_id, c.name as company_name, c.code as company_code
+                 FROM users u LEFT JOIN companies c ON u.company_id = c.id
+                 WHERE u.mason_id = ?`,
+                [masonId],
+                (err, row) => {
+                    if (err) reject(err);
+                    else resolve(row);
                 }
             );
         });

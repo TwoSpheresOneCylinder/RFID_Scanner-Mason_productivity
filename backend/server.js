@@ -64,6 +64,7 @@ function generateToken(user) {
         {
             masonId: user.mason_id,
             username: user.username,
+            role: user.role || 'user',
             companyId: user.company_id || null,
             companyName: user.company_name || null,
             companyCode: user.company_code || null
@@ -138,7 +139,16 @@ app.post('/api/auth/login', async (req, res) => {
         const user = await dbUsers.authenticate(username, password);
         
         if (user) {
-            const isAdmin = user.mason_id === 'MASON_ADMIN' || user.username === 'admin';
+            const role = user.role || 'user';
+            const isSuperAdmin = role === 'super_admin' || user.mason_id === 'MASON_ADMIN' || user.username === 'admin';
+            const isCompanyAdmin = role === 'company_admin';
+            const isAdmin = isSuperAdmin || isCompanyAdmin;
+            
+            // Ensure legacy admin accounts get super_admin role in DB
+            if (isSuperAdmin && role !== 'super_admin') {
+                try { await dbUsers.updateRole(user.mason_id, 'super_admin'); } catch(e) {}
+                user.role = 'super_admin';
+            }
             
             // Generate JWT token
             const token = generateToken(user);
@@ -153,13 +163,16 @@ app.post('/api/auth/login', async (req, res) => {
                 console.error('Session creation error (non-fatal):', sessionErr.message);
             }
             
-            console.log(`✓ Login successful: ${username} -> ${user.mason_id} (admin: ${isAdmin})`);
+            console.log(`✓ Login successful: ${username} -> ${user.mason_id} (role: ${user.role}, admin: ${isAdmin})`);
             return res.json({
                 success: true,
                 message: 'Login successful',
                 masonId: user.mason_id,
                 username: user.username,
+                role: user.role || 'user',
                 isAdmin: isAdmin,
+                isSuperAdmin: isSuperAdmin,
+                isCompanyAdmin: isCompanyAdmin,
                 token: token,
                 company: user.company_name ? {
                     id: user.comp_id,
@@ -268,20 +281,41 @@ app.post('/api/auth/register', async (req, res) => {
 // USER/MASON ENDPOINTS
 // ============================================
 
-// GET /api/users - Get all users for dropdown (username + mason_id)
+// GET /api/users - Get users for dropdown (company-scoped for company admins)
 app.get('/api/users', requireAuth, async (req, res) => {
-    console.log('Get users for dropdown');
+    console.log(`Get users for dropdown (requester: ${req.user.username}, role: ${req.user.role})`);
     
     try {
-        const users = await dbUsers.listAll();
+        let users;
+        const role = req.user.role || 'user';
+        const isSuperAdmin = role === 'super_admin';
+        const isCompanyAdmin = role === 'company_admin';
+        
+        if (isSuperAdmin) {
+            // Super admins see ALL users across all companies
+            users = await dbUsers.listAll();
+        } else if (isCompanyAdmin && req.user.companyId) {
+            // Company admins see only their company's users
+            users = await dbUsers.listByCompany(req.user.companyId);
+        } else {
+            // Regular users see only their company's users
+            if (req.user.companyId) {
+                users = await dbUsers.listByCompany(req.user.companyId);
+            } else {
+                users = [];
+            }
+        }
+        
         res.json({
             success: true,
             count: users.length,
             users: users.map(u => ({
                 username: u.username,
                 masonId: u.mason_id,
+                role: u.role || 'user',
                 company: u.company_name || 'Unassigned',
-                companyCode: u.company_code || 'NONE'
+                companyCode: u.company_code || 'NONE',
+                companyId: u.company_id || null
             }))
         });
     } catch (err) {
@@ -341,6 +375,50 @@ app.post('/api/companies', requireAuth, async (req, res) => {
             success: false,
             message: 'Database error'
         });
+    }
+});
+
+// ============================================
+// USER MANAGEMENT ENDPOINTS
+// ============================================
+
+// PUT /api/users/:masonId/role - Update a user's role (admin only)
+app.put('/api/users/:masonId/role', requireAuth, async (req, res) => {
+    const { masonId } = req.params;
+    const { role } = req.body;
+    const requesterRole = req.user.role || 'user';
+    
+    if (!role) {
+        return res.status(400).json({ success: false, message: 'Role is required' });
+    }
+    
+    // Only super_admin and company_admin can change roles
+    if (requesterRole !== 'super_admin' && requesterRole !== 'company_admin') {
+        return res.status(403).json({ success: false, message: 'Only admins can change user roles' });
+    }
+    
+    // Company admins can only promote/demote within their own company to company_admin or user
+    if (requesterRole === 'company_admin') {
+        if (role === 'super_admin') {
+            return res.status(403).json({ success: false, message: 'Company admins cannot grant super_admin role' });
+        }
+        // Verify target user is in the same company
+        const targetUser = await dbUsers.getByMasonId(masonId);
+        if (!targetUser || targetUser.company_id !== req.user.companyId) {
+            return res.status(403).json({ success: false, message: 'You can only manage users in your own company' });
+        }
+    }
+    
+    try {
+        const changes = await dbUsers.updateRole(masonId, role);
+        if (changes === 0) {
+            return res.status(404).json({ success: false, message: 'User not found' });
+        }
+        console.log(`✓ Role updated: ${masonId} -> ${role} (by ${req.user.username})`);
+        res.json({ success: true, message: `Role updated to ${role}`, masonId, role });
+    } catch (err) {
+        console.error('Error updating role:', err);
+        return res.status(400).json({ success: false, message: err.message });
     }
 });
 

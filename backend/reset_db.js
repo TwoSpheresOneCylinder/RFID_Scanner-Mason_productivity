@@ -66,16 +66,16 @@ async function getCounts(db) {
 
 async function seedDefaults(db) {
     const defaultUsers = [
-        { username: 'mason1', password: 'password123', mason_id: 'MASON_001' },
-        { username: 'mason2', password: 'password123', mason_id: 'MASON_002' },
-        { username: 'admin', password: 'password123', mason_id: 'MASON_ADMIN' }
+        { username: 'mason1', password: 'password123', mason_id: 'MASON_001', role: 'user' },
+        { username: 'mason2', password: 'password123', mason_id: 'MASON_002', role: 'user' },
+        { username: 'developer', password: 'password123', mason_id: 'DEV', role: 'super_admin' }
     ];
 
     for (const user of defaultUsers) {
         const hash = bcrypt.hashSync(user.password, 10);
-        await run(db, `INSERT OR IGNORE INTO users (username, password, mason_id) VALUES ('${user.username}', '${hash}', '${user.mason_id}')`);
+        await run(db, `INSERT OR IGNORE INTO users (username, password, mason_id, role) VALUES ('${user.username}', '${hash}', '${user.mason_id}', '${user.role}')`);
     }
-    console.log('  ✓ Default users re-seeded (mason1, mason2, admin)');
+    console.log('  ✓ Default users re-seeded (mason1, mason2, developer)');
 }
 
 async function clearPlacements(db) {

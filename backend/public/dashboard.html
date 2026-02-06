@@ -734,6 +734,10 @@
                     <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.31.06-.63.06-.94 0-.31-.02-.63-.06-.94l2.03-1.58a.49.49 0 00.12-.61l-1.92-3.32a.49.49 0 00-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 00-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96a.49.49 0 00-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.04.31-.06.63-.06.94s.02.63.06.94l-2.03 1.58a.49.49 0 00-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6A3.6 3.6 0 1112 8.4a3.6 3.6 0 010 7.2z"/></svg>
                 </button>
                 <div class="settings-dropdown" id="settingsDropdown">
+                    <button id="manageUsersBtn" onclick="openManageUsers()" style="display: none;">
+                        <svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+                        Manage Users
+                    </button>
                     <button onclick="logout()" class="danger">
                         <svg viewBox="0 0 24 24"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg>
                         Sign Out
@@ -845,6 +849,28 @@
                 </div>
                 <div id="map"></div>
             </div>
+            
+            <!-- Manage Users Tab (admin only) -->
+            <div id="manage-users-tab" class="tab-content">
+                <h2 style="margin-bottom: 15px;">User Management</h2>
+                <p id="userMgmtSubtitle" style="color: #636E72; margin-bottom: 20px;"></p>
+                <div style="overflow-x: auto;">
+                    <table id="userManagementTable" style="width: 100%; border-collapse: collapse; font-size: 0.95rem;">
+                        <thead>
+                            <tr style="background: #2D3436; color: white; text-align: left;">
+                                <th style="padding: 12px 16px;">Username</th>
+                                <th style="padding: 12px 16px;">Mason ID</th>
+                                <th style="padding: 12px 16px;">Company</th>
+                                <th style="padding: 12px 16px;">Role</th>
+                                <th style="padding: 12px 16px;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="userManagementBody">
+                            <tr><td colspan="5" style="padding: 20px; text-align: center; color: #999;">Loading users...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
         
         <div class="last-updated">
@@ -876,15 +902,29 @@
         let lastPlacementCount = 0;
         let isUpdating = false;
         
+        // Role awareness
+        const userRole = localStorage.getItem('dashboard_role') || 'user';
+        const isSuperAdmin = localStorage.getItem('dashboard_isSuperAdmin') === 'true';
+        const isCompanyAdmin = localStorage.getItem('dashboard_isCompanyAdmin') === 'true';
+        const isAnyAdmin = isSuperAdmin || isCompanyAdmin;
+        const userCompanyRaw = localStorage.getItem('dashboard_company');
+        const userCompany = userCompanyRaw ? JSON.parse(userCompanyRaw) : null;
+        
         // Redirect to login page if not authenticated
         if (!authToken) {
             window.location.href = '/';
         }
 
-        // Show current user in the user bar
+        // Show current user in the user bar (with role badge)
         const currentUser = localStorage.getItem('dashboard_user');
         if (currentUser) {
-            document.getElementById('currentUserDisplay').textContent = currentUser;
+            let displayText = currentUser;
+            if (isSuperAdmin) {
+                displayText += ' (Super Admin)';
+            } else if (isCompanyAdmin) {
+                displayText += ' (Company Admin)';
+            }
+            document.getElementById('currentUserDisplay').textContent = displayText;
         }
 
         // Authenticated fetch wrapper — attaches Bearer token to all API calls
@@ -910,6 +950,9 @@
             localStorage.removeItem('dashboard_pass');
             localStorage.removeItem('dashboard_masonId');
             localStorage.removeItem('dashboard_isAdmin');
+            localStorage.removeItem('dashboard_role');
+            localStorage.removeItem('dashboard_isSuperAdmin');
+            localStorage.removeItem('dashboard_isCompanyAdmin');
             localStorage.removeItem('dashboard_company');
             window.location.href = '/';
         }
@@ -917,6 +960,12 @@
         // Settings cog dropdown
         function toggleSettingsMenu() {
             document.getElementById('settingsDropdown').classList.toggle('open');
+        }
+
+        // Open Manage Users tab from cog menu
+        function openManageUsers() {
+            document.getElementById('settingsDropdown').classList.remove('open');
+            switchTab('manage-users');
         }
 
         document.addEventListener('click', function(e) {
@@ -967,7 +1016,11 @@
             document.querySelectorAll('.tab-button').forEach(btn => {
                 btn.classList.remove('active');
             });
-            event.target.classList.add('active');
+            // Highlight the matching tab button if one exists (manage-users has no tab button)
+            const matchingBtn = document.querySelector(`.tab-button[onclick*="'${tabName}'"]`);
+            if (matchingBtn) {
+                matchingBtn.classList.add('active');
+            }
             
             // Update tab content
             document.querySelectorAll('.tab-content').forEach(content => {
@@ -1526,9 +1579,110 @@
             loadMapData();
         }
         
+        // ============================================
+        // USER MANAGEMENT (Admin only)
+        // ============================================
+        
+        function populateUserManagement(users) {
+            const tbody = document.getElementById('userManagementBody');
+            if (!tbody) return;
+            
+            const subtitle = document.getElementById('userMgmtSubtitle');
+            if (subtitle) {
+                if (isSuperAdmin) {
+                    subtitle.textContent = 'You are a Super Admin — you can manage all users across all companies.';
+                } else if (isCompanyAdmin && userCompany) {
+                    subtitle.textContent = `You are a Company Admin for ${userCompany.name} — you can manage users in your company.`;
+                }
+            }
+            
+            if (!users || users.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="padding: 20px; text-align: center; color: #999;">No users found.</td></tr>';
+                return;
+            }
+            
+            const currentMason = localStorage.getItem('dashboard_masonId');
+            
+            tbody.innerHTML = users.map(user => {
+                const isCurrentUser = user.masonId === currentMason;
+                const roleBadge = getRoleBadge(user.role);
+                const canChangeRole = !isCurrentUser && (isSuperAdmin || (isCompanyAdmin && user.role !== 'super_admin'));
+                
+                let actionsHtml = '';
+                if (canChangeRole) {
+                    if (user.role === 'user') {
+                        actionsHtml = `<button onclick="changeUserRole('${escapeHtml(user.masonId)}', 'company_admin')" 
+                            style="padding: 6px 12px; background: #0984E3; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.85rem;">
+                            Promote to Admin</button>`;
+                    } else if (user.role === 'company_admin') {
+                        actionsHtml = `<button onclick="changeUserRole('${escapeHtml(user.masonId)}', 'user')" 
+                            style="padding: 6px 12px; background: #636E72; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.85rem;">
+                            Remove Admin</button>`;
+                    }
+                    if (isSuperAdmin && user.role !== 'super_admin') {
+                        actionsHtml += ` <button onclick="changeUserRole('${escapeHtml(user.masonId)}', 'super_admin')" 
+                            style="padding: 6px 12px; background: #CC0000; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.85rem;">
+                            Make Super Admin</button>`;
+                    }
+                } else if (isCurrentUser) {
+                    actionsHtml = '<span style="color: #999; font-style: italic;">You</span>';
+                }
+                
+                return `<tr style="border-bottom: 1px solid #eee;">
+                    <td style="padding: 12px 16px; font-weight: ${isCurrentUser ? '700' : '400'};">${escapeHtml(user.username)}</td>
+                    <td style="padding: 12px 16px; font-family: monospace; color: #636E72;">${escapeHtml(user.masonId)}</td>
+                    <td style="padding: 12px 16px;">${escapeHtml(user.company)}</td>
+                    <td style="padding: 12px 16px;">${roleBadge}</td>
+                    <td style="padding: 12px 16px;">${actionsHtml}</td>
+                </tr>`;
+            }).join('');
+        }
+        
+        function getRoleBadge(role) {
+            switch(role) {
+                case 'super_admin':
+                    return '<span style="background: #CC0000; color: white; padding: 4px 10px; border-radius: 12px; font-size: 0.8rem; font-weight: 600;">Super Admin</span>';
+                case 'company_admin':
+                    return '<span style="background: #0984E3; color: white; padding: 4px 10px; border-radius: 12px; font-size: 0.8rem; font-weight: 600;">Company Admin</span>';
+                default:
+                    return '<span style="background: #DFE6E9; color: #2D3436; padding: 4px 10px; border-radius: 12px; font-size: 0.8rem;">User</span>';
+            }
+        }
+        
+        async function changeUserRole(masonId, newRole) {
+            const roleName = newRole === 'super_admin' ? 'Super Admin' : newRole === 'company_admin' ? 'Company Admin' : 'User';
+            if (!confirm(`Change this user's role to ${roleName}?`)) return;
+            
+            try {
+                const response = await authFetch(`${API_BASE}/api/users/${encodeURIComponent(masonId)}/role`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ role: newRole })
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Reload user list to reflect changes
+                    await loadMasons();
+                    alert(`Role updated to ${roleName} successfully.`);
+                } else {
+                    alert('Error: ' + (data.message || 'Failed to update role'));
+                }
+            } catch (err) {
+                console.error('Error changing role:', err);
+                alert('Failed to update role. Check console for details.');
+            }
+        }
+        
         // Initialize dashboard
         async function initDashboard() {
             try {
+                // Show manage users in cog menu if admin
+                if (isAnyAdmin) {
+                    const manageBtn = document.getElementById('manageUsersBtn');
+                    if (manageBtn) manageBtn.style.display = '';
+                }
+                
                 await loadMasons();
                 await refreshData();
                 await loadPlacements();
@@ -1546,7 +1700,7 @@
             }
         }
         
-        // Load all masons from /api/users endpoint
+        // Load all masons from /api/users endpoint (company-scoped based on role)
         async function loadMasons() {
             try {
                 const response = await authFetch(`${API_BASE}/api/users`);
@@ -1555,14 +1709,33 @@
                 if (data.success && data.users && data.users.length > 0) {
                     allMasons = data.users;
                     const select = document.getElementById('masonSelect');
-                    select.innerHTML = '<option value="">All Users</option>';
+                    const companyLabel = isCompanyAdmin && userCompany ? ` (${escapeHtml(userCompany.name)})` : '';
+                    select.innerHTML = `<option value="">All Users${companyLabel}</option>`;
                     
                     data.users.forEach(user => {
                         const option = document.createElement('option');
                         option.value = user.masonId;
-                        option.textContent = user.username;
+                        const roleTag = user.role === 'company_admin' ? ' ★' : user.role === 'super_admin' ? ' ◆' : '';
+                        option.textContent = user.username + roleTag;
                         select.appendChild(option);
                     });
+                    
+                    // Also populate the modal mason select
+                    const modalSelect = document.getElementById('modalMasonSelect');
+                    if (modalSelect) {
+                        modalSelect.innerHTML = `<option value="ALL">All Users${companyLabel}</option>`;
+                        data.users.forEach(user => {
+                            const option = document.createElement('option');
+                            option.value = user.masonId;
+                            option.textContent = user.username;
+                            modalSelect.appendChild(option);
+                        });
+                    }
+                    
+                    // Populate admin user management table if admin
+                    if (isAnyAdmin) {
+                        populateUserManagement(data.users);
+                    }
                     
                     currentMasonId = '';
                 } else {

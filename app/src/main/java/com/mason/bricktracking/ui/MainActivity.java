@@ -73,7 +73,7 @@ import androidx.core.content.FileProvider;
 
 public class MainActivity extends AppCompatActivity {
     
-    private TextView tvPlacementCounter, tvLastBrick, tvSyncStatus, tvUnsyncedCount, tvLastTimestamp;
+    private TextView tvPlacementCounter, tvSyncStatus, tvUnsyncedCount, tvLastTimestamp;
     private ImageView ivBatteryStatus;
     private Button btnStart, btnStop, btnBack;
     
@@ -224,7 +224,6 @@ public class MainActivity extends AppCompatActivity {
     
     private void initViews() {
         tvPlacementCounter = findViewById(R.id.tv_placement_counter);
-        tvLastBrick = findViewById(R.id.tv_last_brick);
         tvSyncStatus = findViewById(R.id.tv_sync_status);
         tvUnsyncedCount = findViewById(R.id.tv_unsynced_count);
 
@@ -839,28 +838,22 @@ public class MainActivity extends AppCompatActivity {
             // Counter will be updated by server response after sync
             // Don't increment locally - server is authoritative
             
-            // Format timestamp for display
-            java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", java.util.Locale.US);
+            // Format timestamp for display — 12-hour time first, then date
+            java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("h:mm:ss a  MM/dd/yyyy", java.util.Locale.US);
             String formattedTime = sdf.format(new java.util.Date(scanTimestamp));
             
             // Display last brick with full info in admin mode
+            tvLastTimestamp.setText("Last Scan: " + formattedTime);
+
             if (isAdmin) {
-                // Show full EPC in admin mode with GPS accuracy and RSSI
-                tvLastBrick.setText("RFID: " + epc + "\n[#" + eventSeq + " | RSSI: " + avgRssi + " dBm | Power: " + currentScanPowerLevel + "]");
+                // Log full details to console for debugging
                 String gpsText = finalGpsAvailable ? 
                     String.format("%.6f, %.6f ±%.1fm", finalLatitude, finalLongitude, finalAccuracy) : 
                     "NO GPS";
-                tvLastTimestamp.setText("Time: " + formattedTime + "\nGPS: " + gpsText + " | Reads: " + readCount);
-                // Log to console for debugging
                 android.util.Log.d("ADMIN_RFID", String.format("Scanned: %s | Seq: %d | Count: %d | Time: %d | RSSI: %d/%d | Reads: %d | GPS: %s | Power: %d dBm | Status: %s", 
                     epc, eventSeq, placementCounter, scanTimestamp, avgRssi, peakRssi, readCount, 
                     finalGpsAvailable ? String.format("%.6f, %.6f ±%.1fm", finalLatitude, finalLongitude, finalAccuracy) : "MISSING",
                     currentScanPowerLevel, finalDecisionStatus));
-            } else {
-                // Show last 4 chars for regular users
-                String displayEpc = epc.substring(Math.max(0, epc.length() - 4));
-                tvLastBrick.setText("Last Scan: ID..." + displayEpc + " (#" + eventSeq + ")");
-                tvLastTimestamp.setText("Time: " + formattedTime);
             }
             
             // Save to local cache with session, sequence, RSSI data, and decision status

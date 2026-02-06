@@ -31,12 +31,34 @@ public class MasonApp extends Application {
                 .apply();
     }
     
+    public void saveMasonId(String masonId, boolean isAdmin, String role) {
+        sharedPreferences.edit()
+                .putString("mason_id", masonId)
+                .putBoolean("is_admin", isAdmin)
+                .putString("role", role != null ? role : "user")
+                .putBoolean("is_super_admin", "super_admin".equals(role))
+                .putBoolean("is_company_admin", "company_admin".equals(role))
+                .apply();
+    }
+    
     public String getMasonId() {
         return sharedPreferences.getString("mason_id", null);
     }
 
     public boolean isAdmin() {
         return sharedPreferences.getBoolean("is_admin", false);
+    }
+    
+    public String getRole() {
+        return sharedPreferences.getString("role", "user");
+    }
+    
+    public boolean isSuperAdmin() {
+        return sharedPreferences.getBoolean("is_super_admin", false);
+    }
+    
+    public boolean isCompanyAdmin() {
+        return sharedPreferences.getBoolean("is_company_admin", false);
     }
     
     // Auth token management (JWT)
