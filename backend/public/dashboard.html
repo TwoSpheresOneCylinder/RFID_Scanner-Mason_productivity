@@ -853,7 +853,7 @@
             <!-- Manage Users Tab (admin only) -->
             <div id="manage-users-tab" class="tab-content">
                 <h2 style="margin-bottom: 15px;">User Management</h2>
-                <p id="userMgmtSubtitle" style="color: #636E72; margin-bottom: 20px;"></p>
+
                 <div style="overflow-x: auto;">
                     <table id="userManagementTable" style="width: 100%; border-collapse: collapse; font-size: 0.95rem;">
                         <thead>
@@ -1587,14 +1587,7 @@
             const tbody = document.getElementById('userManagementBody');
             if (!tbody) return;
             
-            const subtitle = document.getElementById('userMgmtSubtitle');
-            if (subtitle) {
-                if (isSuperAdmin) {
-                    subtitle.textContent = 'You are a Super Admin — you can manage all users across all companies.';
-                } else if (isCompanyAdmin && userCompany) {
-                    subtitle.textContent = `You are a Company Admin for ${userCompany.name} — you can manage users in your company.`;
-                }
-            }
+
             
             if (!users || users.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="5" style="padding: 20px; text-align: center; color: #999;">No users found.</td></tr>';
