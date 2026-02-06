@@ -20,7 +20,16 @@ function initializeDatabase() {
                 return;
             }
             console.log('✓ Connected to SQLite database at:', DB_PATH);
-            createTables(resolve, reject);
+            
+            // Enable WAL mode for better concurrent read/write performance
+            db.run('PRAGMA journal_mode=WAL', (walErr) => {
+                if (walErr) {
+                    console.error('Warning: Could not enable WAL mode:', walErr.message);
+                } else {
+                    console.log('✓ WAL journal mode enabled');
+                }
+                createTables(resolve, reject);
+            });
         });
     });
     return dbReadyPromise;

@@ -4,6 +4,7 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
+const rateLimit = require('express-rate-limit');
 const { initializeDatabase, dbUsers, dbPlacements, dbSessions, closeDatabase } = require('./db');
 
 const app = express();
@@ -13,6 +14,26 @@ const PORT = 8080;
 app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
+
+// Rate limiting — general API (100 requests per minute per IP)
+const generalLimiter = rateLimit({
+    windowMs: 60 * 1000,
+    max: 100,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { success: false, message: 'Too many requests. Try again later.' }
+});
+app.use('/api/', generalLimiter);
+
+// Strict rate limiting for auth endpoints (10 attempts per 15 minutes per IP)
+const authLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 10,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { success: false, message: 'Too many login attempts. Try again in 15 minutes.' }
+});
+app.use('/api/auth/', authLimiter);
 
 // Serve static files from public directory
 app.use(express.static('public'));
