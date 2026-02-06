@@ -9,15 +9,17 @@
         android:layout_width="32dp"
         android:layout_height="32dp"
         android:background="@drawable/circle_white_bg"
+        android:outlineProvider="background"
+        android:clipToOutline="true"
         android:layout_marginEnd="10dp">
 
         <ImageView
             android:id="@+id/action_bar_user_icon"
-            android:layout_width="22dp"
-            android:layout_height="22dp"
-            android:layout_gravity="center"
+            android:layout_width="match_parent"
+            android:layout_height="38dp"
+            android:layout_gravity="top"
             android:src="@drawable/usericon"
-            android:scaleType="fitCenter"
+            android:scaleType="centerCrop"
             android:contentDescription="User icon" />
     </FrameLayout>
 
