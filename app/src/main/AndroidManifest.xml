@@ -44,6 +44,7 @@
         <activity
             android:name=".ui.LoginActivity"
             android:exported="true"
+            android:windowSoftInputMode="adjustResize"
             android:theme="@style/Theme.MasonBrickTracking.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -55,6 +56,7 @@
         <activity
             android:name=".ui.RegisterActivity"
             android:exported="false"
+            android:windowSoftInputMode="adjustResize"
             android:theme="@style/Theme.MasonBrickTracking.NoActionBar" />
         
         <!-- Connection Activity -->

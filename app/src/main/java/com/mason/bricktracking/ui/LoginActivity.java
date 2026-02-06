@@ -193,7 +193,7 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     private void showSuccess(String message) {
-        tvStatusMessage.setText("\u2705 " + message);
+        tvStatusMessage.setText(message);
         tvStatusMessage.setTextColor(ContextCompat.getColor(this, android.R.color.holo_green_dark));
         tvStatusMessage.setVisibility(View.VISIBLE);
     }

@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login — Efficiency Tracker</title>
+    <link href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400;600;700;800&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -22,95 +23,53 @@
 
         .login-container {
             width: 100%;
-            max-width: 440px;
+            max-width: 420px;
             margin: 20px;
-        }
-
-        /* ── Banner ── */
-        .banner {
-            display: flex;
-            align-items: stretch;
-            border-radius: 12px 12px 0 0;
-            overflow: hidden;
-            min-height: 90px;
-            position: relative;
-        }
-
-        .banner-left {
-            background: #CC0000;
-            color: white;
-            flex: 0 0 65%;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            padding: 20px 50px 20px 24px;
-            position: relative;
-            z-index: 1;
-        }
-
-        .banner-left::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            right: -30px;
-            width: 60px;
-            height: 100%;
-            background: #CC0000;
-            transform: skewX(-17deg);
-            z-index: 1;
-        }
-
-        .banner-left h1 {
-            font-size: 1.35rem;
-            font-weight: 700;
-            letter-spacing: -0.3px;
-        }
-
-        .banner-left p {
-            font-size: 0.85rem;
-            opacity: 0.85;
-            margin-top: 3px;
-        }
-
-        .banner-right {
-            background: white;
-            flex: 0 0 35%;
-            display: flex;
-            align-items: center;
-            justify-content: flex-end;
-            padding: 15px 20px 15px 40px;
-        }
-
-        .banner-right img {
-            max-height: 45px;
-            width: auto;
         }
 
         /* ── Card ── */
         .login-card {
             background: white;
-            padding: 36px 32px 32px;
-            border-radius: 0 0 12px 12px;
+            padding: 40px 32px 32px;
+            border-radius: 12px;
             box-shadow: 0 6px 24px rgba(0, 0, 0, 0.10);
+            text-align: center;
+        }
+
+        .login-card .logo {
+            width: 160px;
+            height: auto;
+            margin-bottom: 24px;
         }
 
         .login-card h2 {
+            font-family: 'Barlow Semi Condensed', sans-serif;
             color: #2D3436;
-            font-size: 1.4rem;
+            font-size: 1.5rem;
+            font-weight: 700;
             margin-bottom: 4px;
-            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .login-card .subtitle {
             color: #636E72;
             font-size: 0.9rem;
-            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        /* ── Divider ── */
+        .divider {
+            height: 3px;
+            background: linear-gradient(90deg, transparent, #CC0000, transparent);
+            border-radius: 2px;
             margin-bottom: 28px;
         }
 
         /* ── Form ── */
         .field {
             margin-bottom: 18px;
+            text-align: left;
         }
 
         .field label {
@@ -121,7 +80,7 @@
             font-size: 0.9rem;
         }
 
-        .field input, .field select {
+        .field input {
             width: 100%;
             padding: 12px 14px;
             border: 2px solid #e0e0e0;
@@ -132,7 +91,7 @@
             background: white;
         }
 
-        .field input:focus, .field select:focus {
+        .field input:focus {
             outline: none;
             border-color: #CC0000;
         }
@@ -208,25 +167,20 @@
             text-align: center;
             color: #636E72;
             font-size: 0.8rem;
-            margin-top: 20px;
+            margin-top: 24px;
         }
+
     </style>
 </head>
 <body>
     <div class="login-container">
-        <div class="banner">
-            <div class="banner-left">
-                <h1>Efficiency Tracker</h1>
-                <p>Performance Dashboard</p>
-            </div>
-            <div class="banner-right">
-                <img src="cr_logo.png" alt="Construction Robotics">
-            </div>
-        </div>
-
         <div class="login-card">
-            <h2>Sign In</h2>
-            <p class="subtitle">Enter your credentials to continue</p>
+            <img src="CR_Vertical_BSTag_4C.jpg" alt="Construction Robotics" class="logo">
+
+            <h2>Efficiency Tracker</h2>
+            <p class="subtitle">Sign in to the Performance Dashboard</p>
+
+            <div class="divider"></div>
 
             <div id="errorMsg" class="error-msg"></div>
 
@@ -244,8 +198,6 @@
                     <div id="btnSpinner" class="spinner"></div>
                 </button>
             </form>
-
-            <p class="footer-text">Mason Brick Tracking System</p>
         </div>
     </div>
 

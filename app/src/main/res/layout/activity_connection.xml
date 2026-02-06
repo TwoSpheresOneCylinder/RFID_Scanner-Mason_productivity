@@ -1,114 +1,168 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:padding="16dp"
-    android:background="@color/white">
-
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/rfid_connection_title"
-        android:textSize="20sp"
-        android:textStyle="bold"
-        android:textColor="@color/cr_charcoal"
-        android:gravity="center"
-        android:layout_marginBottom="24dp"
-        android:background="@drawable/rectangle_bg"
-        android:padding="12dp" />
+    android:fillViewport="true"
+    android:background="#F5F5F5"
+    android:clipToPadding="false">
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:layout_marginBottom="16dp"
-        android:background="@drawable/rectangle_bg"
-        android:padding="12dp">
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:background="@color/white"
+        android:clipChildren="false"
+        android:clipToPadding="false">
 
-        <TextView
-            android:layout_width="0dp"
+        <!-- Banner 1: Dark charcoal header -->
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="@string/connection_status"
-            android:textSize="16sp"
-            android:textColor="@color/cr_charcoal" />
-
-        <TextView
-            android:id="@+id/tv_connection_status"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/disconnected"
-            android:textSize="16sp"
-            android:textStyle="bold"
-            android:textColor="@android:color/holo_red_dark" />
-    </LinearLayout>
-
-    <TextView
-        android:id="@+id/tv_device_name"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/no_device_selected"
-        android:textSize="14sp"
-        android:textColor="@color/cr_charcoal_light"
-        android:layout_marginBottom="24dp"
-        android:background="@drawable/rectangle_bg"
-        android:padding="12dp" />
-
-    <!-- Search & Connect side by side -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:layout_marginBottom="8dp">
-
-        <Button
-            android:id="@+id/btn_search_devices"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="@string/search_devices"
-            android:textSize="16sp"
+            android:orientation="vertical"
+            android:background="@drawable/banner_charcoal"
+            android:elevation="12dp"
             android:padding="16dp"
-            android:background="@drawable/button_bg_green"
-            app:backgroundTint="@null"
-            android:textColor="@color/white"
-            android:layout_marginEnd="4dp" />
+            android:gravity="center">
 
-        <Button
-            android:id="@+id/btn_connect"
-            android:layout_width="0dp"
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/rfid_connection_title"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:fontFamily="@font/barlow_semi_condensed"
+                android:textAllCaps="true"
+                android:letterSpacing="0.03"
+                android:textColor="@color/white"
+                android:gravity="center" />
+        </LinearLayout>
+
+        <!-- Banner 2: White connection status -->
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:background="@drawable/card_elevated"
+            android:elevation="10dp"
+            android:paddingTop="10dp"
+            android:paddingBottom="10dp"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:gravity="center_vertical">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/connection_status"
+                android:textSize="15sp"
+                android:textColor="@color/cr_charcoal_light" />
+
+            <TextView
+                android:id="@+id/tv_connection_status"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/disconnected"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                android:textColor="@color/cr_charcoal" />
+        </LinearLayout>
+
+        <!-- Banner 3: Device info strip - tucks behind red -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/card_elevated"
+            android:elevation="6dp"
+            android:paddingTop="10dp"
+            android:paddingBottom="10dp"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp">
+
+            <TextView
+                android:id="@+id/tv_device_name"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/no_device_selected"
+                android:textSize="14sp"
+                android:textColor="@color/cr_charcoal_light" />
+        </LinearLayout>
+
+        <!-- Content area -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
             android:layout_weight="1"
-            android:text="@string/connect"
-            android:textSize="16sp"
+            android:orientation="vertical"
             android:padding="16dp"
-            android:background="@drawable/button_bg_gray"
-            app:backgroundTint="@null"
-            android:textColor="@color/white"
-            android:layout_marginStart="4dp" />
+            android:elevation="2dp">
+
+            <!-- Button Container -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:background="@drawable/button_container_bg"
+                android:padding="16dp"
+                android:elevation="3dp">
+
+                <!-- Search & Connect side by side -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="8dp">
+
+                    <Button
+                        android:id="@+id/btn_search_devices"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/search_devices"
+                        android:textSize="16sp"
+                        android:padding="16dp"
+                        android:background="@drawable/button_bg_green"
+                        app:backgroundTint="@null"
+                        android:textColor="@color/white"
+                        android:layout_marginEnd="4dp" />
+
+                    <Button
+                        android:id="@+id/btn_connect"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/connect"
+                        android:textSize="16sp"
+                        android:padding="16dp"
+                        android:background="@drawable/button_bg_gray"
+                        app:backgroundTint="@null"
+                        android:textColor="@color/white"
+                        android:layout_marginStart="4dp" />
+                </LinearLayout>
+
+                <ProgressBar
+                    android:id="@+id/progress_bar"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:layout_marginVertical="16dp"
+                    android:visibility="gone" />
+
+                <!-- Continue full width -->
+                <Button
+                    android:id="@+id/btn_continue"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/continue_to_tracking"
+                    android:textSize="16sp"
+                    android:padding="16dp"
+                    android:background="@drawable/button_bg_blue"
+                    app:backgroundTint="@null"
+                    android:textColor="@color/white" />
+            </LinearLayout>
+        </LinearLayout>
+
     </LinearLayout>
-
-    <ProgressBar
-        android:id="@+id/progress_bar"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:layout_marginVertical="16dp"
-        android:visibility="gone" />
-
-    <!-- Continue full width -->
-    <Button
-        android:id="@+id/btn_continue"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/continue_to_tracking"
-        android:textSize="16sp"
-        android:padding="16dp"
-        android:background="@drawable/button_bg_blue"
-        app:backgroundTint="@null"
-        android:textColor="@color/white" />
-
-</LinearLayout>
+</ScrollView>

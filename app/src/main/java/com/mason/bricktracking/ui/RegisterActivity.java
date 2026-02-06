@@ -5,10 +5,10 @@ import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.View;
 import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ProgressBar;
-import android.widget.Spinner;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -33,12 +33,13 @@ public class RegisterActivity extends AppCompatActivity {
 
     private EditText etUsername, etMasonId, etPassword, etConfirmPassword;
     private Button btnRegister;
-    private Spinner spinnerCompany;
+    private AutoCompleteTextView dropdownCompany;
     private TextView tvBackToLogin;
     private TextView tvStatusMessage;
     private ProgressBar progressBar;
 
     private List<Company> companies = new ArrayList<>();
+    private int selectedCompanyIndex = -1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,7 +57,7 @@ public class RegisterActivity extends AppCompatActivity {
         etPassword = findViewById(R.id.et_reg_password);
         etConfirmPassword = findViewById(R.id.et_reg_confirm_password);
         btnRegister = findViewById(R.id.btn_register);
-        spinnerCompany = findViewById(R.id.spinner_company);
+        dropdownCompany = findViewById(R.id.dropdown_company);
         tvBackToLogin = findViewById(R.id.tv_back_to_login);
         tvStatusMessage = findViewById(R.id.tv_status_message);
         progressBar = findViewById(R.id.progress_bar);
@@ -69,13 +70,17 @@ public class RegisterActivity extends AppCompatActivity {
 
     private void loadCompanies() {
         ApiService apiService = ApiClient.getApiService();
-        if (apiService == null) return;
+        if (apiService == null) {
+            showError("Cannot connect to server. Check network settings.");
+            return;
+        }
 
         apiService.getCompanies().enqueue(new Callback<CompaniesResponse>() {
             @Override
             public void onResponse(Call<CompaniesResponse> call, Response<CompaniesResponse> response) {
                 if (response.isSuccessful() && response.body() != null
-                        && response.body().getCompanies() != null) {
+                        && response.body().getCompanies() != null
+                        && !response.body().getCompanies().isEmpty()) {
                     companies = response.body().getCompanies();
                     List<String> names = new ArrayList<>();
                     for (Company c : companies) {
@@ -83,17 +88,21 @@ public class RegisterActivity extends AppCompatActivity {
                     }
                     ArrayAdapter<String> adapter = new ArrayAdapter<>(
                         RegisterActivity.this,
-                        android.R.layout.simple_spinner_item,
+                        android.R.layout.simple_dropdown_item_1line,
                         names
                     );
-                    adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-                    spinnerCompany.setAdapter(adapter);
+                    dropdownCompany.setAdapter(adapter);
+                    dropdownCompany.setOnItemClickListener((parent, view, position, id) -> {
+                        selectedCompanyIndex = position;
+                    });
+                } else {
+                    showError("No companies available. Contact your administrator.");
                 }
             }
 
             @Override
             public void onFailure(Call<CompaniesResponse> call, Throwable t) {
-                // Non-critical — spinner will be empty, server will assign default
+                showError("Cannot load companies. Check your connection.");
             }
         });
     }
@@ -141,6 +150,12 @@ public class RegisterActivity extends AppCompatActivity {
             return;
         }
 
+        if (selectedCompanyIndex < 0 || selectedCompanyIndex >= companies.size()) {
+            showError("Please select a company");
+            dropdownCompany.requestFocus();
+            return;
+        }
+
         // --- API call ---
         setLoading(true);
 
@@ -152,13 +167,7 @@ public class RegisterActivity extends AppCompatActivity {
             return;
         }
 
-        RegisterRequest request;
-        int selectedPos = spinnerCompany.getSelectedItemPosition();
-        if (selectedPos >= 0 && selectedPos < companies.size()) {
-            request = new RegisterRequest(username, password, masonId, companies.get(selectedPos).getId());
-        } else {
-            request = new RegisterRequest(username, password, masonId);
-        }
+        RegisterRequest request = new RegisterRequest(username, password, masonId, companies.get(selectedCompanyIndex).getId());
         Call<RegisterResponse> call = apiService.register(request);
 
         call.enqueue(new Callback<RegisterResponse>() {
@@ -203,7 +212,7 @@ public class RegisterActivity extends AppCompatActivity {
         etMasonId.setEnabled(!loading);
         etPassword.setEnabled(!loading);
         etConfirmPassword.setEnabled(!loading);
-        spinnerCompany.setEnabled(!loading);
+        dropdownCompany.setEnabled(!loading);
     }
 
     private void showError(String message) {
@@ -213,7 +222,7 @@ public class RegisterActivity extends AppCompatActivity {
     }
 
     private void showSuccess(String message) {
-        tvStatusMessage.setText("\u2705 " + message);
+        tvStatusMessage.setText(message);
         tvStatusMessage.setTextColor(ContextCompat.getColor(this, android.R.color.holo_green_dark));
         tvStatusMessage.setVisibility(View.VISIBLE);
     }

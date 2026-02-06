@@ -3,83 +3,94 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/white"
-    android:padding="16dp">
+    android:fillViewport="true"
+    android:background="#F5F5F5"
+    android:clipToPadding="false">
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical">
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:background="@color/white"
+        android:clipChildren="false"
+        android:clipToPadding="false">
 
-        <!-- Header -->
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Account Settings"
-            android:textSize="24sp"
-            android:textStyle="bold"
-            android:textColor="@color/cr_charcoal"
-            android:padding="16dp"
-            android:background="@drawable/rectangle_bg"
-            android:layout_marginBottom="24dp"
-            android:gravity="center"/>
-
-        <!-- Account Information Card -->
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Account Information"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            android:textColor="@color/cr_charcoal"
-            android:layout_marginBottom="8dp"/>
-
+        <!-- Banner 1: Charcoal header -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
+            android:background="@drawable/banner_light_charcoal"
+            android:elevation="12dp"
             android:padding="16dp"
-            android:background="@drawable/rectangle_bg"
-            android:layout_marginBottom="24dp">
+            android:gravity="center">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Account Settings"
+                android:textSize="22sp"
+                android:textStyle="bold"
+                android:fontFamily="@font/barlow_semi_condensed"
+                android:textAllCaps="true"
+                android:letterSpacing="0.03"
+                android:textColor="@color/white"
+                android:gravity="center"/>
+        </LinearLayout>
+
+        <!-- Banner 2: White account info strip -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/card_elevated"
+            android:elevation="10dp"
+            android:paddingTop="10dp"
+            android:paddingBottom="10dp"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp">
 
             <TextView
                 android:id="@+id/tv_account_mason_id"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Mason ID: "
-                android:textSize="16sp"
+                android:textSize="15sp"
                 android:textStyle="bold"
                 android:textColor="@color/cr_charcoal"
-                android:layout_marginBottom="8dp"/>
+                android:layout_marginBottom="4dp"/>
 
             <TextView
                 android:id="@+id/tv_account_username"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Username: "
-                android:textSize="14sp"
-                android:textColor="@color/cr_charcoal_light"
-                android:layout_marginBottom="8dp"/>
-
+                android:textSize="13sp"
+                android:textColor="@color/cr_charcoal_light"/>
         </LinearLayout>
 
-        <!-- Device Information Card -->
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="RFID Scanner"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            android:textColor="@color/cr_charcoal"
-            android:layout_marginBottom="8dp"/>
-
+        <!-- Banner 3: Device info strip - tucks behind red -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="16dp"
-            android:background="@drawable/rectangle_bg"
-            android:layout_marginBottom="24dp">
+            android:background="@drawable/card_elevated"
+            android:elevation="6dp"
+            android:paddingTop="10dp"
+            android:paddingBottom="10dp"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="RFID Scanner"
+                android:textSize="12sp"
+                android:textAllCaps="true"
+                android:letterSpacing="0.05"
+                android:textStyle="bold"
+                android:textColor="@color/cr_charcoal_light"
+                android:layout_marginBottom="4dp"/>
 
             <TextView
                 android:id="@+id/tv_account_device_name"
@@ -88,7 +99,7 @@
                 android:text="Device: "
                 android:textSize="14sp"
                 android:textColor="@color/cr_charcoal"
-                android:layout_marginBottom="8dp"/>
+                android:layout_marginBottom="2dp"/>
 
             <TextView
                 android:id="@+id/tv_account_device_address"
@@ -96,61 +107,24 @@
                 android:layout_height="wrap_content"
                 android:text="Address: "
                 android:textSize="12sp"
-                android:textColor="@color/cr_charcoal_light"
-                android:layout_marginBottom="16dp"/>
-
+                android:textColor="@color/cr_charcoal_light"/>
         </LinearLayout>
 
-        <!-- Preferences Card -->
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Preferences"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            android:textColor="@color/cr_charcoal"
-            android:layout_marginBottom="8dp"/>
-
+        <!-- Content area -->
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="0dp"
+            android:layout_weight="1"
             android:orientation="vertical"
             android:padding="16dp"
-            android:background="@drawable/rectangle_bg"
-            android:layout_marginBottom="24dp">
+            android:elevation="2dp">
 
-            <CheckBox
-                android:id="@+id/cb_save_login"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Remember login credentials"
-                android:textSize="14sp"
-                android:textColor="@color/cr_charcoal"
-                android:layout_marginBottom="12dp"/>
-
-            <CheckBox
-                android:id="@+id/cb_save_device"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Remember last RFID device"
-                android:textSize="14sp"
-                android:textColor="@color/cr_charcoal"/>
-
-        </LinearLayout>
-
-        <!-- Development Tools (only visible in debug builds) -->
-        <LinearLayout
-            android:id="@+id/dev_tools_section"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:visibility="gone">
-
+            <!-- Preferences Card -->
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Development Tools"
-                android:textSize="18sp"
+                android:text="Preferences"
+                android:textSize="16sp"
                 android:textStyle="bold"
                 android:textColor="@color/cr_charcoal"
                 android:layout_marginBottom="8dp"/>
@@ -160,61 +134,114 @@
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
                 android:padding="16dp"
-                android:background="@drawable/rectangle_bg"
-                android:layout_marginBottom="24dp">
+                android:background="@drawable/card_elevated"
+                android:elevation="2dp"
+                android:layout_marginBottom="20dp">
 
-                <Button
-                    android:id="@+id/btn_battery_test"
+                <CheckBox
+                    android:id="@+id/cb_save_login"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="START BATTERY TEST"
-                    android:background="@drawable/button_bg_gray"
+                    android:text="Remember login credentials"
+                    android:textSize="14sp"
+                    android:textColor="@color/cr_charcoal"
+                    android:layout_marginBottom="12dp"/>
+
+                <CheckBox
+                    android:id="@+id/cb_save_device"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Remember last RFID device"
+                    android:textSize="14sp"
+                    android:textColor="@color/cr_charcoal"/>
+            </LinearLayout>
+
+            <!-- Development Tools (only visible in debug builds) -->
+            <LinearLayout
+                android:id="@+id/dev_tools_section"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Development Tools"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/cr_charcoal"
+                    android:layout_marginBottom="8dp"/>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp"
+                    android:background="@drawable/card_elevated"
+                    android:elevation="2dp"
+                    android:layout_marginBottom="20dp">
+
+                    <Button
+                        android:id="@+id/btn_battery_test"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="START BATTERY TEST"
+                        android:background="@drawable/button_bg_gray"
+                        app:backgroundTint="@null"
+                        android:textColor="@color/white"
+                        android:layout_marginBottom="8dp"/>
+
+                    <Button
+                        android:id="@+id/btn_reset_profile"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="RESET PROFILE DATA"
+                        android:background="@drawable/button_bg_red"
+                        app:backgroundTint="@null"
+                        android:textColor="@color/white"/>
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- Button Container -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:background="@drawable/button_container_bg"
+                android:padding="16dp"
+                android:elevation="3dp">
+
+                <Button
+                    android:id="@+id/btn_account_logout"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="LOGOUT"
+                    android:background="@drawable/button_bg_red"
                     app:backgroundTint="@null"
                     android:textColor="@color/white"
                     android:layout_marginBottom="8dp"/>
 
                 <Button
-                    android:id="@+id/btn_reset_profile"
+                    android:id="@+id/btn_account_back"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="RESET PROFILE DATA"
-                    android:background="@drawable/button_bg_red"
+                    android:text="BACK TO SCANNING"
+                    android:background="@drawable/button_bg_blue"
                     app:backgroundTint="@null"
                     android:textColor="@color/white"/>
-
             </LinearLayout>
+
+            <!-- Info Text -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Saved credentials are stored securely on this device only."
+                android:textSize="12sp"
+                android:textColor="@color/cr_charcoal_light"
+                android:gravity="center"
+                android:layout_marginTop="16dp"/>
         </LinearLayout>
-
-        <!-- Action Buttons -->
-        
-        <Button
-            android:id="@+id/btn_account_logout"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="LOGOUT"
-            android:background="@drawable/button_bg_red"
-            app:backgroundTint="@null"
-            android:textColor="@color/white"
-            android:layout_marginBottom="8dp"/>
-
-        <Button
-            android:id="@+id/btn_account_back"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="BACK TO SCANNING"
-            android:background="@drawable/button_bg_blue"
-            app:backgroundTint="@null"
-            android:textColor="@color/white"/>
-
-        <!-- Info Text -->
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Saved credentials are stored securely on this device only."
-            android:textSize="12sp"
-            android:textColor="@color/cr_charcoal_light"
-            android:gravity="center"
-            android:layout_marginTop="16dp"/>
 
     </LinearLayout>
 </ScrollView>

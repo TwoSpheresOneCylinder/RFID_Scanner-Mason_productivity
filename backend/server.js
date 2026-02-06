@@ -195,6 +195,13 @@ app.post('/api/auth/register', async (req, res) => {
             message: 'Username, password, and mason_id are required'
         });
     }
+
+    if (!company_id) {
+        return res.status(400).json({
+            success: false,
+            message: 'Company selection is required'
+        });
+    }
     
     // Validate password strength
     if (password.length < 6) {
@@ -1106,10 +1113,6 @@ async function startServer() {
             console.log('  Debug:');
             console.log('    GET  /api/debug/placements');
             console.log('    GET  /api/debug/users');
-            console.log('\nDefault users:');
-            dbUsers.getAll().then(users => {
-                users.forEach(u => console.log(`  - ${u.username} / password123 → ${u.mason_id}`));
-            });
             console.log('\n[Press Ctrl+C to stop]\n');
         });
     } catch (err) {

@@ -1,160 +1,212 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/main_root_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:padding="16dp"
-    android:background="@color/white">
+    android:fillViewport="true"
+    android:background="#F5F5F5"
+    android:clipToPadding="false">
 
-    <!-- Placement Counter Card -->
     <LinearLayout
+        android:id="@+id/main_root_layout"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
         android:orientation="vertical"
-        android:padding="24dp"
-        android:background="@drawable/rectangle_bg"
-        android:gravity="center"
-        android:layout_marginBottom="16dp">
+        android:background="@color/white"
+        android:clipChildren="false"
+        android:clipToPadding="false">
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Placements"
-            android:textSize="18sp"
-            android:textColor="@color/cr_charcoal"
-            android:layout_marginBottom="8dp"/>
-
-        <TextView
-            android:id="@+id/tv_placement_counter"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="0"
-            android:textSize="48sp"
-            android:textStyle="bold"
-            android:textColor="#FF8C00"/>
-    </LinearLayout>
-
-    <!-- Last Brick Scanned with Timestamp -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="12dp"
-        android:background="@drawable/rectangle_bg"
-        android:layout_marginBottom="12dp">
-        
-        <TextView
-            android:id="@+id/tv_last_brick"
+        <!-- Banner 1: Charcoal header - highest z-order -->
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Last Scan: None"
-            android:textSize="16sp"
-            android:textStyle="bold"
-            android:textColor="@color/cr_charcoal"/>
-        
-        <TextView
-            android:id="@+id/tv_last_timestamp"
+            android:orientation="vertical"
+            android:background="@drawable/banner_light_charcoal"
+            android:elevation="12dp"
+            android:padding="20dp"
+            android:gravity="center">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Placements"
+                android:textSize="14sp"
+                android:fontFamily="@font/barlow_semi_condensed"
+                android:textAllCaps="true"
+                android:letterSpacing="0.08"
+                android:textColor="#BBBBBB"/>
+
+            <TextView
+                android:id="@+id/tv_placement_counter"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="0"
+                android:textSize="52sp"
+                android:textStyle="bold"
+                android:fontFamily="@font/barlow_semi_condensed"
+                android:textColor="@color/white"/>
+        </LinearLayout>
+
+        <!-- Banner 2: White status bar -->
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Timestamp: --"
-            android:textSize="12sp"
-            android:textColor="@color/cr_charcoal_light"
-            android:layout_marginTop="4dp"/>
-    </LinearLayout>
+            android:orientation="horizontal"
+            android:background="@drawable/card_elevated"
+            android:elevation="10dp"
+            android:paddingTop="10dp"
+            android:paddingBottom="10dp"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:gravity="center_vertical">
 
-    <!-- Scanner Battery (horizontal) -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:padding="10dp"
-        android:background="@drawable/rectangle_bg"
-        android:layout_marginBottom="16dp"
-        android:gravity="center_vertical">
-        
-        <TextView
-            android:layout_width="0dp"
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/tv_last_brick"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Last Scan: None"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/cr_charcoal"/>
+
+                <TextView
+                    android:id="@+id/tv_last_timestamp"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Timestamp: --"
+                    android:textSize="11sp"
+                    android:textColor="@color/cr_charcoal_light"
+                    android:layout_marginTop="2dp"/>
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- Banner 3: Status strip - tucks behind red -->
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:background="@drawable/card_elevated"
+            android:elevation="6dp"
+            android:paddingTop="10dp"
+            android:paddingBottom="10dp"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:gravity="center_vertical">
+
+            <!-- Scanner Battery -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Battery"
+                    android:textSize="13sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/cr_charcoal"/>
+
+                <ImageView
+                    android:id="@+id/iv_battery_status"
+                    android:layout_width="28dp"
+                    android:layout_height="28dp"
+                    android:layout_marginStart="6dp"
+                    android:scaleType="fitCenter"
+                    android:contentDescription="Scanner Battery Level" />
+            </LinearLayout>
+
+            <!-- Sync Status -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="horizontal"
+                android:gravity="center_vertical|end">
+
+                <TextView
+                    android:id="@+id/tv_sync_status"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Ready"
+                    android:textSize="13sp"
+                    android:textColor="@color/cr_charcoal"/>
+
+                <TextView
+                    android:id="@+id/tv_unsynced_count"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text=" · 0 unsynced"
+                    android:textSize="12sp"
+                    android:textColor="@color/cr_charcoal_light"/>
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- Content area -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
             android:layout_weight="1"
-            android:text="Scanner Battery"
-            android:textSize="14sp"
-            android:textStyle="bold"
-            android:textColor="@color/cr_charcoal"/>
-        
-        <ImageView
-            android:id="@+id/iv_battery_status"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:scaleType="fitCenter"
-            android:contentDescription="Scanner Battery Level" />
+            android:orientation="vertical"
+            android:padding="16dp"
+            android:elevation="2dp">
+
+            <!-- Button Container -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:background="@drawable/button_container_bg"
+                android:padding="16dp"
+                android:elevation="3dp">
+
+                <!-- Control Buttons -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="8dp">
+
+                    <Button
+                        android:id="@+id/btn_start"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="SCAN"
+                        android:background="@drawable/button_bg_green"
+                        app:backgroundTint="@null"
+                        android:textColor="@color/white"
+                        android:layout_marginEnd="8dp"/>
+
+                    <Button
+                        android:id="@+id/btn_stop"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="STOP"
+                        android:background="@drawable/button_bg_red"
+                        app:backgroundTint="@null"
+                        android:textColor="@color/white"/>
+                </LinearLayout>
+
+                <!-- Back Button -->
+                <Button
+                    android:id="@+id/btn_back"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="← BACK"
+                    android:background="@drawable/button_bg_blue"
+                    app:backgroundTint="@null"
+                    android:textColor="@color/white"/>
+            </LinearLayout>
+        </LinearLayout>
+
     </LinearLayout>
-
-    <!-- Sync Status -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:padding="12dp"
-        android:background="@drawable/rectangle_bg"
-        android:layout_marginBottom="16dp">
-
-        <TextView
-            android:id="@+id/tv_sync_status"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Status: Ready"
-            android:textSize="14sp"
-            android:textColor="@color/cr_charcoal"/>
-
-        <TextView
-            android:id="@+id/tv_unsynced_count"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Unsynced: 0"
-            android:textSize="14sp"
-            android:textColor="@color/cr_charcoal"/>
-    </LinearLayout>
-
-    <!-- Control Buttons -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:layout_marginBottom="8dp">
-
-        <Button
-            android:id="@+id/btn_start"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="SCAN"
-            android:background="@drawable/button_bg_green"
-            app:backgroundTint="@null"
-            android:textColor="@color/white"
-            android:layout_marginEnd="8dp"/>
-
-        <Button
-            android:id="@+id/btn_stop"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="STOP"
-            android:background="@drawable/button_bg_red"
-            app:backgroundTint="@null"
-            android:textColor="@color/white"/>
-    </LinearLayout>
-
-    <!-- Back Button -->
-    <Button
-        android:id="@+id/btn_back"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="← BACK"
-        android:background="@drawable/button_bg_blue"
-        app:backgroundTint="@null"
-        android:textColor="@color/white"/>
-
-</LinearLayout>
+</ScrollView>

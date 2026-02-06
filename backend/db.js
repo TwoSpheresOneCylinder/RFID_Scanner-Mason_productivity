@@ -95,7 +95,6 @@ function createTables(resolve, reject) {
                         console.log('✓ Migrated users table: added company_id column');
                     }
                 });
-                seedDefaultUsers();
                 checkComplete();
             }
         });
@@ -240,8 +239,7 @@ function createTables(resolve, reject) {
 // Seed default companies
 function seedDefaultCompanies() {
     const defaults = [
-        { name: 'Construction Robotics', code: 'CR' },
-        { name: 'Unassigned', code: 'NONE' }
+        { name: 'Construction Robotics', code: 'CR' }
     ];
 
     defaults.forEach(c => {
@@ -257,33 +255,7 @@ function seedDefaultCompanies() {
     });
 }
 
-// Seed default users with hashed passwords
-function seedDefaultUsers() {
-    const defaultUsers = [
-        { username: 'mason1', password: 'password123', mason_id: 'MASON_001', company_code: 'CR' },
-        { username: 'mason2', password: 'password123', mason_id: 'MASON_002', company_code: 'CR' },
-        { username: 'admin', password: 'password123', mason_id: 'MASON_ADMIN', company_code: 'CR' }
-    ];
 
-    defaultUsers.forEach(user => {
-        // Hash password before storing
-        const hashedPassword = bcrypt.hashSync(user.password, 10);
-        
-        // Look up company_id from code
-        db.get(`SELECT id FROM companies WHERE code = ?`, [user.company_code], (err, company) => {
-            const companyId = company ? company.id : null;
-            db.run(
-                `INSERT OR IGNORE INTO users (username, password, mason_id, company_id) VALUES (?, ?, ?, ?)`,
-                [user.username, hashedPassword, user.mason_id, companyId],
-                (err) => {
-                    if (err && !err.message.includes('UNIQUE constraint')) {
-                        console.error(`Error seeding user ${user.username}:`, err.message);
-                    }
-                }
-            );
-        });
-    });
-}
 
 // ============================================
 // DATABASE QUERY FUNCTIONS

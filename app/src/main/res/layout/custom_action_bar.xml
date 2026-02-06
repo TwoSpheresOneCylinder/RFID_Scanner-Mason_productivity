@@ -30,6 +30,9 @@
         android:textColor="@color/white"
         android:textSize="18sp"
         android:textStyle="bold"
+        android:fontFamily="@font/barlow_semi_condensed"
+        android:textAllCaps="true"
+        android:letterSpacing="0.03"
         android:singleLine="true"
         android:ellipsize="end" />
 
