@@ -18,6 +18,7 @@ import android.os.Looper;
 import android.os.PowerManager;
 import android.view.Gravity;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -173,6 +174,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main_brick);
+        BannerAnimHelper.animateBanners((ViewGroup) findViewById(R.id.main_root_layout));
         
         // Keep CPU alive when screen is off so scanning continues
         PowerManager pm = (PowerManager) getSystemService(POWER_SERVICE);

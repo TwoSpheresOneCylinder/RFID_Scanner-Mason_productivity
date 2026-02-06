@@ -8,6 +8,7 @@
     android:clipToPadding="false">
 
     <LinearLayout
+        android:id="@+id/login_root_layout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical"
@@ -22,13 +23,16 @@
             android:orientation="vertical"
             android:background="@color/white"
             android:elevation="12dp"
-            android:padding="24dp"
+            android:paddingLeft="24dp"
+            android:paddingRight="24dp"
+            android:paddingTop="16dp"
+            android:paddingBottom="12dp"
             android:gravity="center">
 
             <ImageView
                 android:layout_width="180dp"
                 android:layout_height="180dp"
-                android:layout_marginBottom="12dp"
+                android:layout_marginBottom="4dp"
                 android:src="@drawable/construction_robotics_logo"
                 android:scaleType="fitCenter"
                 android:contentDescription="@string/app_name" />
@@ -51,9 +55,12 @@
             android:layout_height="0dp"
             android:layout_weight="1"
             android:orientation="vertical"
-            android:padding="24dp"
+            android:paddingLeft="24dp"
+            android:paddingRight="24dp"
+            android:paddingTop="16dp"
+            android:paddingBottom="24dp"
             android:elevation="2dp"
-            android:gravity="center">
+            android:gravity="top|center_horizontal">
 
             <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
