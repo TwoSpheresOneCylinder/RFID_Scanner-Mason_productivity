@@ -26,6 +26,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Paint;
+import android.graphics.Rect;
 import android.graphics.Typeface;
 import android.graphics.Color;
 import android.content.res.AssetManager;
@@ -72,7 +73,7 @@ public class MainActivity extends AppCompatActivity {
     
     private TextView tvPlacementCounter, tvLastBrick, tvSyncStatus, tvUnsyncedCount, tvMasonId, tvLastTimestamp;
     private ImageView ivBatteryStatus;
-    private Button btnStart, btnStop, btnBack, btnBatteryTest;
+    private Button btnStart, btnStop, btnBack;
     
     private RFIDWithUHFBLE uhf;
     private SyncManager syncManager;
@@ -189,9 +190,14 @@ public class MainActivity extends AppCompatActivity {
         loadMasonData();
         setupListeners();
         
-        // Set username in action bar title (after masonId is loaded)
+        // Set custom action bar with user icon
         if (getSupportActionBar() != null && masonId != null) {
-            getSupportActionBar().setTitle(masonId + (isAdmin ? " (Admin)" : ""));
+            getSupportActionBar().setDisplayShowCustomEnabled(true);
+            getSupportActionBar().setDisplayShowTitleEnabled(false);
+            View customBar = getLayoutInflater().inflate(R.layout.custom_action_bar, null);
+            ((TextView) customBar.findViewById(R.id.action_bar_title))
+                .setText(masonId + (isAdmin ? " (Admin)" : ""));
+            getSupportActionBar().setCustomView(customBar);
         }
         
         // Clear old test data in admin mode
@@ -206,16 +212,8 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        // Sync button state with service
-        if (BatteryTestService.isRunning()) {
-            isBatteryLoggingEnabled = true;
-            btnBatteryTest.setText("STOP BATTERY TEST");
-            btnBatteryTest.setBackgroundResource(R.drawable.button_bg_red);
-        } else {
-            isBatteryLoggingEnabled = false;
-            btnBatteryTest.setText("START BATTERY TEST");
-            btnBatteryTest.setBackgroundResource(R.drawable.button_bg_gray);
-        }
+        // Sync battery state
+        isBatteryLoggingEnabled = BatteryTestService.isRunning();
         updateBatteryStatus();
     }
     
@@ -230,9 +228,9 @@ public class MainActivity extends AppCompatActivity {
         btnStart = findViewById(R.id.btn_start);
         btnStop = findViewById(R.id.btn_stop);
         btnBack = findViewById(R.id.btn_back);
-        btnBatteryTest = findViewById(R.id.btn_battery_test);
         
         btnStop.setEnabled(false);
+        btnStop.setBackgroundResource(R.drawable.button_bg_disabled);
         
         mainHandler = new Handler(Looper.getMainLooper());
         scanTimeoutHandler = new Handler(Looper.getMainLooper());
@@ -277,7 +275,7 @@ public class MainActivity extends AppCompatActivity {
                 if (!isScanning) {
                     android.util.Log.w("SCAN_CALLBACK", "⚠ Tag detected but scanning session not active");
                     mainHandler.post(() -> {
-                        tvSyncStatus.setText("Press START to Begin");
+                        tvSyncStatus.setText("Press SCAN to Begin");
                         tvSyncStatus.setTextColor(getResources().getColor(android.R.color.holo_orange_dark));
                     });
                     return;
@@ -454,6 +452,7 @@ public class MainActivity extends AppCompatActivity {
     
     private void fetchInitialCounter() {
         btnStart.setEnabled(false);
+        btnStart.setBackgroundResource(R.drawable.button_bg_disabled);
         tvSyncStatus.setText("Loading...");
         
         syncManager.fetchLastPlacementNumber(masonId, new SyncManager.FetchListener() {
@@ -464,6 +463,7 @@ public class MainActivity extends AppCompatActivity {
                 tvSyncStatus.setText("Ready");
                 tvSyncStatus.setTextColor(getResources().getColor(android.R.color.holo_green_dark));
                 btnStart.setEnabled(true);
+                btnStart.setBackgroundResource(R.drawable.button_bg_green);
             }
             
             @Override
@@ -474,6 +474,7 @@ public class MainActivity extends AppCompatActivity {
                 tvSyncStatus.setText("Offline");
                 tvSyncStatus.setTextColor(getResources().getColor(android.R.color.holo_orange_dark));
                 btnStart.setEnabled(true);
+                btnStart.setBackgroundResource(R.drawable.button_bg_green);
             }
         });
     }
@@ -482,7 +483,6 @@ public class MainActivity extends AppCompatActivity {
         btnStart.setOnClickListener(v -> startScanning());
         btnStop.setOnClickListener(v -> stopScanning());
         btnBack.setOnClickListener(v -> goBack());
-        btnBatteryTest.setOnClickListener(v -> toggleBatteryTest());
     }
     
     @Override
@@ -529,7 +529,9 @@ public class MainActivity extends AppCompatActivity {
         isScanning = true;
         isPulsing = false;
         btnStart.setEnabled(false);
+        btnStart.setBackgroundResource(R.drawable.button_bg_disabled);
         btnStop.setEnabled(true);
+        btnStop.setBackgroundResource(R.drawable.button_bg_red);
         tvSyncStatus.setText("Scanning...");
         tvSyncStatus.setTextColor(getResources().getColor(android.R.color.holo_blue_dark));
         
@@ -572,7 +574,9 @@ public class MainActivity extends AppCompatActivity {
         isScanning = false;
         isPulsing = false;
         btnStart.setEnabled(true);
+        btnStart.setBackgroundResource(R.drawable.button_bg_green);
         btnStop.setEnabled(false);
+        btnStop.setBackgroundResource(R.drawable.button_bg_disabled);
         tvSyncStatus.setText("Stopped");
         tvSyncStatus.setTextColor(getResources().getColor(android.R.color.darker_gray));
         
@@ -935,8 +939,6 @@ public class MainActivity extends AppCompatActivity {
             } else {
                 startService(serviceIntent);
             }
-            btnBatteryTest.setText("STOP BATTERY TEST");
-            btnBatteryTest.setBackgroundResource(R.drawable.button_bg_red);
             Toast.makeText(this, "Battery test running — works with screen off", Toast.LENGTH_LONG).show();
             updateBatteryStatus();
         } else {
@@ -944,8 +946,6 @@ public class MainActivity extends AppCompatActivity {
             isBatteryLoggingEnabled = false;
             Intent serviceIntent = new Intent(this, BatteryTestService.class);
             stopService(serviceIntent);
-            btnBatteryTest.setText("START BATTERY TEST");
-            btnBatteryTest.setBackgroundResource(R.drawable.button_bg_gray);
             updateBatteryStatus();
             Toast.makeText(this, "Battery test stopped. Check BatteryLogs folder.", Toast.LENGTH_LONG).show();
         }
@@ -996,26 +996,49 @@ public class MainActivity extends AppCompatActivity {
                     
                     // Setup paint for text
                     Paint paint = new Paint();
-                    paint.setColor(Color.WHITE);
-                    paint.setTextSize(mutableBitmap.getHeight() * 0.25f); // 25% of icon height
+                    paint.setColor(Color.parseColor("#2D3436"));
                     paint.setTypeface(Typeface.create(Typeface.DEFAULT, Typeface.BOLD));
                     paint.setAntiAlias(true);
                     paint.setTextAlign(Paint.Align.CENTER);
                     
-                    // Draw percentage text in center
-                    String text = battery + "%";
+                    String percentText = battery + "%";
+                    float maxWidth = mutableBitmap.getWidth() * 0.85f;
+                    float maxHeight;
+                    
                     if (isBatteryLoggingEnabled) {
-                        text = battery + "%\n[LOG]";
+                        // Reserve top 70% for percentage, bottom 30% for [LOG]
+                        maxHeight = mutableBitmap.getHeight() * 0.55f;
+                    } else {
+                        maxHeight = mutableBitmap.getHeight() * 0.75f;
                     }
                     
+                    // Auto-fit: find the largest text size that fits
+                    float textSize = maxHeight; // start large
+                    Rect bounds = new Rect();
+                    while (textSize > 1) {
+                        paint.setTextSize(textSize);
+                        paint.getTextBounds(percentText, 0, percentText.length(), bounds);
+                        if (bounds.width() <= maxWidth && bounds.height() <= maxHeight) {
+                            break;
+                        }
+                        textSize -= 1f;
+                    }
+                    
+                    // Draw percentage text centered
                     float x = mutableBitmap.getWidth() / 2f;
-                    float y = (mutableBitmap.getHeight() / 2f) - ((paint.descent() + paint.ascent()) / 2f);
-                    canvas.drawText(battery + "%", x, y, paint);
+                    float y;
+                    if (isBatteryLoggingEnabled) {
+                        // Shift percentage text up to make room for [LOG]
+                        y = (mutableBitmap.getHeight() * 0.45f) - ((paint.descent() + paint.ascent()) / 2f);
+                    } else {
+                        y = (mutableBitmap.getHeight() / 2f) - ((paint.descent() + paint.ascent()) / 2f);
+                    }
+                    canvas.drawText(percentText, x, y, paint);
                     
                     // Draw [LOG] indicator if logging
                     if (isBatteryLoggingEnabled) {
-                        paint.setTextSize(mutableBitmap.getHeight() * 0.12f);
-                        canvas.drawText("[LOG]", x, y + mutableBitmap.getHeight() * 0.2f, paint);
+                        paint.setTextSize(mutableBitmap.getHeight() * 0.18f);
+                        canvas.drawText("[LOG]", x, mutableBitmap.getHeight() * 0.88f, paint);
                     }
                     
                     ivBatteryStatus.setImageBitmap(mutableBitmap);

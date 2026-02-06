@@ -2,10 +2,10 @@
 
     <!-- Base application theme. -->
     <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
-        <!-- Customize your theme here. -->
-        <item name="colorPrimary">@color/colorPrimary</item>
-        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
-        <item name="colorAccent">@color/colorAccent</item>
+        <!-- Construction Robotics theme -->
+        <item name="colorPrimary">@color/cr_red</item>
+        <item name="colorPrimaryDark">@color/cr_red_dark</item>
+        <item name="colorAccent">@color/cr_red_light</item>
     </style>
     <style name="Widget.AppCompat.ProgressBar.Horizontal" parent="Base.Widget.AppCompat.ProgressBar.Horizontal"></style>
 

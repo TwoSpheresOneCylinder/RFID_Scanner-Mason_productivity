@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/gray3"
+    android:background="@color/white"
     android:padding="16dp">
 
     <LinearLayout
@@ -46,6 +47,7 @@
                 android:text="Mason ID: "
                 android:textSize="16sp"
                 android:textStyle="bold"
+                android:textColor="@color/cr_charcoal"
                 android:layout_marginBottom="8dp"/>
 
             <TextView
@@ -128,14 +130,50 @@
 
         </LinearLayout>
 
+        <!-- Development Tools (only visible in debug builds) -->
+        <LinearLayout
+            android:id="@+id/dev_tools_section"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Development Tools"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="8dp"/>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp"
+                android:background="@drawable/rectangle_bg"
+                android:layout_marginBottom="24dp">
+
+                <Button
+                    android:id="@+id/btn_battery_test"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="START BATTERY TEST"
+                    android:background="@drawable/button_bg_gray"
+                    app:backgroundTint="@null"
+                    android:textColor="@color/white"/>
+
+            </LinearLayout>
+        </LinearLayout>
+
         <!-- Action Buttons -->
         <Button
             android:id="@+id/btn_reset_profile"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="RESET PROFILE DATA"
-            android:background="@drawable/button_bg"
-            android:backgroundTint="#FF6B6B"
+            android:background="@drawable/button_bg_red"
+            app:backgroundTint="@null"
             android:textColor="@color/white"
             android:layout_marginBottom="8dp"/>
         
@@ -144,7 +182,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="LOGOUT"
-            android:background="@drawable/button_bg"
+            android:background="@drawable/button_bg_blue"
+            app:backgroundTint="@null"
             android:textColor="@color/white"
             android:layout_marginBottom="8dp"/>
 
@@ -153,7 +192,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="BACK TO SCANNING"
-            android:background="@drawable/button_bg_gray"
+            android:background="@drawable/button_bg_blue"
+            app:backgroundTint="@null"
             android:textColor="@color/white"/>
 
         <!-- Info Text -->

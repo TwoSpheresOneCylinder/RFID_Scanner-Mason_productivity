@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/main_root_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:padding="16dp"
-    android:background="@color/gray3">
+    android:background="@color/white">
 
     <!-- Scanner Battery (horizontal) -->
     <LinearLayout
@@ -24,7 +25,7 @@
             android:text="Scanner Battery"
             android:textSize="14sp"
             android:textStyle="bold"
-            android:textColor="@color/blue1"/>
+            android:textColor="@color/cr_charcoal"/>
         
         <ImageView
             android:id="@+id/iv_battery_status"
@@ -58,9 +59,8 @@
             android:text="0"
             android:textSize="48sp"
             android:textStyle="bold"
-            android:textColor="@color/blue1"/>
+            android:textColor="#FF8C00"/>
         
-        <!-- Mason ID Display -->
         <TextView
             android:id="@+id/tv_mason_id"
             android:layout_width="wrap_content"
@@ -68,7 +68,7 @@
             android:text="Mason: --"
             android:textSize="14sp"
             android:textStyle="bold"
-            android:textColor="@color/blue1"
+            android:textColor="@color/cr_charcoal"
             android:layout_marginTop="8dp"/>
     </LinearLayout>
 
@@ -138,6 +138,7 @@
             android:layout_weight="1"
             android:text="SCAN"
             android:background="@drawable/button_bg_green"
+            app:backgroundTint="@null"
             android:textColor="@color/white"
             android:layout_marginEnd="8dp"/>
 
@@ -148,18 +149,9 @@
             android:layout_weight="1"
             android:text="STOP"
             android:background="@drawable/button_bg_red"
+            app:backgroundTint="@null"
             android:textColor="@color/white"/>
     </LinearLayout>
-
-    <!-- Battery Test Button -->
-    <Button
-        android:id="@+id/btn_battery_test"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="START BATTERY TEST"
-        android:background="@drawable/button_bg_gray"
-        android:textColor="@color/white"
-        android:layout_marginBottom="8dp"/>
 
     <!-- Back Button -->
     <Button
@@ -167,17 +159,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="← BACK"
-        android:background="@drawable/button_bg_gray"
+        android:background="@drawable/button_bg_blue"
+        app:backgroundTint="@null"
         android:textColor="@color/white"/>
-
-    <!-- Instructions -->
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Press SCAN to start pulsing scanner.\nScanner pulses ON/OFF until tag is found or you press STOP."
-        android:textSize="12sp"
-        android:textColor="@color/gray2"
-        android:gravity="center"
-        android:layout_marginTop="16dp"/>
 
 </LinearLayout>

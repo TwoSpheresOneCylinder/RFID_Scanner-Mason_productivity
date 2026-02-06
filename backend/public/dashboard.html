@@ -17,7 +17,7 @@
         
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #f5f5f5;
             min-height: 100vh;
             padding: 20px;
         }
@@ -31,12 +31,14 @@
             text-align: center;
             color: white;
             margin-bottom: 30px;
+            background: #CC0000;
+            padding: 25px;
+            border-radius: 10px;
         }
         
         .header h1 {
             font-size: 2.5rem;
             margin-bottom: 10px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
         }
         
         .header p {
@@ -84,8 +86,8 @@
         
         .tab-button.active {
             background: white;
-            color: #667eea;
-            border-bottom-color: #667eea;
+            color: #2D3436;
+            border-bottom-color: #CC0000;
         }
         
         .tab-content {
@@ -115,7 +117,7 @@
         
         .map-controls button {
             padding: 8px 16px;
-            background: #667eea;
+            background: #2D3436;
             color: white;
             border: none;
             border-radius: 5px;
@@ -124,7 +126,7 @@
         }
         
         .map-controls button:hover {
-            background: #5568d3;
+            background: #444;
         }
         
         .controls label {
@@ -134,7 +136,7 @@
         
         .controls select, .controls button {
             padding: 10px 15px;
-            border: 2px solid #667eea;
+            border: 2px solid #ddd;
             border-radius: 5px;
             font-size: 1rem;
             cursor: pointer;
@@ -146,13 +148,14 @@
         }
         
         .controls button {
-            background: #667eea;
+            background: #2D3436;
             color: white;
             font-weight: 600;
+            border-color: #2D3436;
         }
         
         .controls button:hover {
-            background: #5568d3;
+            background: #444;
             transform: translateY(-2px);
             box-shadow: 0 4px 8px rgba(0,0,0,0.2);
         }
@@ -179,7 +182,7 @@
         }
         
         .stat-card h3 {
-            color: #667eea;
+            color: #555;
             font-size: 0.9rem;
             text-transform: uppercase;
             margin-bottom: 10px;
@@ -219,7 +222,7 @@
         
         .last-updated {
             text-align: center;
-            color: white;
+            color: #888;
             font-size: 0.9rem;
             opacity: 0.8;
             margin-top: 20px;
@@ -227,7 +230,7 @@
         
         .loading {
             text-align: center;
-            color: white;
+            color: #666;
             font-size: 1.2rem;
             padding: 50px;
         }
@@ -301,7 +304,7 @@
         }
         
         .modal-content h2 {
-            color: #667eea;
+            color: #2D3436;
             margin-bottom: 20px;
             text-align: center;
         }
@@ -330,7 +333,7 @@
         
         .modal-field select:focus {
             outline: none;
-            border-color: #667eea;
+            border-color: #2D3436;
         }
         
         .modal-buttons {
@@ -351,13 +354,13 @@
         }
         
         .modal-buttons .btn-generate {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #2D3436;
             color: white;
         }
         
         .modal-buttons .btn-generate:hover {
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
         }
         
         .modal-buttons .btn-cancel {
@@ -413,7 +416,7 @@
         
         .placement-timestamp {
             font-family: 'Courier New', monospace;
-            color: #667eea;
+            color: #333;
             font-weight: bold;
             font-size: 0.95rem;
         }
@@ -425,7 +428,7 @@
         }
         
         .placement-mason {
-            color: #764ba2;
+            color: #2D3436;
             font-weight: 600;
         }
         
@@ -457,7 +460,7 @@
                     <option value="">Loading...</option>
                 </select>
             </div>
-            <button onclick="showReportModal()" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); margin-left: auto;">
+            <button onclick="showReportModal()" style="background: #2D3436; margin-left: auto;">
                 Performance Review
             </button>
         </div>
@@ -584,9 +587,9 @@
         
         // Color palette for different masons
         const masonColors = [
-            '#667eea', '#764ba2', '#f093fb', '#4facfe', 
-            '#43e97b', '#fa709a', '#fee140', '#30cfd0',
-            '#a8edea', '#fed6e3', '#c471f5', '#12c2e9'
+            '#FF0000', '#0066FF', '#00CC00', '#FF6600', 
+            '#AA00FF', '#00CCCC', '#FF00AA', '#CCCC00',
+            '#FF3399', '#00FF66', '#3366FF', '#FF9900'
         ];
         
         // Helper function to get consistent color for a mason
@@ -595,15 +598,15 @@
             if (allMasonIds) {
                 const sortedMasons = [...allMasonIds].sort();
                 const index = sortedMasons.indexOf(masonId);
-                return index >= 0 ? masonColors[index % masonColors.length] : '#667eea';
+                return index >= 0 ? masonColors[index % masonColors.length] : '#CC0000';
             }
             // Fallback: get unique masons from allPlacements
             if (allPlacements.length > 0) {
                 const sortedMasons = [...new Set(allPlacements.map(p => p.mason_id || p.masonId))].sort();
                 const index = sortedMasons.indexOf(masonId);
-                return index >= 0 ? masonColors[index % masonColors.length] : '#667eea';
+                return index >= 0 ? masonColors[index % masonColors.length] : '#CC0000';
             }
-            return '#667eea';
+            return '#CC0000';
         }
         
         // Clustering parameters
@@ -641,7 +644,7 @@
             
             // Add OpenStreetMap tiles (free, no API key needed)
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '© OpenStreetMap contributors',
+                attribution: 'Â© OpenStreetMap contributors',
                 maxZoom: 19
             }).addTo(map);
             
@@ -673,14 +676,14 @@
         // Calculate distance between two GPS points in meters
         function calculateDistance(lat1, lon1, lat2, lon2) {
             const R = 6371e3; // Earth radius in meters
-            const φ1 = lat1 * Math.PI / 180;
-            const φ2 = lat2 * Math.PI / 180;
-            const Δφ = (lat2 - lat1) * Math.PI / 180;
-            const Δλ = (lon2 - lon1) * Math.PI / 180;
+            const phi1 = lat1 * Math.PI / 180;
+            const phi2 = lat2 * Math.PI / 180;
+            const dPhi = (lat2 - lat1) * Math.PI / 180;
+            const dLambda = (lon2 - lon1) * Math.PI / 180;
             
-            const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
-                    Math.cos(φ1) * Math.cos(φ2) *
-                    Math.sin(Δλ/2) * Math.sin(Δλ/2);
+            const a = Math.sin(dPhi/2) * Math.sin(dPhi/2) +
+                    Math.cos(phi1) * Math.cos(phi2) *
+                    Math.sin(dLambda/2) * Math.sin(dLambda/2);
             const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
             
             return R * c;
@@ -688,16 +691,16 @@
         
         // Calculate bearing (direction) between two GPS points in degrees (0-360)
         function calculateBearing(lat1, lon1, lat2, lon2) {
-            const φ1 = lat1 * Math.PI / 180;
-            const φ2 = lat2 * Math.PI / 180;
-            const Δλ = (lon2 - lon1) * Math.PI / 180;
+            const phi1 = lat1 * Math.PI / 180;
+            const phi2 = lat2 * Math.PI / 180;
+            const dLambda = (lon2 - lon1) * Math.PI / 180;
             
-            const y = Math.sin(Δλ) * Math.cos(φ2);
-            const x = Math.cos(φ1) * Math.sin(φ2) -
-                    Math.sin(φ1) * Math.cos(φ2) * Math.cos(Δλ);
-            const θ = Math.atan2(y, x);
+            const y = Math.sin(dLambda) * Math.cos(phi2);
+            const x = Math.cos(phi1) * Math.sin(phi2) -
+                    Math.sin(phi1) * Math.cos(phi2) * Math.cos(dLambda);
+            const theta = Math.atan2(y, x);
             
-            return (θ * 180 / Math.PI + 360) % 360; // Normalize to 0-360
+            return (theta * 180 / Math.PI + 360) % 360; // Normalize to 0-360
         }
         
         // Calculate the smallest angle difference between two bearings
@@ -736,7 +739,7 @@
         function splitByDirection(cluster) {
             if (cluster.length < 3) return [cluster]; // Too small to determine direction
             
-            const MAX_BEARING_DIFF = 45; // degrees - walls with >45° difference are separate
+            const MAX_BEARING_DIFF = 45; // degrees - walls with >45 degrees difference are separate
             const subclusters = [];
             const used = new Set();
             
@@ -897,7 +900,7 @@
                     const masonIndex = uniqueMasons.indexOf(masonId);
                     const color = masonIndex >= 0 ? 
                         masonColors[masonIndex % masonColors.length] : 
-                        '#667eea';
+                        '#CC0000';
                     
                     const icon = L.divIcon({
                         className: 'custom-marker',
@@ -915,7 +918,7 @@
                             <p style="margin: 5px 0;"><strong>Time:</strong> ${new Date(p.timestamp).toLocaleString()}</p>
                             <p style="margin: 5px 0;"><strong>Location:</strong> ${p.latitude.toFixed(6)}, ${p.longitude.toFixed(6)}</p>
                             <p style="margin: 5px 0;"><strong>Altitude:</strong> ${altitude.toFixed(1)} m</p>
-                            <p style="margin: 5px 0;"><strong>Accuracy:</strong> ±${p.accuracy ? p.accuracy.toFixed(1) : '999'} m</p>
+                            <p style="margin: 5px 0;"><strong>Accuracy:</strong> Â±${p.accuracy ? p.accuracy.toFixed(1) : '999'} m</p>
                             ${p.rssiAvg ? `<p style="margin: 5px 0;"><strong>RSSI:</strong> ${p.rssiAvg} dBm</p>` : ''}
                         </div>
                     `;
@@ -930,15 +933,15 @@
                 const points = wall.placements.map(p => [p.latitude, p.longitude]);
                 
                 // Determine wall color
-                let wallColor = '#667eea';
+                let wallColor = '#CC0000';
                 if (wall.isMultiMason) {
-                    wallColor = '#9333ea'; // Purple for collaboration
+                    wallColor = '#2D3436'; // Charcoal for collaboration
                 } else {
                     const masonId = wall.masons[0];
                     const masonIndex = uniqueMasons.indexOf(masonId);
                     wallColor = masonIndex >= 0 ? 
                         masonColors[masonIndex % masonColors.length] : 
-                        '#667eea';
+                        '#CC0000';
                 }
                 
                 // Create polygon for wall
@@ -966,7 +969,7 @@
                 const masonBreakdown = wall.masons.map(m => {
                     const count = wall.brickCounts[m];
                     const masonIndex = uniqueMasons.indexOf(m);
-                    const masonColor = masonIndex >= 0 ? masonColors[masonIndex % masonColors.length] : '#667eea';
+                    const masonColor = masonIndex >= 0 ? masonColors[masonIndex % masonColors.length] : '#CC0000';
                     return `<span style="color: ${masonColor}; font-weight: bold;">${m}</span>: ${count} brick${count > 1 ? 's' : ''}`;
                 }).join('<br>');
                 
@@ -975,7 +978,7 @@
                     <div style="padding: 8px; font-family: Arial;">
                         <h4 style="margin: 0 0 5px 0; color: ${wallColor};">
                             ${wall.id}
-                            ${wall.isMultiMason ? '<span style="font-size: 0.7em; background: #9333ea; color: white; padding: 2px 4px; border-radius: 2px; margin-left: 3px;">TEAM</span>' : ''}
+                            ${wall.isMultiMason ? '<span style="font-size: 0.7em; background: #2D3436; color: white; padding: 2px 4px; border-radius: 2px; margin-left: 3px;">TEAM</span>' : ''}
                         </h4>
                         <p style="margin: 3px 0; font-size: 0.9em;"><strong>Bricks:</strong> ${wall.placements.length}</p>
                         <p style="margin: 3px 0; font-size: 0.9em;"><strong>Masons:</strong> ${wall.masons.join(', ')}</p>
@@ -994,7 +997,7 @@
                     <div style="max-width: 300px; font-family: Arial;">
                         <h3 style="margin: 0 0 10px 0; color: ${wallColor};">
                             ${wall.id}
-                            ${wall.isMultiMason ? '<span style="font-size: 0.7em; background: #9333ea; color: white; padding: 2px 6px; border-radius: 3px; margin-left: 5px;">COLLABORATIVE WALL</span>' : ''}
+                            ${wall.isMultiMason ? '<span style="font-size: 0.7em; background: #2D3436; color: white; padding: 2px 6px; border-radius: 3px; margin-left: 5px;">COLLABORATIVE WALL</span>' : ''}
                         </h3>
                         
                         <p style="margin: 5px 0;"><strong>Total Bricks:</strong> ${wall.placements.length}</p>
@@ -1013,7 +1016,7 @@
                                 <div style="font-size: 0.85em; margin: 3px 0; padding: 2px 0;">
                                     <strong>${idx + 1}.</strong> 
                                     RFID: ${p.rfidTag || p.brickNumber} | 
-                                    Mason: <span style="color: ${masonColors[uniqueMasons.indexOf(p.mason_id || p.masonId) % masonColors.length] || '#667eea'};">${p.mason_id || p.masonId}</span> | 
+                                    Mason: <span style="color: ${masonColors[uniqueMasons.indexOf(p.mason_id || p.masonId) % masonColors.length] || '#CC0000'};">${p.mason_id || p.masonId}</span> | 
                                     ${new Date(p.timestamp).toLocaleTimeString()}
                                 </div>
                             `).join('')}
@@ -1046,7 +1049,7 @@
                     const masonIndex = uniqueMasons.indexOf(masonId);
                     const dotColor = masonIndex >= 0 ? 
                         masonColors[masonIndex % masonColors.length] : 
-                        '#667eea';
+                        '#CC0000';
                     
                     const dotIcon = L.divIcon({
                         className: 'custom-marker',
@@ -1064,7 +1067,7 @@
                             <p style="margin: 5px 0;"><strong>Time:</strong> ${new Date(p.timestamp).toLocaleString()}</p>
                             <p style="margin: 5px 0;"><strong>Location:</strong> ${p.latitude.toFixed(6)}, ${p.longitude.toFixed(6)}</p>
                             <p style="margin: 5px 0;"><strong>Altitude:</strong> ${altitude.toFixed(1)} m</p>
-                            <p style="margin: 5px 0;"><strong>Accuracy:</strong> ±${p.accuracy ? p.accuracy.toFixed(1) : '999'} m</p>
+                            <p style="margin: 5px 0;"><strong>Accuracy:</strong> Â±${p.accuracy ? p.accuracy.toFixed(1) : '999'} m</p>
                             ${p.rssiAvg ? `<p style="margin: 5px 0;"><strong>RSSI:</strong> ${p.rssiAvg} dBm</p>` : ''}
                         </div>
                     `;
@@ -1114,7 +1117,7 @@
                 const masonIndex = uniqueMasons.indexOf(masonId);
                 const color = masonIndex >= 0 ? 
                     masonColors[masonIndex % masonColors.length] : 
-                    '#667eea';
+                    '#CC0000';
                 
                 // Create custom icon
                 const icon = L.divIcon({
@@ -1136,7 +1139,7 @@
                         <p style="margin: 5px 0;"><strong>Time:</strong> ${new Date(placement.timestamp).toLocaleString()}</p>
                         <p style="margin: 5px 0;"><strong>Location:</strong> ${placement.latitude.toFixed(6)}, ${placement.longitude.toFixed(6)}</p>
                         <p style="margin: 5px 0;"><strong>Altitude:</strong> ${altitude.toFixed(1)} m</p>
-                        <p style="margin: 5px 0;"><strong>Accuracy:</strong> ±${placement.accuracy ? placement.accuracy.toFixed(1) : '999'} m</p>
+                        <p style="margin: 5px 0;"><strong>Accuracy:</strong> Â±${placement.accuracy ? placement.accuracy.toFixed(1) : '999'} m</p>
                         ${placement.rssiAvg ? `<p style="margin: 5px 0;"><strong>RSSI:</strong> ${placement.rssiAvg} dBm</p>` : ''}
                     </div>
                 `;
@@ -1600,14 +1603,14 @@
                 liveChart.data.datasets = [{
                     label: 'Cumulative Placements',
                     data: dataPoints,
-                    borderColor: '#667eea',
-                    backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                    borderColor: '#CC0000',
+                    backgroundColor: 'rgba(204, 0, 0, 0.1)',
                     borderWidth: 3,
                     fill: true,
                     tension: 0.4,
                     pointRadius: 3,
                     pointHoverRadius: 6,
-                    pointBackgroundColor: '#667eea',
+                    pointBackgroundColor: '#CC0000',
                     pointBorderColor: '#fff',
                     pointBorderWidth: 2
                 }];
@@ -1624,14 +1627,14 @@
                     datasets: [{
                         label: 'Cumulative Placements',
                         data: dataPoints,
-                        borderColor: '#667eea',
-                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        borderColor: '#CC0000',
+                        backgroundColor: 'rgba(204, 0, 0, 0.1)',
                         borderWidth: 3,
                         fill: true,
                         tension: 0.4,
                         pointRadius: 3,
                         pointHoverRadius: 6,
-                        pointBackgroundColor: '#667eea',
+                        pointBackgroundColor: '#CC0000',
                         pointBorderColor: '#fff',
                         pointBorderWidth: 2
                     }]
@@ -1822,7 +1825,7 @@
             
             // Get the mason's color (use first data point's masonId)
             const selectedMasonId = dailyData.length > 0 ? dailyData[0].masonId : null;
-            const masonColor = selectedMasonId ? getMasonColor(selectedMasonId) : '#764ba2';
+            const masonColor = selectedMasonId ? getMasonColor(selectedMasonId) : '#2D3436';
             
             // Update existing chart instead of destroying it
             if (dailyChart) {

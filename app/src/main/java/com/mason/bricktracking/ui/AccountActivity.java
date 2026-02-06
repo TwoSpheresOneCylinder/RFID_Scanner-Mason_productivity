@@ -1,6 +1,7 @@
 package com.mason.bricktracking.ui;
 
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.Gravity;
 import android.view.View;
@@ -14,12 +15,14 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SwitchCompat;
 
+import com.mason.bricktracking.BuildConfig;
 import com.mason.bricktracking.MasonApp;
 import com.mason.bricktracking.R;
 import com.mason.bricktracking.data.local.AppDatabase;
 import com.mason.bricktracking.data.remote.ApiClient;
 import com.mason.bricktracking.data.remote.ApiService;
 import com.mason.bricktracking.data.remote.ResetResponse;
+import com.mason.bricktracking.service.BatteryTestService;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -29,13 +32,26 @@ public class AccountActivity extends AppCompatActivity {
     
     private TextView tvMasonId, tvUsername, tvDeviceName, tvDeviceAddress;
     private CheckBox cbSaveLogin, cbSaveDevice;
-    private Button btnResetProfile, btnLogout, btnBack;
+    private Button btnResetProfile, btnLogout, btnBack, btnBatteryTest;
+    private LinearLayout devToolsSection;
     private ApiService apiService;
     
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_account);
+        
+        // Set custom action bar with user icon
+        String masonId = MasonApp.getInstance().getMasonId();
+        boolean isAdmin = MasonApp.getInstance().isAdmin();
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayShowCustomEnabled(true);
+            getSupportActionBar().setDisplayShowTitleEnabled(false);
+            View customBar = getLayoutInflater().inflate(R.layout.custom_action_bar, null);
+            ((TextView) customBar.findViewById(R.id.action_bar_title))
+                .setText(masonId + (isAdmin ? " (Admin)" : ""));
+            getSupportActionBar().setCustomView(customBar);
+        }
         
         initViews();
         loadAccountData();
@@ -52,6 +68,13 @@ public class AccountActivity extends AppCompatActivity {
         btnResetProfile = findViewById(R.id.btn_reset_profile);
         btnLogout = findViewById(R.id.btn_account_logout);
         btnBack = findViewById(R.id.btn_account_back);
+        btnBatteryTest = findViewById(R.id.btn_battery_test);
+        devToolsSection = findViewById(R.id.dev_tools_section);
+        
+        // Only show development tools in debug builds
+        if (BuildConfig.DEBUG) {
+            devToolsSection.setVisibility(View.VISIBLE);
+        }
         
         apiService = ApiClient.getApiService();
     }
@@ -101,6 +124,42 @@ public class AccountActivity extends AppCompatActivity {
         btnResetProfile.setOnClickListener(v -> showResetConfirmation());
         btnLogout.setOnClickListener(v -> showLogoutConfirmation());
         btnBack.setOnClickListener(v -> finish());
+        
+        // Battery test button (dev only)
+        if (btnBatteryTest != null) {
+            btnBatteryTest.setOnClickListener(v -> toggleBatteryTest());
+            syncBatteryTestButton();
+        }
+    }
+    
+    private void syncBatteryTestButton() {
+        if (btnBatteryTest == null) return;
+        if (BatteryTestService.isRunning()) {
+            btnBatteryTest.setText("STOP BATTERY TEST");
+            btnBatteryTest.setBackgroundResource(R.drawable.button_bg_red);
+        } else {
+            btnBatteryTest.setText("START BATTERY TEST");
+            btnBatteryTest.setBackgroundResource(R.drawable.button_bg_gray);
+        }
+    }
+    
+    private void toggleBatteryTest() {
+        String masonId = MasonApp.getInstance().getMasonId();
+        if (!BatteryTestService.isRunning()) {
+            Intent serviceIntent = new Intent(this, BatteryTestService.class);
+            serviceIntent.putExtra("masonId", masonId);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                startForegroundService(serviceIntent);
+            } else {
+                startService(serviceIntent);
+            }
+            Toast.makeText(this, "Battery test running \u2014 works with screen off", Toast.LENGTH_LONG).show();
+        } else {
+            Intent serviceIntent = new Intent(this, BatteryTestService.class);
+            stopService(serviceIntent);
+            Toast.makeText(this, "Battery test stopped. Check BatteryLogs folder.", Toast.LENGTH_LONG).show();
+        }
+        syncBatteryTestButton();
     }
     
     private void showLogoutConfirmation() {

@@ -45,11 +45,16 @@ public class ConnectionActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_connection);
         
-        // Set username in action bar title
+        // Set custom action bar with user icon
         String masonId = MasonApp.getInstance().getMasonId();
         boolean isAdmin = MasonApp.getInstance().isAdmin();
         if (getSupportActionBar() != null) {
-            getSupportActionBar().setTitle(masonId + (isAdmin ? " (Admin)" : ""));
+            getSupportActionBar().setDisplayShowCustomEnabled(true);
+            getSupportActionBar().setDisplayShowTitleEnabled(false);
+            View customBar = getLayoutInflater().inflate(R.layout.custom_action_bar, null);
+            ((TextView) customBar.findViewById(R.id.action_bar_title))
+                .setText(masonId + (isAdmin ? " (Admin)" : ""));
+            getSupportActionBar().setCustomView(customBar);
         }
         
         initViews();
@@ -290,6 +295,7 @@ public class ConnectionActivity extends AppCompatActivity {
         progressBar.setVisibility(View.GONE);
         updateConnectionStatus("Connected", true);
         btnConnect.setText("Disconnect");
+        btnConnect.setBackgroundResource(R.drawable.button_bg_red);
         btnConnect.setEnabled(true);
         btnContinue.setEnabled(true);
         
@@ -316,6 +322,7 @@ public class ConnectionActivity extends AppCompatActivity {
         progressBar.setVisibility(View.GONE);
         updateConnectionStatus("Disconnected", false);
         btnConnect.setText("Connect");
+        btnConnect.setBackgroundResource(R.drawable.button_bg_gray);
         btnConnect.setEnabled(selectedDevice != null);
         btnContinue.setEnabled(false);
     }

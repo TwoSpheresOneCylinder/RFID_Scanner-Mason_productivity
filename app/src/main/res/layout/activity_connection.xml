@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:padding="16dp"
-    android:background="@color/gray3">
+    android:background="@color/white">
 
     <TextView
         android:layout_width="wrap_content"
@@ -61,7 +62,8 @@
         android:textSize="16sp"
         android:padding="16dp"
         android:layout_marginBottom="12dp"
-        android:background="@drawable/button_bg"
+        android:background="@drawable/button_bg_green"
+        app:backgroundTint="@null"
         android:textColor="@color/white" />
 
     <Button
@@ -73,6 +75,7 @@
         android:padding="16dp"
         android:layout_marginBottom="12dp"
         android:background="@drawable/button_bg_gray"
+        app:backgroundTint="@null"
         android:textColor="@color/white" />
 
     <ProgressBar
@@ -162,7 +165,8 @@
         android:text="@string/continue_to_tracking"
         android:textSize="16sp"
         android:padding="16dp"
-        android:background="@drawable/button_bg"
+        android:background="@drawable/button_bg_blue"
+        app:backgroundTint="@null"
         android:textColor="@color/white" />
 
 </LinearLayout>

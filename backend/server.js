@@ -1,4 +1,5 @@
 const express = require('express');
+const path = require('path');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const { initializeDatabase, dbUsers, dbPlacements, closeDatabase } = require('./db');
@@ -700,31 +701,9 @@ app.get('/api/health', (req, res) => {
     });
 });
 
-// Root endpoint
+// Root endpoint - serve dashboard
 app.get('/', (req, res) => {
-    res.json({
-        message: 'Mason Brick Tracking API',
-        version: '1.0.0',
-        endpoints: {
-            auth: {
-                login: 'POST /api/auth/login'
-            },
-            placements: {
-                sync: 'POST /api/placements/sync',
-                getLast: 'GET /api/placements/last?masonId=XXX',
-                getByMason: 'GET /api/placements/mason/:masonId',
-                getRecent: 'GET /api/placements/recent?limit=50'
-            },
-            statistics: {
-                overall: 'GET /api/statistics'
-            },
-            debug: {
-                allPlacements: 'GET /api/debug/placements',
-                users: 'GET /api/debug/users',
-                health: 'GET /api/health'
-            }
-        }
-    });
+    res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
 });
 
 // GET placement history for a specific brick

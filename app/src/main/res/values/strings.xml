@@ -32,7 +32,7 @@
     <string name="stop_scanning">STOP SCANNING</string>
     <string name="manual_sync">Manual Sync</string>
     <string name="logout">Logout</string>
-    <string name="scanning_instructions">Press START to begin tracking brick placements.\nData will auto-sync every 10 placements.</string>
+    <string name="scanning_instructions">Press SCAN to begin tracking brick placements.\nData will auto-sync every 10 placements.</string>
     
     <!-- Common -->
     <string name="ok">OK</string>
