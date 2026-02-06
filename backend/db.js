@@ -29,7 +29,7 @@ function initializeDatabase() {
 // Create database tables
 function createTables(resolve, reject) {
     let tablesCreated = 0;
-    const totalTables = 3;
+    const totalTables = 4;
     
     const checkComplete = () => {
         tablesCreated++;

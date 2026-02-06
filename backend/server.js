@@ -19,7 +19,10 @@ app.use(express.static('public'));
 app.use((req, res, next) => {
     console.log(`[${new Date().toISOString()}] ${req.method} ${req.path}`);
     if (req.body && Object.keys(req.body).length > 0) {
-        console.log('Body:', JSON.stringify(req.body, null, 2));
+        // Redact sensitive fields before logging
+        const sanitized = { ...req.body };
+        if (sanitized.password) sanitized.password = '***REDACTED***';
+        console.log('Body:', JSON.stringify(sanitized, null, 2));
     }
     next();
 });

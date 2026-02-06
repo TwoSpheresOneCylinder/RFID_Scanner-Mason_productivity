@@ -615,6 +615,17 @@
     </div>
     
     <script>
+        // XSS sanitization helper
+        function escapeHtml(str) {
+            if (str === null || str === undefined) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
         const API_BASE = window.location.origin;
         let liveChart = null;
         let dailyChart = null;
@@ -1386,12 +1397,12 @@
                 // Display both brickNumber and rfidTag if available
                 const brickInfo = placement.brickNumber || placement.rfidTag || 'Unknown';
                 const displayText = brickInfo.length > 20 ? 
-                    `RFID: ${brickInfo.substring(brickInfo.length - 8)}` : 
-                    `Brick #${brickInfo}`;
+                    `RFID: ${escapeHtml(brickInfo.substring(brickInfo.length - 8))}` : 
+                    `Brick #${escapeHtml(brickInfo)}`;
                 
                 // Show session + sequence for true ordering (use snake_case column names)
                 const sessionInfo = (placement.build_session_id || placement.buildSessionId) && (placement.event_seq || placement.eventSeq)
-                    ? `<div style="font-size:0.8rem;color:#888;">Session: ${(placement.build_session_id || placement.buildSessionId).substring(0, 8)}... | Seq: ${placement.event_seq || placement.eventSeq}</div>` 
+                    ? `<div style="font-size:0.8rem;color:#888;">Session: ${escapeHtml((placement.build_session_id || placement.buildSessionId).substring(0, 8))}... | Seq: ${placement.event_seq || placement.eventSeq}</div>` 
                     : '';
                 
                 // Show RSSI and decision status (use snake_case column names)
@@ -1400,13 +1411,13 @@
                 const readsInWindow = placement.reads_in_window || placement.readsInWindow;
                 const decisionStatus = placement.decision_status || placement.decisionStatus;
                 const rssiInfo = rssiAvg ? `<div style="font-size:0.8rem;color:#4ade80;">RSSI: ${rssiAvg}dBm (peak ${rssiPeak}, reads ${readsInWindow})</div>` : '';
-                const statusInfo = decisionStatus && decisionStatus !== 'ACCEPTED' ? `<div style="font-size:0.8rem;color:#ff6b6b;font-weight:600;">[${decisionStatus}]</div>` : '';
+                const statusInfo = decisionStatus && decisionStatus !== 'ACCEPTED' ? `<div style="font-size:0.8rem;color:#ff6b6b;font-weight:600;">[${escapeHtml(decisionStatus)}]</div>` : '';
                 
                 return `
                     <div class="placement-item${newClass}">
-                        <div class="placement-timestamp">${timeString}</div>
+                        <div class="placement-timestamp">${escapeHtml(timeString)}</div>
                         <div class="placement-details">
-                            <div class="placement-mason">${placement.mason_id || placement.masonId || 'Unknown'}</div>
+                            <div class="placement-mason">${escapeHtml(placement.mason_id || placement.masonId || 'Unknown')}</div>
                             <div class="placement-brick">${displayText}</div>
                             ${sessionInfo}
                             ${rssiInfo}

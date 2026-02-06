@@ -117,6 +117,19 @@ function generatePerformanceReport(masonId, startDate, endDate) {
 function generateHTMLReport(reportData) {
     const { masonId, generatedAt, period, summary, dailyBreakdown, improvements, hourlyPattern } = reportData;
     
+    // XSS sanitization helper
+    function escapeHtml(str) {
+        if (str === null || str === undefined) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
+    
+    const safeMasonId = escapeHtml(masonId);
+    
     // Calculate period label
     const startDate = new Date(period.start);
     const endDate = new Date(period.end);
@@ -165,7 +178,7 @@ function generateHTMLReport(reportData) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Performance Review - ${masonId}</title>
+    <title>Performance Review - ${safeMasonId}</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         @media print {
@@ -318,7 +331,7 @@ function generateHTMLReport(reportData) {
         <div class="header">
             <h1>Performance Review</h1>
             <div class="meta">
-                <strong>${masonId}</strong><br>
+                <strong>${safeMasonId}</strong><br>
                 <strong>Period:</strong> ${periodLabel} (${startDate.toLocaleDateString()} - ${endDate.toLocaleDateString()})<br>
                 Generated: ${new Date(generatedAt).toLocaleString()}
             </div>
@@ -512,7 +525,7 @@ function generateHTMLReport(reportData) {
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = 'Performance_Review_${masonId}_${new Date().toISOString().split('T')[0]}.html';
+            a.download = 'Performance_Review_${safeMasonId}_${new Date().toISOString().split('T')[0]}.html';
             a.click();
             URL.revokeObjectURL(url);
         }
