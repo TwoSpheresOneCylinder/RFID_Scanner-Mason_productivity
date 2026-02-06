@@ -53,7 +53,7 @@ public class ConnectionActivity extends AppCompatActivity {
             getSupportActionBar().setDisplayShowTitleEnabled(false);
             View customBar = getLayoutInflater().inflate(R.layout.custom_action_bar, null);
             ((TextView) customBar.findViewById(R.id.action_bar_title))
-                .setText(masonId + (isAdmin ? " (Admin)" : ""));
+                .setText(masonId);
             getSupportActionBar().setCustomView(customBar);
         }
         

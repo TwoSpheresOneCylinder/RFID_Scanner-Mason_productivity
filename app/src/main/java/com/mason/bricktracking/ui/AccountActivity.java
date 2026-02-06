@@ -51,7 +51,7 @@ public class AccountActivity extends AppCompatActivity {
             getSupportActionBar().setDisplayShowTitleEnabled(false);
             View customBar = getLayoutInflater().inflate(R.layout.custom_action_bar, null);
             ((TextView) customBar.findViewById(R.id.action_bar_title))
-                .setText(masonId + (isAdmin ? " (Admin)" : ""));
+                .setText(masonId);
             getSupportActionBar().setCustomView(customBar);
         }
         
@@ -89,8 +89,7 @@ public class AccountActivity extends AppCompatActivity {
         String username = app.getSavedUsername();
         boolean isAdmin = app.isAdmin();
         
-        tvMasonId.setText("Mason ID: " + (masonId != null ? masonId : "Not logged in") + 
-            (isAdmin ? " (ADMIN)" : ""));
+        tvMasonId.setText("Mason ID: " + (masonId != null ? masonId : "Not logged in"));
         tvUsername.setText("Username: " + (username != null ? username : "N/A"));
         
         // Load device info
