@@ -18,6 +18,7 @@
 
         <!-- Banner 1: Charcoal header - highest z-order -->
         <LinearLayout
+            android:id="@+id/banner_placements"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
@@ -183,7 +184,7 @@
                     android:id="@+id/btn_back"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="← BACK"
+                    android:text="BACK"
                     android:background="@drawable/button_bg_blue"
                     app:backgroundTint="@null"
                     android:textColor="@color/white"/>

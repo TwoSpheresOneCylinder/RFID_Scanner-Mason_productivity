@@ -223,7 +223,7 @@
                     android:id="@+id/btn_account_back"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="BACK TO SCANNING"
+                    android:text="BACK"
                     android:background="@drawable/button_bg_blue"
                     app:backgroundTint="@null"
                     android:textColor="@color/white"/>

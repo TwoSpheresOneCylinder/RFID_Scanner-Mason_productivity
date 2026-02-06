@@ -175,7 +175,35 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main_brick);
         BannerAnimHelper.animateBanners((ViewGroup) findViewById(R.id.main_root_layout));
-        
+
+        // Grid-paper background on Placements banner
+        final View bannerPlacements = findViewById(R.id.banner_placements);
+        bannerPlacements.post(() -> {
+            int w = bannerPlacements.getWidth();
+            int h = bannerPlacements.getHeight();
+            if (w > 0 && h > 0) {
+                Bitmap bmp = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
+                Canvas c = new Canvas(bmp);
+                // Base color
+                c.drawColor(0xFF4A5568);
+                Paint gridPaint = new Paint();
+                gridPaint.setColor(0x18FFFFFF);
+                gridPaint.setStrokeWidth(1f);
+                gridPaint.setAntiAlias(false);
+                int step = (int) (20 * getResources().getDisplayMetrics().density);
+                // Vertical lines
+                for (int x = step; x < w; x += step) {
+                    c.drawLine(x, 0, x, h, gridPaint);
+                }
+                // Horizontal lines
+                for (int y = step; y < h; y += step) {
+                    c.drawLine(0, y, w, y, gridPaint);
+                }
+                bannerPlacements.setBackground(
+                    new android.graphics.drawable.BitmapDrawable(getResources(), bmp));
+            }
+        });
+
         // Keep CPU alive when screen is off so scanning continues
         PowerManager pm = (PowerManager) getSystemService(POWER_SERVICE);
         wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "MasonBrickTracking::Scanning");
