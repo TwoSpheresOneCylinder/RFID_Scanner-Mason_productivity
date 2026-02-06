@@ -18,6 +18,7 @@
             android:text="Account Settings"
             android:textSize="24sp"
             android:textStyle="bold"
+            android:textColor="@color/cr_charcoal"
             android:padding="16dp"
             android:background="@drawable/rectangle_bg"
             android:layout_marginBottom="24dp"
@@ -30,6 +31,7 @@
             android:text="Account Information"
             android:textSize="18sp"
             android:textStyle="bold"
+            android:textColor="@color/cr_charcoal"
             android:layout_marginBottom="8dp"/>
 
         <LinearLayout
@@ -56,6 +58,7 @@
                 android:layout_height="wrap_content"
                 android:text="Username: "
                 android:textSize="14sp"
+                android:textColor="@color/cr_charcoal_light"
                 android:layout_marginBottom="8dp"/>
 
         </LinearLayout>
@@ -67,6 +70,7 @@
             android:text="RFID Scanner"
             android:textSize="18sp"
             android:textStyle="bold"
+            android:textColor="@color/cr_charcoal"
             android:layout_marginBottom="8dp"/>
 
         <LinearLayout
@@ -83,6 +87,7 @@
                 android:layout_height="wrap_content"
                 android:text="Device: "
                 android:textSize="14sp"
+                android:textColor="@color/cr_charcoal"
                 android:layout_marginBottom="8dp"/>
 
             <TextView
@@ -91,7 +96,7 @@
                 android:layout_height="wrap_content"
                 android:text="Address: "
                 android:textSize="12sp"
-                android:textColor="@color/gray2"
+                android:textColor="@color/cr_charcoal_light"
                 android:layout_marginBottom="16dp"/>
 
         </LinearLayout>
@@ -103,6 +108,7 @@
             android:text="Preferences"
             android:textSize="18sp"
             android:textStyle="bold"
+            android:textColor="@color/cr_charcoal"
             android:layout_marginBottom="8dp"/>
 
         <LinearLayout
@@ -119,6 +125,7 @@
                 android:layout_height="wrap_content"
                 android:text="Remember login credentials"
                 android:textSize="14sp"
+                android:textColor="@color/cr_charcoal"
                 android:layout_marginBottom="12dp"/>
 
             <CheckBox
@@ -126,7 +133,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Remember last RFID device"
-                android:textSize="14sp"/>
+                android:textSize="14sp"
+                android:textColor="@color/cr_charcoal"/>
 
         </LinearLayout>
 
@@ -144,6 +152,7 @@
                 android:text="Development Tools"
                 android:textSize="18sp"
                 android:textStyle="bold"
+                android:textColor="@color/cr_charcoal"
                 android:layout_marginBottom="8dp"/>
 
             <LinearLayout
@@ -202,7 +211,7 @@
             android:layout_height="wrap_content"
             android:text="Saved credentials are stored securely on this device only."
             android:textSize="12sp"
-            android:textColor="@color/gray2"
+            android:textColor="@color/cr_charcoal_light"
             android:gravity="center"
             android:layout_marginTop="16dp"/>
 

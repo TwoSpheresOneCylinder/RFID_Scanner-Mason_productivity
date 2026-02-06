@@ -18,21 +18,21 @@
     <string name="disconnected">Disconnected</string>
     <string name="connecting">Connecting...</string>
     <string name="no_device_selected">No device selected</string>
-    <string name="search_devices">Search Devices</string>
+    <string name="search_devices">Search</string>
     <string name="connect">Connect</string>
     <string name="disconnect">Disconnect</string>
     <string name="continue_to_tracking">Continue to Tracking</string>
     <string name="paired_devices">Paired Devices</string>
     
     <!-- Main Activity -->
-    <string name="brick_placements">Brick Placements</string>
+    <string name="brick_placements">Placements</string>
     <string name="last_brick_none">Last Brick: None</string>
     <string name="status_ready">Ready</string>
     <string name="start_scanning">START SCANNING</string>
     <string name="stop_scanning">STOP SCANNING</string>
     <string name="manual_sync">Manual Sync</string>
     <string name="logout">Logout</string>
-    <string name="scanning_instructions">Press SCAN to begin tracking brick placements.\nData will auto-sync every 10 placements.</string>
+    <string name="scanning_instructions">Press SCAN to begin tracking placements.\nData will auto-sync every 10 placements.</string>
     
     <!-- Common -->
     <string name="ok">OK</string>

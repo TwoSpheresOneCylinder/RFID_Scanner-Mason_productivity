@@ -11,7 +11,6 @@ import android.view.Gravity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ProgressBar;
-import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -31,10 +30,9 @@ public class ConnectionActivity extends AppCompatActivity {
     private static final int REQUEST_BLUETOOTH_PERMISSIONS = 2;
     private static final int REQUEST_SELECT_DEVICE = 3;
     
-    private TextView tvConnectionStatus, tvDeviceName, tvPowerLevel;
+    private TextView tvConnectionStatus, tvDeviceName;
     private Button btnSearchDevices, btnConnect, btnContinue;
     private ProgressBar progressBar;
-    private SeekBar seekBarPower;
     
     private RFIDWithUHFBLE uhf;
     private BluetoothAdapter bluetoothAdapter;
@@ -69,21 +67,13 @@ public class ConnectionActivity extends AppCompatActivity {
     private void initViews() {
         tvConnectionStatus = findViewById(R.id.tv_connection_status);
         tvDeviceName = findViewById(R.id.tv_device_name);
-        tvPowerLevel = findViewById(R.id.tv_power_level);
         btnSearchDevices = findViewById(R.id.btn_search_devices);
         btnConnect = findViewById(R.id.btn_connect);
         btnContinue = findViewById(R.id.btn_continue);
         progressBar = findViewById(R.id.progress_bar);
-        seekBarPower = findViewById(R.id.seekbar_power);
         
         btnConnect.setEnabled(false);
         btnContinue.setEnabled(false);
-        
-        // Load and display saved power level (convert dBm to feet: 5-33 dBm -> 1-6 ft)
-        int powerLevel = MasonApp.getInstance().getRfidPowerLevel();
-        int rangeFeet = convertPowerToFeet(powerLevel);
-        seekBarPower.setProgress(rangeFeet - 1); // SeekBar 0-5 maps to range 1-6 feet
-        updateRangeDisplay(rangeFeet);
     }
     
     private void initRFID() {
@@ -173,36 +163,6 @@ public class ConnectionActivity extends AppCompatActivity {
             }
         });
         btnContinue.setOnClickListener(v -> navigateToMain());
-        
-        // SeekBar listener for range adjustment (works in feet, stores as dBm)
-        seekBarPower.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                if (fromUser) {
-                    // SeekBar progress 0-5 maps to range 1-6 feet
-                    int rangeFeet = progress + 1;
-                    updateRangeDisplay(rangeFeet);
-                }
-            }
-            
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-                // Not needed
-            }
-            
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-                // Save the new power level when user finishes adjusting
-                int rangeFeet = seekBar.getProgress() + 1;
-                int powerDbm = convertFeetToPower(rangeFeet);
-                MasonApp.getInstance().setRfidPowerLevel(powerDbm);
-                
-                // Apply power level if connected
-                if (uhf.getConnectStatus() == ConnectionStatus.CONNECTED) {
-                    uhf.setPower(powerDbm);
-                }
-            }
-        });
     }
     
     @Override
@@ -298,13 +258,14 @@ public class ConnectionActivity extends AppCompatActivity {
         btnConnect.setBackgroundResource(R.drawable.button_bg_red);
         btnConnect.setEnabled(true);
         btnContinue.setEnabled(true);
+        btnSearchDevices.setEnabled(false);
+        btnSearchDevices.setBackgroundResource(R.drawable.button_bg_disabled);
         
-        // Apply saved power level
+        // Apply saved power level (always full power by default)
         int powerLevel = MasonApp.getInstance().getRfidPowerLevel();
-        int rangeFeet = convertPowerToFeet(powerLevel);
         boolean powerSet = uhf.setPower(powerLevel);
         if (powerSet) {
-            android.util.Log.d("CONNECTION", "Power level set to " + powerLevel + " dBm (~" + rangeFeet + " feet)");
+            android.util.Log.d("CONNECTION", "Power level set to " + powerLevel + " dBm");
         } else {
             android.util.Log.e("CONNECTION", "Failed to set power level");
         }
@@ -325,6 +286,8 @@ public class ConnectionActivity extends AppCompatActivity {
         btnConnect.setBackgroundResource(R.drawable.button_bg_gray);
         btnConnect.setEnabled(selectedDevice != null);
         btnContinue.setEnabled(false);
+        btnSearchDevices.setEnabled(true);
+        btnSearchDevices.setBackgroundResource(R.drawable.button_bg_green);
     }
     
     private void updateConnectionStatus(String status, boolean connected) {
@@ -332,27 +295,6 @@ public class ConnectionActivity extends AppCompatActivity {
         tvConnectionStatus.setTextColor(getResources().getColor(
             connected ? android.R.color.holo_green_dark : android.R.color.holo_red_dark
         ));
-    }
-    
-    private void updateRangeDisplay(int rangeFeet) {
-        tvPowerLevel.setText(String.format("Current: ~%d feet", rangeFeet));
-    }
-    
-    // Convert power level (5-33 dBm) to range in feet (1-6 ft)
-    // Linear mapping: 5dBm=1ft, 33dBm=6ft
-    private int convertPowerToFeet(int powerDbm) {
-        // Clamp to valid range
-        powerDbm = Math.max(5, Math.min(33, powerDbm));
-        // Linear interpolation: (powerDbm - 5) / 28 * 5 + 1
-        return Math.round((powerDbm - 5) / 28.0f * 5.0f) + 1;
-    }
-    
-    // Convert range in feet (1-6 ft) to power level (5-33 dBm)
-    private int convertFeetToPower(int rangeFeet) {
-        // Clamp to valid range
-        rangeFeet = Math.max(1, Math.min(6, rangeFeet));
-        // Linear interpolation: (rangeFeet - 1) / 5 * 28 + 5
-        return Math.round((rangeFeet - 1) / 5.0f * 28.0f) + 5;
     }
     
     private void navigateToMain() {

@@ -13,6 +13,7 @@
         android:text="@string/rfid_connection_title"
         android:textSize="20sp"
         android:textStyle="bold"
+        android:textColor="@color/cr_charcoal"
         android:layout_marginBottom="24dp"
         android:background="@drawable/rectangle_bg"
         android:padding="12dp" />
@@ -31,7 +32,8 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="@string/connection_status"
-            android:textSize="16sp" />
+            android:textSize="16sp"
+            android:textColor="@color/cr_charcoal" />
 
         <TextView
             android:id="@+id/tv_connection_status"
@@ -49,34 +51,44 @@
         android:layout_height="wrap_content"
         android:text="@string/no_device_selected"
         android:textSize="14sp"
-        android:textColor="@color/gray2"
+        android:textColor="@color/cr_charcoal_light"
         android:layout_marginBottom="24dp"
         android:background="@drawable/rectangle_bg"
         android:padding="12dp" />
 
-    <Button
-        android:id="@+id/btn_search_devices"
+    <!-- Search & Connect side by side -->
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/search_devices"
-        android:textSize="16sp"
-        android:padding="16dp"
-        android:layout_marginBottom="12dp"
-        android:background="@drawable/button_bg_green"
-        app:backgroundTint="@null"
-        android:textColor="@color/white" />
+        android:orientation="horizontal"
+        android:layout_marginBottom="8dp">
 
-    <Button
-        android:id="@+id/btn_connect"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/connect"
-        android:textSize="16sp"
-        android:padding="16dp"
-        android:layout_marginBottom="12dp"
-        android:background="@drawable/button_bg_gray"
-        app:backgroundTint="@null"
-        android:textColor="@color/white" />
+        <Button
+            android:id="@+id/btn_search_devices"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/search_devices"
+            android:textSize="16sp"
+            android:padding="16dp"
+            android:background="@drawable/button_bg_green"
+            app:backgroundTint="@null"
+            android:textColor="@color/white"
+            android:layout_marginEnd="4dp" />
+
+        <Button
+            android:id="@+id/btn_connect"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/connect"
+            android:textSize="16sp"
+            android:padding="16dp"
+            android:background="@drawable/button_bg_gray"
+            app:backgroundTint="@null"
+            android:textColor="@color/white"
+            android:layout_marginStart="4dp" />
+    </LinearLayout>
 
     <ProgressBar
         android:id="@+id/progress_bar"
@@ -86,78 +98,7 @@
         android:layout_marginVertical="16dp"
         android:visibility="gone" />
 
-    <!-- Scanner Range Control -->
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Scanner Range"
-        android:textSize="16sp"
-        android:textStyle="bold"
-        android:layout_marginTop="16dp"
-        android:layout_marginBottom="8dp"
-        android:background="@drawable/rectangle_bg"
-        android:padding="12dp" />
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="16dp"
-        android:background="@drawable/rectangle_bg"
-        android:layout_marginBottom="24dp">
-
-        <TextView
-            android:id="@+id/tv_power_level"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Current: 6 feet (Full Power)"
-            android:textSize="14sp"
-            android:textColor="@color/gray2"
-            android:layout_marginBottom="8dp"/>
-
-        <SeekBar
-            android:id="@+id/seekbar_power"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:max="5"
-            android:progress="5"
-            android:layout_marginBottom="8dp"/>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="1 ft"
-                android:textSize="10sp"
-                android:textColor="@color/gray2"/>
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="3 ft"
-                android:textSize="10sp"
-                android:textColor="@color/gray2"
-                android:gravity="center"/>
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="6 ft"
-                android:textSize="10sp"
-                android:textColor="@color/gray2"
-                android:gravity="end"/>
-
-        </LinearLayout>
-
-    </LinearLayout>
-
+    <!-- Continue full width -->
     <Button
         android:id="@+id/btn_continue"
         android:layout_width="match_parent"

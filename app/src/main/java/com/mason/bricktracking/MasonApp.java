@@ -90,7 +90,7 @@ public class MasonApp extends Application {
     }
     
     public boolean isSaveLoginEnabled() {
-        return sharedPreferences.getBoolean("save_login_enabled", false);
+        return sharedPreferences.getBoolean("save_login_enabled", true);
     }
     
     public void setSaveDeviceEnabled(boolean enabled) {

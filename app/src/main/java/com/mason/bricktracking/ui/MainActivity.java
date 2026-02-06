@@ -857,7 +857,7 @@ public class MainActivity extends AppCompatActivity {
             } else {
                 // Show last 4 chars for regular users
                 String displayEpc = epc.substring(Math.max(0, epc.length() - 4));
-                tvLastBrick.setText("Last Brick: ID..." + displayEpc + " (#" + eventSeq + ")");
+                tvLastBrick.setText("Last Scan: ID..." + displayEpc + " (#" + eventSeq + ")");
                 tvLastTimestamp.setText("Time: " + formattedTime);
             }
             

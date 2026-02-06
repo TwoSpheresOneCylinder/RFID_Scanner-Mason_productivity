@@ -10,7 +10,7 @@
         android:layout_width="48dp"
         android:layout_height="wrap_content"
         tool:text="@string/index"
-        android:textColor="#333333"/>
+        android:textColor="@color/cr_charcoal"/>
 
     <TextView
         android:id="@+id/tvEPC"
@@ -18,7 +18,7 @@
         android:layout_height="wrap_content"
         android:layout_weight="5"
         tool:text="@string/tagEPC"
-        android:textColor="#333333"/>
+        android:textColor="@color/cr_charcoal"/>
 
     <TextView
         android:id="@+id/tvCount"
@@ -26,5 +26,5 @@
         android:layout_height="wrap_content"
         android:layout_weight="1"
         tool:text="@string/count"
-        android:textColor="#333333" />
+        android:textColor="@color/cr_charcoal" />
 </LinearLayout>

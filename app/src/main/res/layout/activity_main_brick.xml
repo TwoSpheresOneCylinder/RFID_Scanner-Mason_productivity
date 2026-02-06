@@ -48,8 +48,9 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Brick Placements"
+            android:text="Placements"
             android:textSize="18sp"
+            android:textColor="@color/cr_charcoal"
             android:layout_marginBottom="8dp"/>
 
         <TextView
@@ -75,9 +76,10 @@
             android:id="@+id/tv_last_brick"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Last Brick: None"
+            android:text="Last Scan: None"
             android:textSize="16sp"
-            android:textStyle="bold"/>
+            android:textStyle="bold"
+            android:textColor="@color/cr_charcoal"/>
         
         <TextView
             android:id="@+id/tv_last_timestamp"
@@ -85,7 +87,7 @@
             android:layout_height="wrap_content"
             android:text="Timestamp: --"
             android:textSize="12sp"
-            android:textColor="@color/gray2"
+            android:textColor="@color/cr_charcoal_light"
             android:layout_marginTop="4dp"/>
     </LinearLayout>
 
@@ -104,14 +106,16 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="Status: Ready"
-            android:textSize="14sp"/>
+            android:textSize="14sp"
+            android:textColor="@color/cr_charcoal"/>
 
         <TextView
             android:id="@+id/tv_unsynced_count"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Unsynced: 0"
-            android:textSize="14sp"/>
+            android:textSize="14sp"
+            android:textColor="@color/cr_charcoal"/>
     </LinearLayout>
 
     <!-- Control Buttons -->
