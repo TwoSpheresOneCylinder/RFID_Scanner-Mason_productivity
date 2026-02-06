@@ -4,9 +4,11 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.View;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ProgressBar;
+import android.widget.Spinner;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -15,8 +17,13 @@ import androidx.core.content.ContextCompat;
 import com.mason.bricktracking.R;
 import com.mason.bricktracking.data.remote.ApiClient;
 import com.mason.bricktracking.data.remote.ApiService;
+import com.mason.bricktracking.data.remote.CompaniesResponse;
+import com.mason.bricktracking.data.remote.Company;
 import com.mason.bricktracking.data.remote.RegisterRequest;
 import com.mason.bricktracking.data.remote.RegisterResponse;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -26,9 +33,12 @@ public class RegisterActivity extends AppCompatActivity {
 
     private EditText etUsername, etMasonId, etPassword, etConfirmPassword;
     private Button btnRegister;
+    private Spinner spinnerCompany;
     private TextView tvBackToLogin;
     private TextView tvStatusMessage;
     private ProgressBar progressBar;
+
+    private List<Company> companies = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,6 +47,7 @@ public class RegisterActivity extends AppCompatActivity {
 
         initViews();
         setupListeners();
+        loadCompanies();
     }
 
     private void initViews() {
@@ -45,6 +56,7 @@ public class RegisterActivity extends AppCompatActivity {
         etPassword = findViewById(R.id.et_reg_password);
         etConfirmPassword = findViewById(R.id.et_reg_confirm_password);
         btnRegister = findViewById(R.id.btn_register);
+        spinnerCompany = findViewById(R.id.spinner_company);
         tvBackToLogin = findViewById(R.id.tv_back_to_login);
         tvStatusMessage = findViewById(R.id.tv_status_message);
         progressBar = findViewById(R.id.progress_bar);
@@ -53,6 +65,37 @@ public class RegisterActivity extends AppCompatActivity {
     private void setupListeners() {
         btnRegister.setOnClickListener(v -> attemptRegister());
         tvBackToLogin.setOnClickListener(v -> finish());
+    }
+
+    private void loadCompanies() {
+        ApiService apiService = ApiClient.getApiService();
+        if (apiService == null) return;
+
+        apiService.getCompanies().enqueue(new Callback<CompaniesResponse>() {
+            @Override
+            public void onResponse(Call<CompaniesResponse> call, Response<CompaniesResponse> response) {
+                if (response.isSuccessful() && response.body() != null
+                        && response.body().getCompanies() != null) {
+                    companies = response.body().getCompanies();
+                    List<String> names = new ArrayList<>();
+                    for (Company c : companies) {
+                        names.add(c.getName());
+                    }
+                    ArrayAdapter<String> adapter = new ArrayAdapter<>(
+                        RegisterActivity.this,
+                        android.R.layout.simple_spinner_item,
+                        names
+                    );
+                    adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+                    spinnerCompany.setAdapter(adapter);
+                }
+            }
+
+            @Override
+            public void onFailure(Call<CompaniesResponse> call, Throwable t) {
+                // Non-critical — spinner will be empty, server will assign default
+            }
+        });
     }
 
     private void attemptRegister() {
@@ -109,7 +152,13 @@ public class RegisterActivity extends AppCompatActivity {
             return;
         }
 
-        RegisterRequest request = new RegisterRequest(username, password, masonId);
+        RegisterRequest request;
+        int selectedPos = spinnerCompany.getSelectedItemPosition();
+        if (selectedPos >= 0 && selectedPos < companies.size()) {
+            request = new RegisterRequest(username, password, masonId, companies.get(selectedPos).getId());
+        } else {
+            request = new RegisterRequest(username, password, masonId);
+        }
         Call<RegisterResponse> call = apiService.register(request);
 
         call.enqueue(new Callback<RegisterResponse>() {
@@ -154,6 +203,7 @@ public class RegisterActivity extends AppCompatActivity {
         etMasonId.setEnabled(!loading);
         etPassword.setEnabled(!loading);
         etConfirmPassword.setEnabled(!loading);
+        spinnerCompany.setEnabled(!loading);
     }
 
     private void showError(String message) {

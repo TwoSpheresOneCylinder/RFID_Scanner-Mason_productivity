@@ -38,7 +38,7 @@ function initializeDatabase() {
 // Create database tables
 function createTables(resolve, reject) {
     let tablesCreated = 0;
-    const totalTables = 4;
+    const totalTables = 5;
     
     const checkComplete = () => {
         tablesCreated++;
@@ -50,6 +50,25 @@ function createTables(resolve, reject) {
     };
     
     db.serialize(() => {
+        // Companies table
+        db.run(`
+            CREATE TABLE IF NOT EXISTS companies (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL,
+                code TEXT UNIQUE NOT NULL,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+        `, (err) => {
+            if (err) {
+                console.error('Error creating companies table:', err.message);
+                reject(err);
+            } else {
+                console.log('✓ Companies table ready');
+                seedDefaultCompanies();
+                checkComplete();
+            }
+        });
+
         // Users table
         db.run(`
             CREATE TABLE IF NOT EXISTS users (
@@ -57,7 +76,9 @@ function createTables(resolve, reject) {
                 username TEXT UNIQUE NOT NULL,
                 password TEXT NOT NULL,
                 mason_id TEXT UNIQUE NOT NULL,
-                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                company_id INTEGER,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (company_id) REFERENCES companies(id)
             )
         `, (err) => {
             if (err) {
@@ -65,6 +86,15 @@ function createTables(resolve, reject) {
                 reject(err);
             } else {
                 console.log('✓ Users table ready');
+                // Migrate: add company_id column if missing (existing DBs)
+                db.run(`ALTER TABLE users ADD COLUMN company_id INTEGER REFERENCES companies(id)`, (alterErr) => {
+                    // Ignore "duplicate column" error — it means column already exists
+                    if (alterErr && !alterErr.message.includes('duplicate column')) {
+                        console.error('Warning: Could not add company_id column:', alterErr.message);
+                    } else if (!alterErr) {
+                        console.log('✓ Migrated users table: added company_id column');
+                    }
+                });
                 seedDefaultUsers();
                 checkComplete();
             }
@@ -207,27 +237,51 @@ function createTables(resolve, reject) {
     });
 }
 
+// Seed default companies
+function seedDefaultCompanies() {
+    const defaults = [
+        { name: 'Construction Robotics', code: 'CR' },
+        { name: 'Unassigned', code: 'NONE' }
+    ];
+
+    defaults.forEach(c => {
+        db.run(
+            `INSERT OR IGNORE INTO companies (name, code) VALUES (?, ?)`,
+            [c.name, c.code],
+            (err) => {
+                if (err && !err.message.includes('UNIQUE constraint')) {
+                    console.error(`Error seeding company ${c.name}:`, err.message);
+                }
+            }
+        );
+    });
+}
+
 // Seed default users with hashed passwords
 function seedDefaultUsers() {
     const defaultUsers = [
-        { username: 'mason1', password: 'password123', mason_id: 'MASON_001' },
-        { username: 'mason2', password: 'password123', mason_id: 'MASON_002' },
-        { username: 'admin', password: 'password123', mason_id: 'MASON_ADMIN' }
+        { username: 'mason1', password: 'password123', mason_id: 'MASON_001', company_code: 'CR' },
+        { username: 'mason2', password: 'password123', mason_id: 'MASON_002', company_code: 'CR' },
+        { username: 'admin', password: 'password123', mason_id: 'MASON_ADMIN', company_code: 'CR' }
     ];
 
     defaultUsers.forEach(user => {
         // Hash password before storing
         const hashedPassword = bcrypt.hashSync(user.password, 10);
         
-        db.run(
-            `INSERT OR IGNORE INTO users (username, password, mason_id) VALUES (?, ?, ?)`,
-            [user.username, hashedPassword, user.mason_id],
-            (err) => {
-                if (err && !err.message.includes('UNIQUE constraint')) {
-                    console.error(`Error seeding user ${user.username}:`, err.message);
+        // Look up company_id from code
+        db.get(`SELECT id FROM companies WHERE code = ?`, [user.company_code], (err, company) => {
+            const companyId = company ? company.id : null;
+            db.run(
+                `INSERT OR IGNORE INTO users (username, password, mason_id, company_id) VALUES (?, ?, ?, ?)`,
+                [user.username, hashedPassword, user.mason_id, companyId],
+                (err) => {
+                    if (err && !err.message.includes('UNIQUE constraint')) {
+                        console.error(`Error seeding user ${user.username}:`, err.message);
+                    }
                 }
-            }
-        );
+            );
+        });
     });
 }
 
@@ -241,7 +295,9 @@ const dbUsers = {
     authenticate: async (username, password) => {
         return new Promise((resolve, reject) => {
             db.get(
-                `SELECT * FROM users WHERE username = ?`,
+                `SELECT u.*, c.name as company_name, c.code as company_code, c.id as comp_id
+                 FROM users u LEFT JOIN companies c ON u.company_id = c.id
+                 WHERE u.username = ?`,
                 [username],
                 async (err, row) => {
                     if (err) {
@@ -265,18 +321,24 @@ const dbUsers = {
     // Get all users
     getAll: () => {
         return new Promise((resolve, reject) => {
-            db.all(`SELECT * FROM users`, (err, rows) => {
-                if (err) reject(err);
-                else resolve(rows);
-            });
+            db.all(
+                `SELECT u.*, c.name as company_name, c.code as company_code
+                 FROM users u LEFT JOIN companies c ON u.company_id = c.id`,
+                (err, rows) => {
+                    if (err) reject(err);
+                    else resolve(rows);
+                }
+            );
         });
     },
 
-    // Get all users for dropdown (username + mason_id only)
+    // Get all users for dropdown (username + mason_id + company)
     listAll: () => {
         return new Promise((resolve, reject) => {
             db.all(
-                `SELECT username, mason_id FROM users ORDER BY username ASC`,
+                `SELECT u.username, u.mason_id, c.name as company_name, c.code as company_code
+                 FROM users u LEFT JOIN companies c ON u.company_id = c.id
+                 ORDER BY c.name ASC, u.username ASC`,
                 (err, rows) => {
                     if (err) reject(err);
                     else resolve(rows || []);
@@ -286,17 +348,31 @@ const dbUsers = {
     },
 
     // Create new user with hashed password
-    create: async (username, password, masonId) => {
+    create: async (username, password, masonId, companyId) => {
         return new Promise(async (resolve, reject) => {
             // Hash password before storing
             const hashedPassword = await bcrypt.hash(password, 10);
             
             db.run(
-                `INSERT INTO users (username, password, mason_id) VALUES (?, ?, ?)`,
-                [username, hashedPassword, masonId],
+                `INSERT INTO users (username, password, mason_id, company_id) VALUES (?, ?, ?, ?)`,
+                [username, hashedPassword, masonId, companyId || null],
                 function(err) {
                     if (err) reject(err);
-                    else resolve({ id: this.lastID, username, masonId });
+                    else resolve({ id: this.lastID, username, masonId, companyId });
+                }
+            );
+        });
+    },
+
+    // Update a user's company assignment
+    updateCompany: async (masonId, companyId) => {
+        return new Promise((resolve, reject) => {
+            db.run(
+                `UPDATE users SET company_id = ? WHERE mason_id = ?`,
+                [companyId, masonId],
+                function(err) {
+                    if (err) reject(err);
+                    else resolve(this.changes);
                 }
             );
         });
@@ -770,6 +846,64 @@ const dbPlacements = {
     }
 };
 
+// Company functions
+const dbCompanies = {
+    // Get all companies
+    getAll: () => {
+        return new Promise((resolve, reject) => {
+            db.all(
+                `SELECT id, name, code, created_at FROM companies ORDER BY name ASC`,
+                (err, rows) => {
+                    if (err) reject(err);
+                    else resolve(rows || []);
+                }
+            );
+        });
+    },
+
+    // Get company by id
+    getById: (id) => {
+        return new Promise((resolve, reject) => {
+            db.get(
+                `SELECT * FROM companies WHERE id = ?`,
+                [id],
+                (err, row) => {
+                    if (err) reject(err);
+                    else resolve(row || null);
+                }
+            );
+        });
+    },
+
+    // Get company by code
+    getByCode: (code) => {
+        return new Promise((resolve, reject) => {
+            db.get(
+                `SELECT * FROM companies WHERE code = ?`,
+                [code],
+                (err, row) => {
+                    if (err) reject(err);
+                    else resolve(row || null);
+                }
+            );
+        });
+    },
+
+    // Create a new company
+    create: (name, code) => {
+        return new Promise((resolve, reject) => {
+            db.run(
+                `INSERT INTO companies (name, code) VALUES (?, ?)`,
+                [name, code.toUpperCase()],
+                function(err) {
+                    if (err) reject(err);
+                    else resolve({ id: this.lastID, name, code: code.toUpperCase() });
+                }
+            );
+        });
+    }
+};
+
 // Session functions (JWT token tracking)
 const dbSessions = {
     // Create a new session
@@ -866,6 +1000,7 @@ module.exports = {
     initializeDatabase,
     dbUsers,
     dbPlacements,
+    dbCompanies,
     dbSessions,
     closeDatabase,
     get db() { return db; }

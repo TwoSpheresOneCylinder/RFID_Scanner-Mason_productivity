@@ -58,9 +58,10 @@ public class ApiClient {
             .addInterceptor(chain -> {
                 Request original = chain.request();
                 
-                // Skip auth header for login and register endpoints
+                // Skip auth header for public endpoints
                 String path = original.url().encodedPath();
-                if (path.contains("/auth/login") || path.contains("/auth/register")) {
+                if (path.contains("/auth/login") || path.contains("/auth/register")
+                        || path.endsWith("/companies")) {
                     return chain.proceed(original);
                 }
                 

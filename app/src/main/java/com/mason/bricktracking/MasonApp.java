@@ -55,6 +55,35 @@ public class MasonApp extends Application {
                 .remove("auth_token")
                 .apply();
     }
+
+    // Company management
+    public void saveCompany(int companyId, String companyName, String companyCode) {
+        sharedPreferences.edit()
+                .putInt("company_id", companyId)
+                .putString("company_name", companyName)
+                .putString("company_code", companyCode)
+                .apply();
+    }
+
+    public int getCompanyId() {
+        return sharedPreferences.getInt("company_id", -1);
+    }
+
+    public String getCompanyName() {
+        return sharedPreferences.getString("company_name", null);
+    }
+
+    public String getCompanyCode() {
+        return sharedPreferences.getString("company_code", null);
+    }
+
+    public void clearCompany() {
+        sharedPreferences.edit()
+                .remove("company_id")
+                .remove("company_name")
+                .remove("company_code")
+                .apply();
+    }
     
     // Device connection preferences
     public void saveLastDevice(String deviceAddress, String deviceName) {
@@ -150,6 +179,9 @@ public class MasonApp extends Application {
                 .remove("mason_id")
                 .remove("is_admin")
                 .remove("auth_token")
+                .remove("company_id")
+                .remove("company_name")
+                .remove("company_code")
                 .apply();
         
         // Reset API client so new login gets fresh interceptor

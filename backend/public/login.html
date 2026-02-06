@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login — Efficiency Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .login-container {
+            width: 100%;
+            max-width: 440px;
+            margin: 20px;
+        }
+
+        /* ── Banner ── */
+        .banner {
+            display: flex;
+            align-items: stretch;
+            border-radius: 12px 12px 0 0;
+            overflow: hidden;
+            min-height: 90px;
+            position: relative;
+        }
+
+        .banner-left {
+            background: #CC0000;
+            color: white;
+            flex: 0 0 65%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 20px 50px 20px 24px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .banner-left::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: -30px;
+            width: 60px;
+            height: 100%;
+            background: #CC0000;
+            transform: skewX(-17deg);
+            z-index: 1;
+        }
+
+        .banner-left h1 {
+            font-size: 1.35rem;
+            font-weight: 700;
+            letter-spacing: -0.3px;
+        }
+
+        .banner-left p {
+            font-size: 0.85rem;
+            opacity: 0.85;
+            margin-top: 3px;
+        }
+
+        .banner-right {
+            background: white;
+            flex: 0 0 35%;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding: 15px 20px 15px 40px;
+        }
+
+        .banner-right img {
+            max-height: 45px;
+            width: auto;
+        }
+
+        /* ── Card ── */
+        .login-card {
+            background: white;
+            padding: 36px 32px 32px;
+            border-radius: 0 0 12px 12px;
+            box-shadow: 0 6px 24px rgba(0, 0, 0, 0.10);
+        }
+
+        .login-card h2 {
+            color: #2D3436;
+            font-size: 1.4rem;
+            margin-bottom: 4px;
+            text-align: center;
+        }
+
+        .login-card .subtitle {
+            color: #636E72;
+            font-size: 0.9rem;
+            text-align: center;
+            margin-bottom: 28px;
+        }
+
+        /* ── Form ── */
+        .field {
+            margin-bottom: 18px;
+        }
+
+        .field label {
+            display: block;
+            font-weight: 600;
+            color: #2D3436;
+            margin-bottom: 6px;
+            font-size: 0.9rem;
+        }
+
+        .field input, .field select {
+            width: 100%;
+            padding: 12px 14px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.2s;
+            font-family: inherit;
+            background: white;
+        }
+
+        .field input:focus, .field select:focus {
+            outline: none;
+            border-color: #CC0000;
+        }
+
+        .btn-login {
+            width: 100%;
+            padding: 14px;
+            background: #2D3436;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-top: 6px;
+        }
+
+        .btn-login:hover {
+            background: #444;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-login:disabled {
+            background: #999;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .error-msg {
+            background: #FFE8E8;
+            color: #CC0000;
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            margin-bottom: 16px;
+            display: none;
+            text-align: center;
+            border: 1px solid #FFCCCC;
+        }
+
+        .error-msg.show {
+            display: block;
+            animation: shake 0.3s;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-6px); }
+            75% { transform: translateX(6px); }
+        }
+
+        .spinner {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+            margin: 0 auto;
+        }
+
+        .spinner.show { display: inline-block; }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .footer-text {
+            text-align: center;
+            color: #636E72;
+            font-size: 0.8rem;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="banner">
+            <div class="banner-left">
+                <h1>Efficiency Tracker</h1>
+                <p>Performance Dashboard</p>
+            </div>
+            <div class="banner-right">
+                <img src="cr_logo.png" alt="Construction Robotics">
+            </div>
+        </div>
+
+        <div class="login-card">
+            <h2>Sign In</h2>
+            <p class="subtitle">Enter your credentials to continue</p>
+
+            <div id="errorMsg" class="error-msg"></div>
+
+            <form id="loginForm" autocomplete="on">
+                <div class="field">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" name="username" autocomplete="username" required autofocus>
+                </div>
+                <div class="field">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" autocomplete="current-password" required>
+                </div>
+                <button type="submit" class="btn-login" id="btnLogin">
+                    <span id="btnText">Sign In</span>
+                    <div id="btnSpinner" class="spinner"></div>
+                </button>
+            </form>
+
+            <p class="footer-text">Mason Brick Tracking System</p>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = window.location.origin;
+
+        // If already logged in, redirect to dashboard
+        const existingToken = localStorage.getItem('dashboard_token');
+        if (existingToken) {
+            window.location.href = '/dashboard';
+        }
+
+        const form = document.getElementById('loginForm');
+        const errorMsg = document.getElementById('errorMsg');
+        const btnLogin = document.getElementById('btnLogin');
+        const btnText = document.getElementById('btnText');
+        const btnSpinner = document.getElementById('btnSpinner');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+
+            if (!username || !password) {
+                showError('Please enter both username and password.');
+                return;
+            }
+
+            setLoading(true);
+            hideError();
+
+            try {
+                const response = await fetch(`${API_BASE}/api/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+
+                const data = await response.json();
+
+                if (data.success && data.token) {
+                    // Store auth data
+                    localStorage.setItem('dashboard_token', data.token);
+                    localStorage.setItem('dashboard_user', data.username || username);
+                    localStorage.setItem('dashboard_masonId', data.masonId || '');
+                    localStorage.setItem('dashboard_isAdmin', data.isAdmin ? 'true' : 'false');
+                    if (data.company) {
+                        localStorage.setItem('dashboard_company', JSON.stringify(data.company));
+                    }
+
+                    // Redirect to dashboard
+                    window.location.href = '/dashboard';
+                } else {
+                    showError(data.message || 'Invalid credentials.');
+                }
+            } catch (err) {
+                console.error('Login error:', err);
+                showError('Cannot reach server. Check your connection.');
+            } finally {
+                setLoading(false);
+            }
+        });
+
+        function showError(msg) {
+            errorMsg.textContent = msg;
+            errorMsg.classList.add('show');
+        }
+
+        function hideError() {
+            errorMsg.classList.remove('show');
+        }
+
+        function setLoading(loading) {
+            btnLogin.disabled = loading;
+            btnText.style.display = loading ? 'none' : 'inline';
+            btnSpinner.classList.toggle('show', loading);
+        }
+    </script>
+</body>
+</html>

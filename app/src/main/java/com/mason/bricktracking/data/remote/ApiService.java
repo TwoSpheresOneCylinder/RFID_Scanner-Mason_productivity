@@ -8,6 +8,8 @@ import retrofit2.http.POST;
 import retrofit2.http.Path;
 import retrofit2.http.Query;
 
+import java.util.List;
+
 public interface ApiService {
     
     @POST("placements/sync")
@@ -24,4 +26,7 @@ public interface ApiService {
 
     @DELETE("placements/mason/{masonId}")
     Call<ResetResponse> resetProfileData(@Path("masonId") String masonId);
+
+    @GET("companies")
+    Call<CompaniesResponse> getCompanies();
 }

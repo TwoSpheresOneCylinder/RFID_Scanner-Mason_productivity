@@ -6,6 +6,7 @@ public class LoginResponse {
     private String masonId;
     private boolean isAdmin;
     private String token;
+    private Company company;
     
     public boolean isSuccess() {
         return success;
@@ -45,5 +46,13 @@ public class LoginResponse {
 
     public void setToken(String token) {
         this.token = token;
+    }
+
+    public Company getCompany() {
+        return company;
+    }
+
+    public void setCompany(Company company) {
+        this.company = company;
     }
 }

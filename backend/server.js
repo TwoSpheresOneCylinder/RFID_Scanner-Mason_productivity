@@ -5,7 +5,7 @@ const cors = require('cors');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const rateLimit = require('express-rate-limit');
-const { initializeDatabase, dbUsers, dbPlacements, dbSessions, closeDatabase } = require('./db');
+const { initializeDatabase, dbUsers, dbPlacements, dbCompanies, dbSessions, closeDatabase } = require('./db');
 
 const app = express();
 const PORT = 8080;
@@ -61,7 +61,13 @@ const JWT_EXPIRY = '7d'; // Tokens valid for 7 days
 // Generate a JWT token for a user
 function generateToken(user) {
     return jwt.sign(
-        { masonId: user.mason_id, username: user.username },
+        {
+            masonId: user.mason_id,
+            username: user.username,
+            companyId: user.company_id || null,
+            companyName: user.company_name || null,
+            companyCode: user.company_code || null
+        },
         JWT_SECRET,
         { expiresIn: JWT_EXPIRY }
     );
@@ -154,7 +160,12 @@ app.post('/api/auth/login', async (req, res) => {
                 masonId: user.mason_id,
                 username: user.username,
                 isAdmin: isAdmin,
-                token: token
+                token: token,
+                company: user.company_name ? {
+                    id: user.comp_id,
+                    name: user.company_name,
+                    code: user.company_code
+                } : null
             });
         } else {
             console.log(`✗ Login failed: Invalid credentials for ${username}`);
@@ -174,7 +185,7 @@ app.post('/api/auth/login', async (req, res) => {
 
 // POST /api/auth/register - Register new user
 app.post('/api/auth/register', async (req, res) => {
-    const { username, password, mason_id } = req.body;
+    const { username, password, mason_id, company_id } = req.body;
     
     console.log(`Registration attempt: ${username}`);
     
@@ -194,11 +205,22 @@ app.post('/api/auth/register', async (req, res) => {
     }
     
     try {
-        await dbUsers.create(username, password, mason_id);
+        await dbUsers.create(username, password, mason_id, company_id || null);
         console.log(`✓ User registered: ${username} -> ${mason_id}`);
         
         // Generate token so user can immediately use the API
-        const token = generateToken({ mason_id, username });
+        // Look up company info for the token
+        let companyInfo = null;
+        if (company_id) {
+            companyInfo = await dbCompanies.getById(company_id);
+        }
+        
+        const token = generateToken({
+            mason_id, username,
+            company_id: company_id || null,
+            company_name: companyInfo ? companyInfo.name : null,
+            company_code: companyInfo ? companyInfo.code : null
+        });
         const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
         
         try {
@@ -212,7 +234,12 @@ app.post('/api/auth/register', async (req, res) => {
             message: 'User registered successfully',
             username: username,
             masonId: mason_id,
-            token: token
+            token: token,
+            company: companyInfo ? {
+                id: companyInfo.id,
+                name: companyInfo.name,
+                code: companyInfo.code
+            } : null
         });
     } catch (err) {
         if (err.message.includes('UNIQUE constraint')) {
@@ -245,11 +272,64 @@ app.get('/api/users', requireAuth, async (req, res) => {
             count: users.length,
             users: users.map(u => ({
                 username: u.username,
-                masonId: u.mason_id
+                masonId: u.mason_id,
+                company: u.company_name || 'Unassigned',
+                companyCode: u.company_code || 'NONE'
             }))
         });
     } catch (err) {
         console.error('Error fetching users:', err);
+        return res.status(500).json({
+            success: false,
+            message: 'Database error'
+        });
+    }
+});
+
+// GET /api/companies - Get all companies for dropdowns (public - needed for registration)
+app.get('/api/companies', async (req, res) => {
+    try {
+        const companies = await dbCompanies.getAll();
+        res.json({
+            success: true,
+            companies: companies.map(c => ({
+                id: c.id,
+                name: c.name,
+                code: c.code
+            }))
+        });
+    } catch (err) {
+        console.error('Error fetching companies:', err);
+        return res.status(500).json({
+            success: false,
+            message: 'Database error'
+        });
+    }
+});
+
+// POST /api/companies - Create a new company (admin only)
+app.post('/api/companies', requireAuth, async (req, res) => {
+    const { name, code } = req.body;
+    
+    if (!name || !code) {
+        return res.status(400).json({
+            success: false,
+            message: 'Company name and code are required'
+        });
+    }
+    
+    try {
+        const company = await dbCompanies.create(name, code);
+        console.log(`✓ Company created: ${name} (${code.toUpperCase()})`);
+        res.json({ success: true, company });
+    } catch (err) {
+        if (err.message.includes('UNIQUE constraint')) {
+            return res.status(409).json({
+                success: false,
+                message: 'Company code already exists'
+            });
+        }
+        console.error('Error creating company:', err);
         return res.status(500).json({
             success: false,
             message: 'Database error'
@@ -816,8 +896,13 @@ app.get('/api/health', (req, res) => {
     });
 });
 
-// Root endpoint - serve dashboard
+// Root endpoint - serve login page
 app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'login.html'));
+});
+
+// Dashboard route
+app.get('/dashboard', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
 });
 

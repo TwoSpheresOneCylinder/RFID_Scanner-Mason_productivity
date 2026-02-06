@@ -87,6 +87,44 @@
             max-height: 60px;
             width: auto;
         }
+
+        .user-bar {
+            background: #2D3436;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding: 8px 20px;
+            border-radius: 0 0 10px 10px;
+            margin-top: -10px;
+            margin-bottom: 20px;
+            font-size: 0.85rem;
+            gap: 16px;
+        }
+
+        .user-bar .user-info {
+            opacity: 0.85;
+        }
+
+        .user-bar .user-info strong {
+            opacity: 1;
+        }
+
+        .btn-logout {
+            background: rgba(255,255,255,0.15);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.3);
+            padding: 5px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-family: inherit;
+            transition: all 0.2s;
+        }
+
+        .btn-logout:hover {
+            background: rgba(255,255,255,0.25);
+        }
         
         .controls {
             background: white;
@@ -499,6 +537,11 @@
                 <img src="cr_logo.png" alt="Construction Robotics">
             </div>
         </div>
+
+        <div class="user-bar">
+            <span class="user-info">Signed in as <strong id="currentUserDisplay">—</strong></span>
+            <button class="btn-logout" onclick="logout()">Sign Out</button>
+        </div>
         
         <div class="controls">
             <div class="mason-select-group">
@@ -638,65 +681,42 @@
         let lastPlacementCount = 0;
         let isUpdating = false;
         
+        // Redirect to login page if not authenticated
+        if (!authToken) {
+            window.location.href = '/';
+        }
+
+        // Show current user in the user bar
+        const currentUser = localStorage.getItem('dashboard_user');
+        if (currentUser) {
+            document.getElementById('currentUserDisplay').textContent = currentUser;
+        }
+
         // Authenticated fetch wrapper — attaches Bearer token to all API calls
         async function authFetch(url, options = {}) {
             if (!authToken) {
-                await dashboardLogin();
+                window.location.href = '/';
+                return;
             }
             const headers = { ...(options.headers || {}), 'Authorization': `Bearer ${authToken}` };
             let response = await fetch(url, { ...options, headers });
-            // If token expired, re-login and retry once
+            // If token expired, redirect to login
             if (response.status === 401) {
-                localStorage.removeItem('dashboard_token');
-                authToken = null;
-                await dashboardLogin();
-                headers['Authorization'] = `Bearer ${authToken}`;
-                response = await fetch(url, { ...options, headers });
+                logout();
+                return;
             }
             return response;
         }
 
-        // Dashboard login — prompts for credentials if no stored token
-        async function dashboardLogin() {
-            // Try auto-login with stored credentials first
-            const storedUser = localStorage.getItem('dashboard_user');
-            const storedPass = localStorage.getItem('dashboard_pass');
-            if (storedUser && storedPass) {
-                const ok = await attemptDashboardLogin(storedUser, storedPass);
-                if (ok) return;
-            }
-            // Prompt user
-            while (!authToken) {
-                const username = prompt('Dashboard Login — Username:');
-                if (!username) continue;
-                const password = prompt('Password:');
-                if (!password) continue;
-                const ok = await attemptDashboardLogin(username, password);
-                if (!ok) {
-                    alert('Invalid credentials. Try again.');
-                }
-            }
-        }
-
-        async function attemptDashboardLogin(username, password) {
-            try {
-                const response = await fetch(`${API_BASE}/api/auth/login`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username, password })
-                });
-                const data = await response.json();
-                if (data.success && data.token) {
-                    authToken = data.token;
-                    localStorage.setItem('dashboard_token', authToken);
-                    localStorage.setItem('dashboard_user', username);
-                    localStorage.setItem('dashboard_pass', password);
-                    return true;
-                }
-            } catch (err) {
-                console.error('Dashboard login error:', err);
-            }
-            return false;
+        // Logout — clear all stored auth data and redirect to login
+        function logout() {
+            localStorage.removeItem('dashboard_token');
+            localStorage.removeItem('dashboard_user');
+            localStorage.removeItem('dashboard_pass');
+            localStorage.removeItem('dashboard_masonId');
+            localStorage.removeItem('dashboard_isAdmin');
+            localStorage.removeItem('dashboard_company');
+            window.location.href = '/';
         }
         
         // Map variables

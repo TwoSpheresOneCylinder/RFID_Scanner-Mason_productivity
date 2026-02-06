@@ -18,6 +18,7 @@ import com.mason.bricktracking.MasonApp;
 import com.mason.bricktracking.R;
 import com.mason.bricktracking.data.remote.ApiClient;
 import com.mason.bricktracking.data.remote.ApiService;
+import com.mason.bricktracking.data.remote.Company;
 import com.mason.bricktracking.data.remote.LoginRequest;
 import com.mason.bricktracking.data.remote.LoginResponse;
 
@@ -134,6 +135,16 @@ public class LoginActivity extends AppCompatActivity {
                         // Save JWT auth token
                         if (loginResponse.getToken() != null) {
                             MasonApp.getInstance().saveAuthToken(loginResponse.getToken());
+                        }
+
+                        // Save company info
+                        Company company = loginResponse.getCompany();
+                        if (company != null) {
+                            MasonApp.getInstance().saveCompany(
+                                company.getId(),
+                                company.getName(),
+                                company.getCode()
+                            );
                         }
                         
                         // Save credentials if enabled

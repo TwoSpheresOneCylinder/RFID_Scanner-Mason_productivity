@@ -5,6 +5,8 @@ public class RegisterResponse {
     private String message;
     private String username;
     private String masonId;
+    private String token;
+    private Company company;
 
     public boolean isSuccess() { return success; }
     public void setSuccess(boolean success) { this.success = success; }
@@ -17,4 +19,10 @@ public class RegisterResponse {
 
     public String getMasonId() { return masonId; }
     public void setMasonId(String masonId) { this.masonId = masonId; }
+
+    public String getToken() { return token; }
+    public void setToken(String token) { this.token = token; }
+
+    public Company getCompany() { return company; }
+    public void setCompany(Company company) { this.company = company; }
 }
