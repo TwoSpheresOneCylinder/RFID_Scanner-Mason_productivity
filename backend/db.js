@@ -761,6 +761,78 @@ const dbPlacements = {
     }
 };
 
+// Session functions (JWT token tracking)
+const dbSessions = {
+    // Create a new session
+    create: async (masonId, token, expiresAt) => {
+        return new Promise((resolve, reject) => {
+            db.run(
+                `INSERT INTO sessions (mason_id, token, expires_at) VALUES (?, ?, ?)`,
+                [masonId, token, expiresAt],
+                function(err) {
+                    if (err) reject(err);
+                    else resolve({ id: this.lastID, masonId, token });
+                }
+            );
+        });
+    },
+
+    // Find a valid (non-expired) session by token
+    findByToken: async (token) => {
+        return new Promise((resolve, reject) => {
+            db.get(
+                `SELECT * FROM sessions WHERE token = ? AND expires_at > datetime('now')`,
+                [token],
+                (err, row) => {
+                    if (err) reject(err);
+                    else resolve(row || null);
+                }
+            );
+        });
+    },
+
+    // Delete a session (logout)
+    deleteByToken: async (token) => {
+        return new Promise((resolve, reject) => {
+            db.run(
+                `DELETE FROM sessions WHERE token = ?`,
+                [token],
+                function(err) {
+                    if (err) reject(err);
+                    else resolve(this.changes);
+                }
+            );
+        });
+    },
+
+    // Delete all sessions for a mason (force logout everywhere)
+    deleteByMasonId: async (masonId) => {
+        return new Promise((resolve, reject) => {
+            db.run(
+                `DELETE FROM sessions WHERE mason_id = ?`,
+                [masonId],
+                function(err) {
+                    if (err) reject(err);
+                    else resolve(this.changes);
+                }
+            );
+        });
+    },
+
+    // Clean up expired sessions
+    cleanExpired: async () => {
+        return new Promise((resolve, reject) => {
+            db.run(
+                `DELETE FROM sessions WHERE expires_at <= datetime('now')`,
+                function(err) {
+                    if (err) reject(err);
+                    else resolve(this.changes);
+                }
+            );
+        });
+    }
+};
+
 // Close database connection
 function closeDatabase() {
     return new Promise((resolve, reject) => {
@@ -785,6 +857,7 @@ module.exports = {
     initializeDatabase,
     dbUsers,
     dbPlacements,
+    dbSessions,
     closeDatabase,
     get db() { return db; }
 };

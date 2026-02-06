@@ -3,6 +3,8 @@ package com.mason.bricktracking;
 import android.app.Application;
 import android.content.SharedPreferences;
 
+import com.mason.bricktracking.data.remote.ApiClient;
+
 public class MasonApp extends Application {
     private static MasonApp instance;
     private SharedPreferences sharedPreferences;
@@ -35,6 +37,23 @@ public class MasonApp extends Application {
 
     public boolean isAdmin() {
         return sharedPreferences.getBoolean("is_admin", false);
+    }
+    
+    // Auth token management (JWT)
+    public void saveAuthToken(String token) {
+        sharedPreferences.edit()
+                .putString("auth_token", token)
+                .apply();
+    }
+    
+    public String getAuthToken() {
+        return sharedPreferences.getString("auth_token", null);
+    }
+    
+    public void clearAuthToken() {
+        sharedPreferences.edit()
+                .remove("auth_token")
+                .apply();
     }
     
     // Device connection preferences
@@ -130,7 +149,11 @@ public class MasonApp extends Application {
         sharedPreferences.edit()
                 .remove("mason_id")
                 .remove("is_admin")
+                .remove("auth_token")
                 .apply();
+        
+        // Reset API client so new login gets fresh interceptor
+        ApiClient.reset();
         
         // Clear credentials if save login is disabled
         if (!isSaveLoginEnabled()) {

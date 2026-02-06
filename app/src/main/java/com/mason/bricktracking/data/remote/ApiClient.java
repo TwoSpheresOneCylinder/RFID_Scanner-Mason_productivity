@@ -1,7 +1,11 @@
 package com.mason.bricktracking.data.remote;
 
 import android.util.Log;
+
+import com.mason.bricktracking.MasonApp;
+
 import okhttp3.OkHttpClient;
+import okhttp3.Request;
 import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
@@ -35,11 +39,43 @@ public class ApiClient {
         return apiService;
     }
     
+    /**
+     * Reset the API client (e.g., after logout so the auth interceptor
+     * picks up the new token on next login).
+     */
+    public static synchronized void reset() {
+        retrofit = null;
+        apiService = null;
+        Log.d(TAG, "API client reset");
+    }
+    
     private static Retrofit createRetrofit() {
         HttpLoggingInterceptor loggingInterceptor = new HttpLoggingInterceptor();
         loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
         
         OkHttpClient client = new OkHttpClient.Builder()
+            // Auth interceptor — attaches Bearer token from MasonApp
+            .addInterceptor(chain -> {
+                Request original = chain.request();
+                
+                // Skip auth header for login and register endpoints
+                String path = original.url().encodedPath();
+                if (path.contains("/auth/login") || path.contains("/auth/register")) {
+                    return chain.proceed(original);
+                }
+                
+                MasonApp app = MasonApp.getInstance();
+                String token = (app != null) ? app.getAuthToken() : null;
+                
+                if (token != null) {
+                    Request authenticated = original.newBuilder()
+                        .header("Authorization", "Bearer " + token)
+                        .build();
+                    return chain.proceed(authenticated);
+                }
+                
+                return chain.proceed(original);
+            })
             .addInterceptor(loggingInterceptor)
             .connectTimeout(30, TimeUnit.SECONDS)
             .readTimeout(30, TimeUnit.SECONDS)

@@ -131,6 +131,11 @@ public class LoginActivity extends AppCompatActivity {
                         
                         MasonApp.getInstance().saveMasonId(finalMasonId, loginResponse.isAdmin());
                         
+                        // Save JWT auth token
+                        if (loginResponse.getToken() != null) {
+                            MasonApp.getInstance().saveAuthToken(loginResponse.getToken());
+                        }
+                        
                         // Save credentials if enabled
                         MasonApp.getInstance().saveCredentials(username, password);
                         

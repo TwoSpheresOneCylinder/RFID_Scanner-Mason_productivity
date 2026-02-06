@@ -627,6 +627,7 @@
         }
 
         const API_BASE = window.location.origin;
+        let authToken = localStorage.getItem('dashboard_token');
         let liveChart = null;
         let dailyChart = null;
         let currentMasonId = null;
@@ -636,6 +637,67 @@
         let allPlacements = [];
         let lastPlacementCount = 0;
         let isUpdating = false;
+        
+        // Authenticated fetch wrapper — attaches Bearer token to all API calls
+        async function authFetch(url, options = {}) {
+            if (!authToken) {
+                await dashboardLogin();
+            }
+            const headers = { ...(options.headers || {}), 'Authorization': `Bearer ${authToken}` };
+            let response = await fetch(url, { ...options, headers });
+            // If token expired, re-login and retry once
+            if (response.status === 401) {
+                localStorage.removeItem('dashboard_token');
+                authToken = null;
+                await dashboardLogin();
+                headers['Authorization'] = `Bearer ${authToken}`;
+                response = await fetch(url, { ...options, headers });
+            }
+            return response;
+        }
+
+        // Dashboard login — prompts for credentials if no stored token
+        async function dashboardLogin() {
+            // Try auto-login with stored credentials first
+            const storedUser = localStorage.getItem('dashboard_user');
+            const storedPass = localStorage.getItem('dashboard_pass');
+            if (storedUser && storedPass) {
+                const ok = await attemptDashboardLogin(storedUser, storedPass);
+                if (ok) return;
+            }
+            // Prompt user
+            while (!authToken) {
+                const username = prompt('Dashboard Login — Username:');
+                if (!username) continue;
+                const password = prompt('Password:');
+                if (!password) continue;
+                const ok = await attemptDashboardLogin(username, password);
+                if (!ok) {
+                    alert('Invalid credentials. Try again.');
+                }
+            }
+        }
+
+        async function attemptDashboardLogin(username, password) {
+            try {
+                const response = await fetch(`${API_BASE}/api/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                const data = await response.json();
+                if (data.success && data.token) {
+                    authToken = data.token;
+                    localStorage.setItem('dashboard_token', authToken);
+                    localStorage.setItem('dashboard_user', username);
+                    localStorage.setItem('dashboard_pass', password);
+                    return true;
+                }
+            } catch (err) {
+                console.error('Dashboard login error:', err);
+            }
+            return false;
+        }
         
         // Map variables
         let map = null;
@@ -720,7 +782,7 @@
                     `${API_BASE}/api/placements/mason/${masonId}` : 
                     `${API_BASE}/api/placements/recent?limit=500`;
                 
-                const response = await fetch(url);
+                const response = await authFetch(url);
                 const data = await response.json();
                 
                 if (data.success && data.placements) {
@@ -1260,7 +1322,7 @@
         // Load all masons from /api/users endpoint
         async function loadMasons() {
             try {
-                const response = await fetch(`${API_BASE}/api/users`);
+                const response = await authFetch(`${API_BASE}/api/users`);
                 const data = await response.json();
                 
                 if (data.success && data.users && data.users.length > 0) {
@@ -1300,7 +1362,7 @@
                 const masonId = document.getElementById('masonSelect').value;
                 
                 if (!masonId) {
-                    const response = await fetch(`${API_BASE}/api/placements/recent?limit=100`);
+                    const response = await authFetch(`${API_BASE}/api/placements/recent?limit=100`);
                     const data = await response.json();
                     
                     if (data.success && data.placements) {
@@ -1321,7 +1383,7 @@
                     }
                 } else {
                     const url = `${API_BASE}/api/placements/mason/${masonId}`;
-                    const response = await fetch(url);
+                    const response = await authFetch(url);
                     const data = await response.json();
                     
                     if (data.success) {
@@ -1431,7 +1493,7 @@
         // Refresh dashboard data (stats only, don't reload placements)
         async function refreshData() {
             try {
-                const response = await fetch(`${API_BASE}/api/statistics/efficiency`);
+                const response = await authFetch(`${API_BASE}/api/statistics/efficiency`);
                 const data = await response.json();
                 
                 if (!data.success) {

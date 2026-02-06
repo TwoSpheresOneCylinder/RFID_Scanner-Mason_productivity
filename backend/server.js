@@ -2,7 +2,9 @@ const express = require('express');
 const path = require('path');
 const bodyParser = require('body-parser');
 const cors = require('cors');
-const { initializeDatabase, dbUsers, dbPlacements, closeDatabase } = require('./db');
+const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
+const { initializeDatabase, dbUsers, dbPlacements, dbSessions, closeDatabase } = require('./db');
 
 const app = express();
 const PORT = 8080;
@@ -28,6 +30,66 @@ app.use((req, res, next) => {
 });
 
 // ============================================
+// JWT AUTHENTICATION
+// ============================================
+
+// Generate a persistent secret - in production use an env variable
+const JWT_SECRET = process.env.JWT_SECRET || crypto.randomBytes(32).toString('hex');
+const JWT_EXPIRY = '7d'; // Tokens valid for 7 days
+
+// Generate a JWT token for a user
+function generateToken(user) {
+    return jwt.sign(
+        { masonId: user.mason_id, username: user.username },
+        JWT_SECRET,
+        { expiresIn: JWT_EXPIRY }
+    );
+}
+
+// Auth middleware - verifies JWT Bearer token
+function requireAuth(req, res, next) {
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return res.status(401).json({
+            success: false,
+            message: 'Authentication required. Provide Bearer token.'
+        });
+    }
+
+    const token = authHeader.split(' ')[1];
+
+    try {
+        const decoded = jwt.verify(token, JWT_SECRET);
+        req.user = decoded; // { masonId, username, iat, exp }
+        next();
+    } catch (err) {
+        if (err.name === 'TokenExpiredError') {
+            return res.status(401).json({
+                success: false,
+                message: 'Token expired. Please log in again.'
+            });
+        }
+        return res.status(401).json({
+            success: false,
+            message: 'Invalid token.'
+        });
+    }
+}
+
+// Clean up expired sessions periodically (every 6 hours)
+setInterval(async () => {
+    try {
+        const cleaned = await dbSessions.cleanExpired();
+        if (cleaned > 0) {
+            console.log(`[SESSION] Cleaned ${cleaned} expired sessions`);
+        }
+    } catch (err) {
+        console.error('[SESSION] Cleanup error:', err.message);
+    }
+}, 6 * 60 * 60 * 1000);
+
+// ============================================
 // AUTH ENDPOINTS
 // ============================================
 
@@ -50,13 +112,28 @@ app.post('/api/auth/login', async (req, res) => {
         
         if (user) {
             const isAdmin = user.mason_id === 'MASON_ADMIN' || user.username === 'admin';
+            
+            // Generate JWT token
+            const token = generateToken(user);
+            
+            // Calculate expiry date for session storage
+            const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+            
+            // Store session in database
+            try {
+                await dbSessions.create(user.mason_id, token, expiresAt);
+            } catch (sessionErr) {
+                console.error('Session creation error (non-fatal):', sessionErr.message);
+            }
+            
             console.log(`✓ Login successful: ${username} -> ${user.mason_id} (admin: ${isAdmin})`);
             return res.json({
                 success: true,
                 message: 'Login successful',
                 masonId: user.mason_id,
                 username: user.username,
-                isAdmin: isAdmin
+                isAdmin: isAdmin,
+                token: token
             });
         } else {
             console.log(`✗ Login failed: Invalid credentials for ${username}`);
@@ -98,11 +175,23 @@ app.post('/api/auth/register', async (req, res) => {
     try {
         await dbUsers.create(username, password, mason_id);
         console.log(`✓ User registered: ${username} -> ${mason_id}`);
+        
+        // Generate token so user can immediately use the API
+        const token = generateToken({ mason_id, username });
+        const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+        
+        try {
+            await dbSessions.create(mason_id, token, expiresAt);
+        } catch (sessionErr) {
+            console.error('Session creation error (non-fatal):', sessionErr.message);
+        }
+        
         return res.json({
             success: true,
             message: 'User registered successfully',
             username: username,
-            masonId: mason_id
+            masonId: mason_id,
+            token: token
         });
     } catch (err) {
         if (err.message.includes('UNIQUE constraint')) {
@@ -125,7 +214,7 @@ app.post('/api/auth/register', async (req, res) => {
 // ============================================
 
 // GET /api/users - Get all users for dropdown (username + mason_id)
-app.get('/api/users', async (req, res) => {
+app.get('/api/users', requireAuth, async (req, res) => {
     console.log('Get users for dropdown');
     
     try {
@@ -152,7 +241,7 @@ app.get('/api/users', async (req, res) => {
 // ============================================
 
 // POST /api/placements/sync
-app.post('/api/placements/sync', async (req, res) => {
+app.post('/api/placements/sync', requireAuth, async (req, res) => {
     const { masonId, placements: newPlacements } = req.body;
     
     console.log(`[${masonId}] Sync request received`);
@@ -226,7 +315,7 @@ app.post('/api/placements/sync', async (req, res) => {
 });
 
 // GET /api/placements/last
-app.get('/api/placements/last', async (req, res) => {
+app.get('/api/placements/last', requireAuth, async (req, res) => {
     const { masonId } = req.query;
     
     console.log(`Get last placement number for: ${masonId}`);
@@ -262,7 +351,7 @@ app.get('/api/placements/last', async (req, res) => {
 // ============================================
 
 // GET /api/debug/placements
-app.get('/api/debug/placements', async (req, res) => {
+app.get('/api/debug/placements', requireAuth, async (req, res) => {
     console.log('Debug: Get all placements');
     try {
         const allPlacements = await dbPlacements.getAll();
@@ -283,8 +372,8 @@ app.get('/api/debug/placements', async (req, res) => {
     }
 });
 
-// DELETE /api/debug/purge - Purge all placements
-app.delete('/api/debug/purge', async (req, res) => {
+// DELETE /api/debug/purge - Purge all placements (ADMIN ONLY)
+app.delete('/api/debug/purge', requireAuth, async (req, res) => {
     console.log('PURGE: Deleting all placements');
     try {
         const { db } = require('./db');
@@ -312,7 +401,7 @@ app.delete('/api/debug/purge', async (req, res) => {
 });
 
 // GET /api/debug/users
-app.get('/api/debug/users', async (req, res) => {
+app.get('/api/debug/users', requireAuth, async (req, res) => {
     console.log('Debug: Get all users');
     try {
         const users = await dbUsers.getAll();
@@ -335,7 +424,7 @@ app.get('/api/debug/users', async (req, res) => {
 
 // GET /api/placements/mason/:masonId - Get all placements for a specific mason
 // Supports ?since=<timestamp> for incremental live feed
-app.get('/api/placements/mason/:masonId', async (req, res) => {
+app.get('/api/placements/mason/:masonId', requireAuth, async (req, res) => {
     const { masonId } = req.params;
     const { since } = req.query;
     console.log(`Get placements for mason: ${masonId}${since ? ` (since ${since})` : ''}`);
@@ -378,7 +467,7 @@ app.get('/api/placements/mason/:masonId', async (req, res) => {
 });
 
 // DELETE /api/placements/mason/:masonId - Delete all placements for a mason (reset profile)
-app.delete('/api/placements/mason/:masonId', async (req, res) => {
+app.delete('/api/placements/mason/:masonId', requireAuth, async (req, res) => {
     const { masonId } = req.params;
     console.log(`Reset profile data for mason: ${masonId}`);
     
@@ -409,7 +498,7 @@ app.delete('/api/placements/mason/:masonId', async (req, res) => {
 });
 
 // GET /api/placements/recent - Get recent placements across all masons
-app.get('/api/placements/recent', async (req, res) => {
+app.get('/api/placements/recent', requireAuth, async (req, res) => {
     const limit = parseInt(req.query.limit) || 50;
     console.log(`Get recent placements (limit: ${limit})`);
     
@@ -451,7 +540,7 @@ app.get('/api/placements/recent', async (req, res) => {
 });
 
 // GET /api/statistics - Get overall statistics
-app.get('/api/statistics', async (req, res) => {
+app.get('/api/statistics', requireAuth, async (req, res) => {
     console.log('Get statistics');
     
     try {
@@ -480,7 +569,7 @@ app.get('/api/statistics', async (req, res) => {
 });
 
 // GET /api/statistics/efficiency/:masonId - Get mason efficiency metrics (session-based)
-app.get('/api/statistics/efficiency/:masonId', async (req, res) => {
+app.get('/api/statistics/efficiency/:masonId', requireAuth, async (req, res) => {
     const { masonId } = req.params;
     console.log(`Get efficiency statistics for mason: ${masonId}`);
     
@@ -576,7 +665,7 @@ app.get('/api/statistics/efficiency/:masonId', async (req, res) => {
 });
 
 // GET /api/statistics/efficiency - Get mason efficiency comparison data (legacy - all masons)
-app.get('/api/statistics/efficiency', async (req, res) => {
+app.get('/api/statistics/efficiency', requireAuth, async (req, res) => {
     const { masonId } = req.query;
     
     // If masonId provided as query param, redirect to specific endpoint
@@ -685,7 +774,7 @@ app.get('/api/statistics/efficiency', async (req, res) => {
 });
 
 // Debug: Get placement table structure
-app.get('/api/debug/table-info', async (req, res) => {
+app.get('/api/debug/table-info', requireAuth, async (req, res) => {
     console.log('Get table info');
     const { db } = require('./db');
     
@@ -712,7 +801,7 @@ app.get('/', (req, res) => {
 });
 
 // GET placement history for a specific brick
-app.get('/api/history/brick/:brickNumber', async (req, res) => {
+app.get('/api/history/brick/:brickNumber', requireAuth, async (req, res) => {
     const { brickNumber } = req.params;
     
     console.log(`[HISTORY] Get history for brick: ${brickNumber}`);
@@ -781,7 +870,7 @@ app.get('/api/history/brick/:brickNumber', async (req, res) => {
 });
 
 // GET placement history for a mason
-app.get('/api/history/mason/:masonId', async (req, res) => {
+app.get('/api/history/mason/:masonId', requireAuth, async (req, res) => {
     const { masonId } = req.params;
     const limit = parseInt(req.query.limit) || 100;
     
@@ -825,7 +914,7 @@ app.get('/api/history/mason/:masonId', async (req, res) => {
 });
 
 // GET performance review report
-app.get('/api/report/mason/:masonId', async (req, res) => {
+app.get('/api/report/mason/:masonId', requireAuth, async (req, res) => {
     const { masonId } = req.params;
     const startDate = parseInt(req.query.startDate) || (Date.now() - 30 * 24 * 60 * 60 * 1000); // Default: last 30 days
     const endDate = parseInt(req.query.endDate) || Date.now();
