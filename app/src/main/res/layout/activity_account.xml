@@ -170,28 +170,29 @@
                     android:text="START BATTERY TEST"
                     android:background="@drawable/button_bg_gray"
                     app:backgroundTint="@null"
+                    android:textColor="@color/white"
+                    android:layout_marginBottom="8dp"/>
+
+                <Button
+                    android:id="@+id/btn_reset_profile"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="RESET PROFILE DATA"
+                    android:background="@drawable/button_bg_red"
+                    app:backgroundTint="@null"
                     android:textColor="@color/white"/>
 
             </LinearLayout>
         </LinearLayout>
 
         <!-- Action Buttons -->
-        <Button
-            android:id="@+id/btn_reset_profile"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="RESET PROFILE DATA"
-            android:background="@drawable/button_bg_red"
-            app:backgroundTint="@null"
-            android:textColor="@color/white"
-            android:layout_marginBottom="8dp"/>
         
         <Button
             android:id="@+id/btn_account_logout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="LOGOUT"
-            android:background="@drawable/button_bg_blue"
+            android:background="@drawable/button_bg_red"
             app:backgroundTint="@null"
             android:textColor="@color/white"
             android:layout_marginBottom="8dp"/>

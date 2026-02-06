@@ -25,30 +25,22 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.LinkedList;
 import java.util.Locale;
-import java.util.Random;
 
 public class BatteryTestService extends Service {
 
     private static final String CHANNEL_ID = "battery_test_channel";
     private static final int NOTIFICATION_ID = 1001;
+    private static final long LOG_INTERVAL_MS = 30000; // 30 seconds
 
     private RFIDWithUHFBLE uhf;
     private Handler handler;
-    private Runnable scanRunnable;
     private Runnable batteryLogRunnable;
-    private Random random = new Random();
     private PowerManager.WakeLock wakeLock;
 
     private FileWriter logWriter;
     private File logFile;
     private long testStartTime;
-    private int totalScans = 0;
-    private int lastLoggedBattery = -1;
-    private String masonId = "";
-    private final LinkedList<Integer> logBatteryReadings = new LinkedList<>();
-    private static final int LOG_SMOOTHING_WINDOW = 5;
 
     private static boolean isRunning = false;
 
@@ -66,26 +58,18 @@ public class BatteryTestService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        if (intent != null) {
-            masonId = intent.getStringExtra("masonId");
-            if (masonId == null) masonId = "UNKNOWN";
-        }
-
         // Acquire wake lock to keep CPU running with screen off
         PowerManager pm = (PowerManager) getSystemService(POWER_SERVICE);
-        wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "MasonBrickTracking::BatteryTest");
+        wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "MasonBrickTracking::BatteryLog");
         wakeLock.acquire();
 
-        // Start as foreground service with persistent notification
-        startForeground(NOTIFICATION_ID, buildNotification("Battery test running..."));
+        // Start as foreground service
+        startForeground(NOTIFICATION_ID, buildNotification("Battery logging started..."));
 
-        // Start logging
+        // Start CSV logging
         startLogging();
 
-        // Start simulated scans
-        startSimScans();
-
-        // Start battery logging every 30 seconds
+        // Log every 30 seconds
         startBatteryLogging();
 
         isRunning = true;
@@ -101,66 +85,29 @@ public class BatteryTestService extends Service {
 
             logFile = new File(logDir, filename);
             logWriter = new FileWriter(logFile, true);
-            logWriter.append("Timestamp,Raw Battery %,Smoothed Battery %,Elapsed Minutes,Activity,Total Scans,Mason ID\n");
+            logWriter.append("Timestamp,Battery %,Elapsed Minutes\n");
             logWriter.flush();
 
             testStartTime = System.currentTimeMillis();
-            totalScans = 0;
-            lastLoggedBattery = -1;
-
-            android.util.Log.d("BATTERY_SERVICE", "Logging started: " + filename);
+            android.util.Log.d("BATTERY_LOG", "Logging started: " + filename);
         } catch (IOException e) {
-            android.util.Log.e("BATTERY_SERVICE", "Failed to start logging", e);
+            android.util.Log.e("BATTERY_LOG", "Failed to start logging", e);
         }
     }
 
-    private void startSimScans() {
-        scanRunnable = new Runnable() {
-            @Override
-            public void run() {
-                if (!isRunning) return;
-
-                if (uhf != null && uhf.getConnectStatus() == ConnectionStatus.CONNECTED) {
-                    try {
-                        uhf.startInventoryTag();
-                        totalScans++;
-                        android.util.Log.d("BATTERY_SERVICE", "Sim scan #" + totalScans);
-
-                        // Stop inventory after 500ms read window
-                        handler.postDelayed(() -> {
-                            try {
-                                uhf.stopInventory();
-                            } catch (Exception e) { /* ignore */ }
-                        }, 500);
-
-                        // Update notification
-                        updateNotification();
-                    } catch (Exception e) {
-                        android.util.Log.e("BATTERY_SERVICE", "Scan error", e);
-                    }
-                }
-
-                // Next scan: random 30-60 seconds
-                long nextDelay = 30000 + random.nextInt(30001);
-                handler.postDelayed(this, nextDelay);
-            }
-        };
-
-        long firstDelay = 30000 + random.nextInt(30001);
-        handler.postDelayed(scanRunnable, firstDelay);
-    }
-
     private void startBatteryLogging() {
+        // Log immediately on start
+        logBattery();
+
         batteryLogRunnable = new Runnable() {
             @Override
             public void run() {
                 if (!isRunning) return;
-
                 logBattery();
-                handler.postDelayed(this, 30000);
+                handler.postDelayed(this, LOG_INTERVAL_MS);
             }
         };
-        handler.postDelayed(batteryLogRunnable, 30000);
+        handler.postDelayed(batteryLogRunnable, LOG_INTERVAL_MS);
     }
 
     private void logBattery() {
@@ -168,49 +115,30 @@ public class BatteryTestService extends Service {
 
         if (uhf != null && uhf.getConnectStatus() == ConnectionStatus.CONNECTED) {
             try {
-                int rawBattery = uhf.getBattery();
-                
-                // Skip invalid reads
-                if (rawBattery < 0) return;
+                int battery = uhf.getBattery();
+                if (battery < 0) return;
 
-                // Rolling average
-                logBatteryReadings.add(rawBattery);
-                if (logBatteryReadings.size() > LOG_SMOOTHING_WINDOW) {
-                    logBatteryReadings.removeFirst();
-                }
-                int sum = 0;
-                for (int r : logBatteryReadings) sum += r;
-                int smoothed = sum / logBatteryReadings.size();
-
-                long elapsedMs = System.currentTimeMillis() - testStartTime;
-                long minutes = elapsedMs / 60000;
+                long elapsedMinutes = (System.currentTimeMillis() - testStartTime) / 60000;
 
                 SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US);
                 String timestamp = sdf.format(new Date());
 
-                logWriter.append(String.format(Locale.US, "%s,%d,%d,%d,Scanning,%d,%s\n",
-                        timestamp, rawBattery, smoothed, minutes, totalScans, masonId));
+                logWriter.append(String.format(Locale.US, "%s,%d,%d\n",
+                        timestamp, battery, elapsedMinutes));
                 logWriter.flush();
 
-                android.util.Log.d("BATTERY_SERVICE", "Logged: raw=" + rawBattery + "% smoothed=" + smoothed + "% @ " + minutes + "min");
+                // Update notification with current reading
+                updateNotification(battery, elapsedMinutes);
+
+                android.util.Log.d("BATTERY_LOG", "Logged: " + battery + "% @ " + elapsedMinutes + "min");
             } catch (Exception e) {
-                android.util.Log.e("BATTERY_SERVICE", "Log error", e);
+                android.util.Log.e("BATTERY_LOG", "Log error", e);
             }
         }
     }
 
-    private void updateNotification() {
-        int battery = -1;
-        try {
-            if (uhf != null && uhf.getConnectStatus() == ConnectionStatus.CONNECTED) {
-                battery = uhf.getBattery();
-            }
-        } catch (Exception e) { /* ignore */ }
-
-        long minutes = (System.currentTimeMillis() - testStartTime) / 60000;
-        String text = String.format(Locale.US, "Battery: %s | Scans: %d | %d min",
-                battery >= 0 ? battery + "%" : "--", totalScans, minutes);
-
+    private void updateNotification(int battery, long minutes) {
+        String text = String.format(Locale.US, "Battery: %d%% | Running: %d min", battery, minutes);
         NotificationManager nm = getSystemService(NotificationManager.class);
         nm.notify(NOTIFICATION_ID, buildNotification(text));
     }
@@ -221,7 +149,7 @@ public class BatteryTestService extends Service {
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
 
         return new NotificationCompat.Builder(this, CHANNEL_ID)
-                .setContentTitle("RFID Battery Test")
+                .setContentTitle("Battery Logger")
                 .setContentText(text)
                 .setSmallIcon(R.mipmap.ic_launcher)
                 .setContentIntent(pendingIntent)
@@ -233,9 +161,9 @@ public class BatteryTestService extends Service {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationChannel channel = new NotificationChannel(
                     CHANNEL_ID,
-                    "Battery Test",
+                    "Battery Logger",
                     NotificationManager.IMPORTANCE_LOW);
-            channel.setDescription("Shows battery test progress");
+            channel.setDescription("Shows battery logging progress");
 
             NotificationManager nm = getSystemService(NotificationManager.class);
             nm.createNotificationChannel(channel);
@@ -246,23 +174,19 @@ public class BatteryTestService extends Service {
     public void onDestroy() {
         isRunning = false;
 
-        // Stop scheduled tasks
-        if (handler != null) {
-            if (scanRunnable != null) handler.removeCallbacks(scanRunnable);
-            if (batteryLogRunnable != null) handler.removeCallbacks(batteryLogRunnable);
+        if (handler != null && batteryLogRunnable != null) {
+            handler.removeCallbacks(batteryLogRunnable);
         }
 
-        // Close log file
         try {
             if (logWriter != null) logWriter.close();
         } catch (IOException e) { /* ignore */ }
 
-        // Release wake lock
         if (wakeLock != null && wakeLock.isHeld()) {
             wakeLock.release();
         }
 
-        android.util.Log.d("BATTERY_SERVICE", "Service destroyed. Total scans: " + totalScans);
+        android.util.Log.d("BATTERY_LOG", "Service stopped");
         super.onDestroy();
     }
 
@@ -274,10 +198,6 @@ public class BatteryTestService extends Service {
 
     public File getLogFile() {
         return logFile;
-    }
-
-    public int getTotalScans() {
-        return totalScans;
     }
 
     public long getTestStartTime() {

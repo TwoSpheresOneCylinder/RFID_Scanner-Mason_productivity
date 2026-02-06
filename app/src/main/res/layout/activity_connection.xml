@@ -8,12 +8,13 @@
     android:background="@color/white">
 
     <TextView
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/rfid_connection_title"
         android:textSize="20sp"
         android:textStyle="bold"
         android:textColor="@color/cr_charcoal"
+        android:gravity="center"
         android:layout_marginBottom="24dp"
         android:background="@drawable/rectangle_bg"
         android:padding="12dp" />
