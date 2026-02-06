@@ -92,32 +92,34 @@ function createTables(resolve, reject) {
                 reject(err);
             } else {
                 console.log('✓ Placements table ready');
-                // Create indexes for multi-mason query performance
+                // === Placement indexes ===
+                // Composite: mason + timestamp (covers WHERE mason_id=? queries, ORDER BY timestamp, live feed since=)
                 db.run(`CREATE INDEX IF NOT EXISTS idx_mason_timestamp ON placements(mason_id, timestamp DESC)`, (err) => {
                     if (err) console.error('Error creating mason_timestamp index:', err.message);
                     else console.log('✓ Index idx_mason_timestamp created');
                 });
-                db.run(`CREATE INDEX IF NOT EXISTS idx_mason_id ON placements(mason_id)`, (err) => {
-                    if (err) console.error('Error creating mason_id index:', err.message);
-                    else console.log('✓ Index idx_mason_id created');
+                // Composite: mason + brick + timestamp (covers the critical dedup lookup during sync)
+                db.run(`CREATE INDEX IF NOT EXISTS idx_mason_brick ON placements(mason_id, brick_number, timestamp DESC)`, (err) => {
+                    if (err) console.error('Error creating mason_brick index:', err.message);
+                    else console.log('✓ Index idx_mason_brick created');
                 });
-                // Index for incremental live feed queries (since=lastTimestamp)
-                db.run(`CREATE INDEX IF NOT EXISTS idx_mason_time ON placements(mason_id, timestamp)`, (err) => {
-                    if (err) console.error('Error creating mason_time index:', err.message);
-                    else console.log('✓ Index idx_mason_time created');
+                // Composite: brick + timestamp (covers cross-mason duplicate check)
+                db.run(`CREATE INDEX IF NOT EXISTS idx_brick_timestamp ON placements(brick_number, timestamp DESC)`, (err) => {
+                    if (err) console.error('Error creating brick_timestamp index:', err.message);
+                    else console.log('✓ Index idx_brick_timestamp created');
                 });
+                // Global timestamp ordering (covers ORDER BY timestamp DESC for getAll, getRecent)
                 db.run(`CREATE INDEX IF NOT EXISTS idx_timestamp ON placements(timestamp DESC)`, (err) => {
                     if (err) console.error('Error creating timestamp index:', err.message);
                     else console.log('✓ Index idx_timestamp created');
                 });
-                db.run(`CREATE INDEX IF NOT EXISTS idx_event_id ON placements(event_id)`, (err) => {
-                    if (err) console.error('Error creating event_id index:', err.message);
-                    else console.log('✓ Index idx_event_id created');
-                });
+                // Session + sequence (covers ORDER BY build_session_id, event_seq)
                 db.run(`CREATE INDEX IF NOT EXISTS idx_session_seq ON placements(build_session_id, event_seq)`, (err) => {
                     if (err) console.error('Error creating session_seq index:', err.message);
                     else console.log('✓ Index idx_session_seq created');
                 });
+                // Note: event_id UNIQUE constraint already creates an implicit index
+                // Note: idx_mason_id, idx_mason_time, idx_event_id removed (redundant)
                 checkComplete();
             }
         });
@@ -191,10 +193,8 @@ function createTables(resolve, reject) {
             }
         });
 
-        // Create indexes for better performance
-        db.run(`CREATE INDEX IF NOT EXISTS idx_placements_mason_id ON placements(mason_id)`);
-        db.run(`CREATE INDEX IF NOT EXISTS idx_placements_timestamp ON placements(timestamp)`);
-        db.run(`CREATE INDEX IF NOT EXISTS idx_placements_brick_number ON placements(brick_number)`);
+        // Note: redundant single-column indexes (idx_placements_mason_id, idx_placements_timestamp,
+        // idx_placements_brick_number) removed — all covered by composite indexes above
     });
 }
 
