@@ -51,6 +51,12 @@
             </intent-filter>
         </activity>
         
+        <!-- Register Activity -->
+        <activity
+            android:name=".ui.RegisterActivity"
+            android:exported="false"
+            android:theme="@style/Theme.MasonBrickTracking.NoActionBar" />
+        
         <!-- Connection Activity -->
         <activity
             android:name=".ui.ConnectionActivity"

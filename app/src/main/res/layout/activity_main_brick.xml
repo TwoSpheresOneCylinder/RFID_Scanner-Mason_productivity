@@ -60,16 +60,6 @@
             android:textSize="48sp"
             android:textStyle="bold"
             android:textColor="#FF8C00"/>
-        
-        <TextView
-            android:id="@+id/tv_mason_id"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Mason: --"
-            android:textSize="14sp"
-            android:textStyle="bold"
-            android:textColor="@color/cr_charcoal"
-            android:layout_marginTop="8dp"/>
     </LinearLayout>
 
     <!-- Last Brick Scanned with Timestamp -->

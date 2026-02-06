@@ -18,7 +18,7 @@ const testData = {
     decisionStatus: "CONFIRMED_TEST"
 };
 
-console.log("=== MASON BRICK TRACKING - DATA INTEGRITY TEST ===\n");
+console.log("=== EFFICIENCY TRACKER - DATA INTEGRITY TEST ===\n");
 console.log("=== SENDING TEST DATA TO API ===");
 console.log(JSON.stringify(testData, null, 2));
 

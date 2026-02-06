@@ -46,12 +46,14 @@ app.post('/api/auth/login', async (req, res) => {
         const user = await dbUsers.authenticate(username, password);
         
         if (user) {
-            console.log(`✓ Login successful: ${username} -> ${user.mason_id}`);
+            const isAdmin = user.mason_id === 'MASON_ADMIN' || user.username === 'admin';
+            console.log(`✓ Login successful: ${username} -> ${user.mason_id} (admin: ${isAdmin})`);
             return res.json({
                 success: true,
                 message: 'Login successful',
                 masonId: user.mason_id,
-                username: user.username
+                username: user.username,
+                isAdmin: isAdmin
             });
         } else {
             console.log(`✗ Login failed: Invalid credentials for ${username}`);
@@ -882,7 +884,7 @@ async function startServer() {
         // Then start Express server
         app.listen(PORT, '0.0.0.0', () => {
             console.log('╔════════════════════════════════════════════════╗');
-            console.log('║   Mason Brick Tracking API Server             ║');
+            console.log('║   Efficiency Tracker API Server               ║');
             console.log('║   with SQLite Database                         ║');
             console.log('╚════════════════════════════════════════════════╝');
             console.log(`\n✓ Server running on http://0.0.0.0:${PORT}`);

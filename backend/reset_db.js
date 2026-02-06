@@ -103,7 +103,7 @@ async function main() {
     const counts = await getCounts(db);
     const action = process.argv[2];
 
-    console.log('\n=== Mason Brick Tracking - Database Reset ===');
+    console.log('\n=== Efficiency Tracker - Database Reset ===');
     console.log(`  Users:             ${counts.users}`);
     console.log(`  Placements:        ${counts.placements}`);
     console.log(`  Placement History: ${counts.history}`);

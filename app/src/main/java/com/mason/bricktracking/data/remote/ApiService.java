@@ -19,6 +19,9 @@ public interface ApiService {
     @POST("auth/login")
     Call<LoginResponse> login(@Body LoginRequest request);
     
+    @POST("auth/register")
+    Call<RegisterResponse> register(@Body RegisterRequest request);
+
     @DELETE("placements/mason/{masonId}")
     Call<ResetResponse> resetProfileData(@Path("masonId") String masonId);
 }

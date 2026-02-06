@@ -389,7 +389,7 @@ function generateHTMLReport(reportData) {
         </div>
 
         <div class="footer">
-            <p><strong>Mason Brick Tracking System</strong></p>
+            <p><strong>Efficiency Tracker</strong></p>
             <p>Performance Review Report - ${new Date().getFullYear()}</p>
         </div>
     </div>

@@ -3,14 +3,16 @@ package com.mason.bricktracking.ui;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
-import android.view.Gravity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ProgressBar;
-import android.widget.Toast;
+import android.widget.TextView;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 
 import com.mason.bricktracking.MasonApp;
 import com.mason.bricktracking.R;
@@ -28,6 +30,19 @@ public class LoginActivity extends AppCompatActivity {
     private EditText etUsername, etPassword;
     private Button btnLogin;
     private ProgressBar progressBar;
+    private TextView tvStatusMessage;
+
+    private final ActivityResultLauncher<Intent> registerLauncher =
+        registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
+            if (result.getResultCode() == RESULT_OK && result.getData() != null) {
+                Intent data = result.getData();
+                String username = data.getStringExtra("username");
+                String password = data.getStringExtra("password");
+                if (username != null) etUsername.setText(username);
+                if (password != null) etPassword.setText(password);
+                showSuccess("Account created! You can now log in.");
+            }
+        });
     
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,10 +68,16 @@ public class LoginActivity extends AppCompatActivity {
         etPassword = findViewById(R.id.et_password);
         btnLogin = findViewById(R.id.btn_login);
         progressBar = findViewById(R.id.progress_bar);
+        tvStatusMessage = findViewById(R.id.tv_status_message);
     }
     
     private void setupListeners() {
         btnLogin.setOnClickListener(v -> attemptLogin());
+        
+        findViewById(R.id.tv_create_account).setOnClickListener(v -> {
+            tvStatusMessage.setVisibility(View.GONE);
+            registerLauncher.launch(new Intent(LoginActivity.this, RegisterActivity.class));
+        });
     }
     
     private void attemptLogin() {
@@ -89,11 +110,7 @@ public class LoginActivity extends AppCompatActivity {
         // Handle case where API service couldn't be initialized
         if (apiService == null) {
             setLoading(false);
-            // For development: Allow offline login
-            // Convention: username "admin" is admin
-            boolean isAdmin = username.toLowerCase().contains("admin");
-            MasonApp.getInstance().saveMasonId(masonId, isAdmin);
-            navigateToConnection();
+            showError("Cannot connect to server. Check network settings.");
             return;
         }
         
@@ -118,24 +135,24 @@ public class LoginActivity extends AppCompatActivity {
                         MasonApp.getInstance().saveCredentials(username, password);
                         
                         navigateToConnection();
+                    } else {
+                        // Server returned success:false with a message
+                        String msg = loginResponse.getMessage();
+                        showError(msg != null ? msg : "Login failed");
                     }
+                } else if (response.code() == 401) {
+                    showError("Invalid username or password");
+                } else if (response.code() == 400) {
+                    showError("Please enter both username and password");
                 } else {
-                    // Login failed
+                    showError("Server error (" + response.code() + "). Try again later.");
                 }
             }
             
             @Override
             public void onFailure(Call<LoginResponse> call, Throwable t) {
                 setLoading(false);
-                
-                // For development: Allow offline login
-                boolean isAdmin = username.toLowerCase().contains("admin");
-                MasonApp.getInstance().saveMasonId(masonId, isAdmin);
-                
-                // Save credentials if enabled
-                MasonApp.getInstance().saveCredentials(username, password);
-                
-                navigateToConnection();
+                showError("Cannot reach server. Check your network connection.");
             }
         });
     }
@@ -151,5 +168,17 @@ public class LoginActivity extends AppCompatActivity {
         Intent intent = new Intent(LoginActivity.this, ConnectionActivity.class);
         startActivity(intent);
         finish();
+    }
+    
+    private void showError(String message) {
+        tvStatusMessage.setText(message);
+        tvStatusMessage.setTextColor(ContextCompat.getColor(this, android.R.color.holo_red_dark));
+        tvStatusMessage.setVisibility(View.VISIBLE);
+    }
+
+    private void showSuccess(String message) {
+        tvStatusMessage.setText("\u2705 " + message);
+        tvStatusMessage.setTextColor(ContextCompat.getColor(this, android.R.color.holo_green_dark));
+        tvStatusMessage.setVisibility(View.VISIBLE);
     }
 }

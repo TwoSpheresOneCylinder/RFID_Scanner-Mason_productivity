@@ -25,6 +25,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.LinkedList;
 import java.util.Locale;
 import java.util.Random;
 
@@ -46,6 +47,8 @@ public class BatteryTestService extends Service {
     private int totalScans = 0;
     private int lastLoggedBattery = -1;
     private String masonId = "";
+    private final LinkedList<Integer> logBatteryReadings = new LinkedList<>();
+    private static final int LOG_SMOOTHING_WINDOW = 5;
 
     private static boolean isRunning = false;
 
@@ -98,7 +101,7 @@ public class BatteryTestService extends Service {
 
             logFile = new File(logDir, filename);
             logWriter = new FileWriter(logFile, true);
-            logWriter.append("Timestamp,Battery %,Elapsed Minutes,Activity,Total Scans,Mason ID\n");
+            logWriter.append("Timestamp,Raw Battery %,Smoothed Battery %,Elapsed Minutes,Activity,Total Scans,Mason ID\n");
             logWriter.flush();
 
             testStartTime = System.currentTimeMillis();
@@ -165,22 +168,31 @@ public class BatteryTestService extends Service {
 
         if (uhf != null && uhf.getConnectStatus() == ConnectionStatus.CONNECTED) {
             try {
-                int battery = uhf.getBattery();
+                int rawBattery = uhf.getBattery();
+                
+                // Skip invalid reads
+                if (rawBattery < 0) return;
 
-                if (battery != lastLoggedBattery) {
-                    long elapsedMs = System.currentTimeMillis() - testStartTime;
-                    long minutes = elapsedMs / 60000;
-
-                    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US);
-                    String timestamp = sdf.format(new Date());
-
-                    logWriter.append(String.format(Locale.US, "%s,%d,%d,Scanning,%d,%s\n",
-                            timestamp, battery, minutes, totalScans, masonId));
-                    logWriter.flush();
-
-                    lastLoggedBattery = battery;
-                    android.util.Log.d("BATTERY_SERVICE", "Logged: " + battery + "% @ " + minutes + "min");
+                // Rolling average
+                logBatteryReadings.add(rawBattery);
+                if (logBatteryReadings.size() > LOG_SMOOTHING_WINDOW) {
+                    logBatteryReadings.removeFirst();
                 }
+                int sum = 0;
+                for (int r : logBatteryReadings) sum += r;
+                int smoothed = sum / logBatteryReadings.size();
+
+                long elapsedMs = System.currentTimeMillis() - testStartTime;
+                long minutes = elapsedMs / 60000;
+
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US);
+                String timestamp = sdf.format(new Date());
+
+                logWriter.append(String.format(Locale.US, "%s,%d,%d,%d,Scanning,%d,%s\n",
+                        timestamp, rawBattery, smoothed, minutes, totalScans, masonId));
+                logWriter.flush();
+
+                android.util.Log.d("BATTERY_SERVICE", "Logged: raw=" + rawBattery + "% smoothed=" + smoothed + "% @ " + minutes + "min");
             } catch (Exception e) {
                 android.util.Log.e("BATTERY_SERVICE", "Log error", e);
             }

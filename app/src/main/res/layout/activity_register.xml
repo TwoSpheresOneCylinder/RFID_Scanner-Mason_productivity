@@ -9,9 +9,9 @@
     android:background="@color/white">
 
     <ImageView
-        android:layout_width="160dp"
-        android:layout_height="160dp"
-        android:layout_marginBottom="24dp"
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:layout_marginBottom="16dp"
         android:src="@drawable/construction_robotics_logo"
         android:scaleType="fitCenter"
         android:contentDescription="@string/app_name" />
@@ -19,7 +19,7 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/mason_brick_tracking"
+        android:text="Create Account"
         android:textSize="24sp"
         android:textStyle="bold"
         android:textColor="@color/cr_charcoal"
@@ -28,21 +28,21 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/login_subtitle"
+        android:text="Register a new mason account"
         android:textSize="14sp"
         android:textColor="@color/cr_charcoal_light"
-        android:layout_marginBottom="48dp" />
+        android:layout_marginBottom="32dp" />
 
     <com.google.android.material.textfield.TextInputLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="16dp"
-        android:hint="@string/username"
+        android:layout_marginBottom="12dp"
+        android:hint="Username"
         app:boxStrokeColor="@color/cr_charcoal"
         app:hintTextColor="@color/cr_charcoal_light">
 
         <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/et_username"
+            android:id="@+id/et_reg_username"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:inputType="text"
@@ -52,13 +52,48 @@
     <com.google.android.material.textfield.TextInputLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="24dp"
-        android:hint="@string/password"
+        android:layout_marginBottom="12dp"
+        android:hint="Name"
         app:boxStrokeColor="@color/cr_charcoal"
         app:hintTextColor="@color/cr_charcoal_light">
 
         <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/et_password"
+            android:id="@+id/et_reg_mason_id"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="text"
+            android:textAllCaps="true"
+            android:maxLines="1" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="12dp"
+        android:hint="Password"
+        app:boxStrokeColor="@color/cr_charcoal"
+        app:hintTextColor="@color/cr_charcoal_light"
+        app:endIconMode="password_toggle">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/et_reg_password"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="textPassword"
+            android:maxLines="1" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="24dp"
+        android:hint="Confirm Password"
+        app:boxStrokeColor="@color/cr_charcoal"
+        app:hintTextColor="@color/cr_charcoal_light"
+        app:endIconMode="password_toggle">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/et_reg_confirm_password"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:inputType="textPassword"
@@ -66,27 +101,27 @@
     </com.google.android.material.textfield.TextInputLayout>
 
     <Button
-        android:id="@+id/btn_login"
+        android:id="@+id/btn_register"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/login"
-        android:textSize="16sp"
-        android:padding="16dp"
-        android:background="@drawable/button_bg_gray"
-        app:backgroundTint="@null"
-        android:textColor="@color/white" />
-
-    <Button
-        android:id="@+id/tv_create_account"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
         android:text="Create Account"
         android:textSize="16sp"
         android:padding="16dp"
-        android:background="@drawable/button_bg_blue"
+        android:background="@drawable/button_bg_green"
         app:backgroundTint="@null"
         android:textColor="@color/white" />
+
+    <TextView
+        android:id="@+id/tv_back_to_login"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="Already have an account? Log in"
+        android:textSize="14sp"
+        android:textColor="@color/cr_blue"
+        android:clickable="true"
+        android:focusable="true"
+        android:padding="8dp" />
 
     <TextView
         android:id="@+id/tv_status_message"

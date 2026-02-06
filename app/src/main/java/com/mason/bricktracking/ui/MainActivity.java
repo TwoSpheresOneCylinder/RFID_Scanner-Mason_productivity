@@ -59,6 +59,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -71,7 +72,7 @@ import androidx.core.content.FileProvider;
 
 public class MainActivity extends AppCompatActivity {
     
-    private TextView tvPlacementCounter, tvLastBrick, tvSyncStatus, tvUnsyncedCount, tvMasonId, tvLastTimestamp;
+    private TextView tvPlacementCounter, tvLastBrick, tvSyncStatus, tvUnsyncedCount, tvLastTimestamp;
     private ImageView ivBatteryStatus;
     private Button btnStart, btnStop, btnBack;
     
@@ -114,6 +115,8 @@ public class MainActivity extends AppCompatActivity {
     
     // Battery logging
     private boolean isBatteryLoggingEnabled = false;
+    private final LinkedList<Integer> batteryReadings = new LinkedList<>();
+    private static final int BATTERY_SMOOTHING_WINDOW = 5;
     
     // Helper class to store individual tag reads
     private static class TagRead {
@@ -222,7 +225,7 @@ public class MainActivity extends AppCompatActivity {
         tvLastBrick = findViewById(R.id.tv_last_brick);
         tvSyncStatus = findViewById(R.id.tv_sync_status);
         tvUnsyncedCount = findViewById(R.id.tv_unsynced_count);
-        tvMasonId = findViewById(R.id.tv_mason_id);
+
         tvLastTimestamp = findViewById(R.id.tv_last_timestamp);
         ivBatteryStatus = findViewById(R.id.iv_battery_status);
         btnStart = findViewById(R.id.btn_start);
@@ -444,10 +447,7 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
         
-        // Display mason ID in UI
-        if (tvMasonId != null && masonId != null) {
-            tvMasonId.setText("Mason: " + masonId);
-        }
+
     }
     
     private void fetchInitialCounter() {
@@ -971,7 +971,24 @@ public class MainActivity extends AppCompatActivity {
     private void updateBatteryStatus() {
         if (uhf != null && uhf.getConnectStatus() == ConnectionStatus.CONNECTED) {
             try {
-                int battery = uhf.getBattery();
+                int rawBattery = uhf.getBattery();
+                
+                // Skip invalid reads
+                if (rawBattery < 0) return;
+                
+                // Add to rolling buffer
+                batteryReadings.add(rawBattery);
+                if (batteryReadings.size() > BATTERY_SMOOTHING_WINDOW) {
+                    batteryReadings.removeFirst();
+                }
+                
+                // Calculate smoothed average for display
+                int sum = 0;
+                for (int reading : batteryReadings) {
+                    sum += reading;
+                }
+                int battery = sum / batteryReadings.size();
+                
                 String iconFile;
                 
                 // Select icon based on battery percentage
@@ -1001,15 +1018,29 @@ public class MainActivity extends AppCompatActivity {
                     paint.setAntiAlias(true);
                     paint.setTextAlign(Paint.Align.CENTER);
                     
-                    String percentText = battery + "%";
-                    float maxWidth = mutableBitmap.getWidth() * 0.85f;
+                    String percentText = String.valueOf(battery);
+
+                    // Battery body inner area (inside black borders, excluding nub)
+                    // Icons are 395x208; inner content: x=20..355, y=20..187
+                    int w = mutableBitmap.getWidth();
+                    int h = mutableBitmap.getHeight();
+                    float bodyLeft   = w * 0.051f;   // ~20/395
+                    float bodyRight  = w * 0.899f;   // ~355/395
+                    float bodyTop    = h * 0.096f;   // ~20/208
+                    float bodyBottom = h * 0.899f;   // ~187/208
+                    float bodyCenterX = (bodyLeft + bodyRight) / 2f;
+                    float bodyCenterY = (bodyTop + bodyBottom) / 2f;
+                    float bodyWidth  = bodyRight - bodyLeft;
+                    float bodyHeight = bodyBottom - bodyTop;
+
+                    float maxWidth = bodyWidth * 0.85f;
                     float maxHeight;
                     
                     if (isBatteryLoggingEnabled) {
-                        // Reserve top 70% for percentage, bottom 30% for [LOG]
-                        maxHeight = mutableBitmap.getHeight() * 0.55f;
+                        // Reserve top 65% of body for percentage, bottom for [LOG]
+                        maxHeight = bodyHeight * 0.55f;
                     } else {
-                        maxHeight = mutableBitmap.getHeight() * 0.75f;
+                        maxHeight = bodyHeight * 0.75f;
                     }
                     
                     // Auto-fit: find the largest text size that fits
@@ -1024,21 +1055,23 @@ public class MainActivity extends AppCompatActivity {
                         textSize -= 1f;
                     }
                     
-                    // Draw percentage text centered
-                    float x = mutableBitmap.getWidth() / 2f;
+                    // Draw percentage text centered within battery body
+                    float x = bodyCenterX;
                     float y;
                     if (isBatteryLoggingEnabled) {
-                        // Shift percentage text up to make room for [LOG]
-                        y = (mutableBitmap.getHeight() * 0.45f) - ((paint.descent() + paint.ascent()) / 2f);
+                        // Shift percentage text up within body to make room for [LOG]
+                        float textCenterY = bodyTop + bodyHeight * 0.38f;
+                        y = textCenterY + (bounds.height() / 2f) - bounds.bottom;
                     } else {
-                        y = (mutableBitmap.getHeight() / 2f) - ((paint.descent() + paint.ascent()) / 2f);
+                        y = bodyCenterY + (bounds.height() / 2f) - bounds.bottom;
                     }
                     canvas.drawText(percentText, x, y, paint);
                     
                     // Draw [LOG] indicator if logging
                     if (isBatteryLoggingEnabled) {
-                        paint.setTextSize(mutableBitmap.getHeight() * 0.18f);
-                        canvas.drawText("[LOG]", x, mutableBitmap.getHeight() * 0.88f, paint);
+                        paint.setTextSize(bodyHeight * 0.22f);
+                        float logY = bodyTop + bodyHeight * 0.85f;
+                        canvas.drawText("[LOG]", bodyCenterX, logY, paint);
                     }
                     
                     ivBatteryStatus.setImageBitmap(mutableBitmap);

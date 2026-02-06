@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Mason Brick Tracking</string>
-    <string name="mason_brick_tracking">Mason Brick Tracking</string>
-    <string name="login_subtitle">Track your brick placements with RFID</string>
+    <string name="app_name">Efficiency Tracker</string>
+    <string name="mason_brick_tracking">Efficiency Tracker</string>
+    <string name="login_subtitle">RFID-powered productivity insights</string>
     
     <!-- Login -->
     <string name="username">Username</string>

@@ -66,3 +66,6 @@ backend/logs/
 # Misc
 # =========================
 *.log
+app/libs/aar_extract/
+app/libs/*.zip
+app/src/main/assets/companyassets/
