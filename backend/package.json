@@ -10,7 +10,11 @@
     "stop": "pm2 stop mason-brick-api",
     "restart": "pm2 restart mason-brick-api",
     "status": "pm2 status",
-    "logs": "pm2 logs mason-brick-api"
+    "logs": "pm2 logs mason-brick-api",
+    "reset": "node reset_db.js",
+    "reset:placements": "node reset_db.js placements",
+    "reset:users": "node reset_db.js users",
+    "reset:all": "node reset_db.js all"
   },
   "keywords": [
     "rfid",
