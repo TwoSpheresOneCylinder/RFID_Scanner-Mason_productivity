@@ -25,6 +25,11 @@ public class SyncManager {
     private static final String TAG = "SyncManager";
     private static final int SYNC_THRESHOLD = 1; // Sync immediately after each scan
     
+    // Retry configuration
+    private static final int MAX_RETRY_ATTEMPTS = 5;
+    private static final long INITIAL_RETRY_DELAY_MS = 2000; // 2 seconds
+    private static final long MAX_RETRY_DELAY_MS = 60000; // 1 minute max
+    
     private Context context;
     private BrickPlacementDao dao;
     private ApiService apiService;
@@ -34,10 +39,16 @@ public class SyncManager {
     private int unsyncedCount = 0;
     private boolean isSyncing = false;
     
+    // Retry state
+    private int retryAttempts = 0;
+    private boolean retryScheduled = false;
+    private Runnable retryRunnable;
+    
     public interface SyncListener {
         void onSyncStarted();
-        void onSyncSuccess(int lastPlacementNumber);
+        void onSyncSuccess(int lastPlacementNumber, int palletCount, int placementCount);
         void onSyncFailed(String error);
+        void onSyncRetrying(int attempt, long delayMs);
         void onCounterUpdated(int unsyncedCount);
     }
     
@@ -120,7 +131,8 @@ public class SyncManager {
                     placement.getRssiPeak(),
                     placement.getReadsInWindow(),
                     placement.getPowerLevel(),
-                    placement.getDecisionStatus()
+                    placement.getDecisionStatus(),
+                    placement.getScanType() != null ? placement.getScanType() : "placement"
                 );
             }
             
@@ -161,17 +173,25 @@ public class SyncManager {
                             
                             mainHandler.post(() -> {
                                 if (syncListener != null) {
-                                    syncListener.onSyncSuccess(syncResponse.getLastPlacementNumber());
+                                    syncListener.onSyncSuccess(
+                                        syncResponse.getLastPlacementNumber(),
+                                        syncResponse.getPalletCount(),
+                                        syncResponse.getPlacementCount()
+                                    );
                                     syncListener.onCounterUpdated(unsyncedCount);
                                 }
                             });
                         });
                         
+                        // Reset retry counter on success
+                        retryAttempts = 0;
+                        cancelPendingRetry();
                         Log.d(TAG, "Sync successful");
                     } else {
                         String error = "Sync failed: " + (response.body() != null ? response.body().getMessage() : "Unknown error");
                         Log.e(TAG, error);
                         
+                        // Server responded but with error - don't retry (data issue, not network)
                         mainHandler.post(() -> {
                             if (syncListener != null) {
                                 syncListener.onSyncFailed(error);
@@ -183,7 +203,10 @@ public class SyncManager {
                 @Override
                 public void onFailure(Call<SyncResponse> call, Throwable t) {
                     isSyncing = false;
-                    Log.e(TAG, "Sync failed", t);
+                    Log.e(TAG, "Sync failed (network)", t);
+                    
+                    // Network failure - schedule retry with exponential backoff
+                    scheduleRetry();
                     
                     mainHandler.post(() -> {
                         if (syncListener != null) {
@@ -193,6 +216,77 @@ public class SyncManager {
                 }
             });
         });
+    }
+    
+    /**
+     * Schedule a retry with exponential backoff
+     */
+    private void scheduleRetry() {
+        if (retryScheduled || retryAttempts >= MAX_RETRY_ATTEMPTS) {
+            if (retryAttempts >= MAX_RETRY_ATTEMPTS) {
+                Log.w(TAG, "Max retry attempts reached (" + MAX_RETRY_ATTEMPTS + "), waiting for network restore");
+            }
+            return;
+        }
+        
+        retryAttempts++;
+        long delay = Math.min(INITIAL_RETRY_DELAY_MS * (long) Math.pow(2, retryAttempts - 1), MAX_RETRY_DELAY_MS);
+        
+        Log.d(TAG, "Scheduling retry attempt " + retryAttempts + "/" + MAX_RETRY_ATTEMPTS + " in " + delay + "ms");
+        
+        mainHandler.post(() -> {
+            if (syncListener != null) {
+                syncListener.onSyncRetrying(retryAttempts, delay);
+            }
+        });
+        
+        retryRunnable = () -> {
+            retryScheduled = false;
+            Log.d(TAG, "Executing retry attempt " + retryAttempts);
+            attemptSync();
+        };
+        
+        retryScheduled = true;
+        mainHandler.postDelayed(retryRunnable, delay);
+    }
+    
+    /**
+     * Cancel any pending retry
+     */
+    private void cancelPendingRetry() {
+        if (retryRunnable != null && retryScheduled) {
+            mainHandler.removeCallbacks(retryRunnable);
+            retryScheduled = false;
+            Log.d(TAG, "Cancelled pending retry");
+        }
+    }
+    
+    /**
+     * Called when network connection is restored.
+     * Resets retry counter and immediately attempts sync if there are unsynced placements.
+     */
+    public void onNetworkRestored() {
+        Log.d(TAG, "Network restored, resetting retry counter");
+        retryAttempts = 0;
+        cancelPendingRetry();
+        
+        // Check if we have unsynced placements and attempt sync
+        executorService.execute(() -> {
+            int count = getDao().getUnsyncedCount();
+            if (count > 0) {
+                Log.d(TAG, "Network restored with " + count + " unsynced placements, attempting sync");
+                attemptSync();
+            }
+        });
+    }
+    
+    /**
+     * Force an immediate sync attempt, resetting retry state
+     */
+    public void forceSyncNow() {
+        retryAttempts = 0;
+        cancelPendingRetry();
+        attemptSync();
     }
     
     public void fetchLastPlacementNumber(String masonId, FetchListener listener) {
@@ -245,6 +339,7 @@ public class SyncManager {
     }
     
     public void shutdown() {
+        cancelPendingRetry();
         if (executorService != null && !executorService.isShutdown()) {
             executorService.shutdown();
         }

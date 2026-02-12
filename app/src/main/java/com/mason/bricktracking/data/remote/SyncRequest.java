@@ -39,10 +39,11 @@ public class SyncRequest {
         private int readsInWindow;
         private int powerLevel;
         private String decisionStatus;
+        private String scanType;
         
         public PlacementData(String brickNumber, long timestamp, double latitude, double longitude, double altitude, double accuracy,
                            String buildSessionId, int eventSeq, int rssiAvg, int rssiPeak, int readsInWindow,
-                           int powerLevel, String decisionStatus) {
+                           int powerLevel, String decisionStatus, String scanType) {
             this.brickNumber = brickNumber;
             this.timestamp = timestamp;
             this.latitude = latitude;
@@ -56,6 +57,7 @@ public class SyncRequest {
             this.readsInWindow = readsInWindow;
             this.powerLevel = powerLevel;
             this.decisionStatus = decisionStatus;
+            this.scanType = scanType;
         }
         
         public String getBrickNumber() {

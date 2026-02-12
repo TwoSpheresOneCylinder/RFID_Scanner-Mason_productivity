@@ -1,0 +1,302 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@color/white">
+
+    <!-- Header Banner - Charcoal like the app -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:background="@color/cr_charcoal"
+        android:padding="16dp"
+        android:gravity="center">
+
+        <TextView
+            android:id="@+id/tv_validation_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="SCANNER READY CHECK"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textAllCaps="true"
+            android:letterSpacing="0.03"
+            android:textColor="@color/white"
+            android:gravity="center" />
+    </LinearLayout>
+
+    <!-- Progress indicator -->
+    <LinearLayout
+        android:id="@+id/layout_progress"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:background="@color/cr_warm_white"
+        android:padding="12dp">
+
+        <ProgressBar
+            android:id="@+id/progress_validation"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:layout_marginEnd="12dp"
+            android:indeterminateTint="@color/cr_red" />
+
+        <TextView
+            android:id="@+id/tv_progress_message"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Checking..."
+            android:textSize="14sp"
+            android:textColor="@color/cr_charcoal_light" />
+    </LinearLayout>
+
+    <!-- Check items container -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="8dp">
+
+        <!-- Battery Check -->
+        <LinearLayout
+            android:id="@+id/layout_check_battery"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:padding="10dp"
+            android:background="@drawable/card_elevated">
+
+            <TextView
+                android:id="@+id/tv_check_battery_icon"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
+                android:gravity="center"
+                android:text="○"
+                android:textSize="20sp"
+                android:textColor="@color/gray2" />
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="12dp"
+                android:text="Battery"
+                android:textSize="15sp"
+                android:textColor="@color/cr_charcoal" />
+
+            <TextView
+                android:id="@+id/tv_check_battery_status"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Checking..."
+                android:textSize="14sp"
+                android:textColor="@color/cr_charcoal_light" />
+        </LinearLayout>
+
+        <!-- BLE Check -->
+        <LinearLayout
+            android:id="@+id/layout_check_ble"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:padding="10dp"
+            android:layout_marginTop="4dp"
+            android:background="@drawable/card_elevated">
+
+            <TextView
+                android:id="@+id/tv_check_ble_icon"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
+                android:gravity="center"
+                android:text="○"
+                android:textSize="20sp"
+                android:textColor="@color/gray2" />
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="12dp"
+                android:text="Scanner Connection"
+                android:textSize="15sp"
+                android:textColor="@color/cr_charcoal" />
+
+            <TextView
+                android:id="@+id/tv_check_ble_status"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Checking..."
+                android:textSize="14sp"
+                android:textColor="@color/cr_charcoal_light" />
+        </LinearLayout>
+
+        <!-- GPS Check -->
+        <LinearLayout
+            android:id="@+id/layout_check_gps"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:padding="10dp"
+            android:layout_marginTop="4dp"
+            android:background="@drawable/card_elevated">
+
+            <TextView
+                android:id="@+id/tv_check_gps_icon"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
+                android:gravity="center"
+                android:text="○"
+                android:textSize="20sp"
+                android:textColor="@color/gray2" />
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="12dp"
+                android:text="GPS Signal"
+                android:textSize="15sp"
+                android:textColor="@color/cr_charcoal" />
+
+            <TextView
+                android:id="@+id/tv_check_gps_status"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Checking..."
+                android:textSize="14sp"
+                android:textColor="@color/cr_charcoal_light" />
+        </LinearLayout>
+
+        <!-- Test Scan Check -->
+        <LinearLayout
+            android:id="@+id/layout_check_testscan"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:padding="10dp"
+            android:layout_marginTop="4dp"
+            android:background="@drawable/card_elevated">
+
+            <TextView
+                android:id="@+id/tv_check_testscan_icon"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
+                android:gravity="center"
+                android:text="○"
+                android:textSize="20sp"
+                android:textColor="@color/gray2" />
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="12dp"
+                android:text="RF Test Scan"
+                android:textSize="15sp"
+                android:textColor="@color/cr_charcoal" />
+
+            <TextView
+                android:id="@+id/tv_check_testscan_status"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Checking..."
+                android:textSize="14sp"
+                android:textColor="@color/cr_charcoal_light" />
+        </LinearLayout>
+
+        <!-- Network Check -->
+        <LinearLayout
+            android:id="@+id/layout_check_network"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:padding="10dp"
+            android:layout_marginTop="4dp"
+            android:background="@drawable/card_elevated">
+
+            <TextView
+                android:id="@+id/tv_check_network_icon"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
+                android:gravity="center"
+                android:text="○"
+                android:textSize="20sp"
+                android:textColor="@color/gray2" />
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="12dp"
+                android:text="Network"
+                android:textSize="15sp"
+                android:textColor="@color/cr_charcoal" />
+
+            <TextView
+                android:id="@+id/tv_check_network_status"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Checking..."
+                android:textSize="14sp"
+                android:textColor="@color/cr_charcoal_light" />
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <!-- Overall status -->
+    <TextView
+        android:id="@+id/tv_overall_status"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:text=""
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:visibility="gone"
+        android:padding="16dp"
+        android:background="@color/cr_warm_white" />
+
+    <!-- Buttons -->
+    <LinearLayout
+        android:id="@+id/layout_buttons"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:padding="16dp"
+        android:visibility="gone">
+
+        <Button
+            android:id="@+id/btn_cancel"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="1"
+            android:layout_marginEnd="8dp"
+            android:text="CANCEL"
+            android:textColor="@color/cr_charcoal"
+            android:textAllCaps="true"
+            android:background="@drawable/button_bg_gray" />
+
+        <Button
+            android:id="@+id/btn_proceed"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="1"
+            android:layout_marginStart="8dp"
+            android:text="CONTINUE"
+            android:textColor="@color/white"
+            android:textAllCaps="true"
+            android:background="@drawable/button_bg_green"
+            android:enabled="false" />
+
+    </LinearLayout>
+
+</LinearLayout>

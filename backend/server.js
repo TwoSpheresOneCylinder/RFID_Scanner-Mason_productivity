@@ -10,6 +10,9 @@ const { initializeDatabase, dbUsers, dbPlacements, dbCompanies, dbSessions, clos
 const app = express();
 const PORT = 8080;
 
+// Trust proxy for ngrok/reverse proxy (required for rate limiting to work correctly)
+app.set('trust proxy', 1);
+
 // Middleware
 app.use(cors());
 app.use(bodyParser.json());
@@ -470,23 +473,27 @@ app.post('/api/placements/sync', requireAuth, async (req, res) => {
         // Store new placements or update existing ones
         const { inserted, updated } = await dbPlacements.addBatch(masonId, result);
         
-        // Log each placement with operation type
+        // Log each placement with operation type and scan type
         result.toInsert.forEach(placement => {
-            console.log(`[${masonId}] + New: ${placement.brickNumber} @ ${new Date(placement.timestamp).toISOString()}`);
+            console.log(`[${masonId}] + New ${placement.scanType || 'placement'}: ${placement.brickNumber} @ ${new Date(placement.timestamp).toISOString()}`);
         });
         result.toUpdate.forEach(placement => {
-            console.log(`[${masonId}] ↻ Updated: ${placement.brickNumber} @ ${new Date(placement.timestamp).toISOString()}`);
+            console.log(`[${masonId}] ↻ Updated ${placement.scanType || 'placement'}: ${placement.brickNumber} @ ${new Date(placement.timestamp).toISOString()}`);
         });
         
-        // Get total count for this mason
-        const totalCount = await dbPlacements.getCountByMasonId(masonId);
+        // Get counts by scan type for this mason
+        const palletCount = await dbPlacements.getCountByMasonId(masonId, 'pallet');
+        const placementCount = await dbPlacements.getCountByMasonId(masonId, 'placement');
+        const totalCount = palletCount + placementCount;
         
-        console.log(`[${masonId}] ✓ Synced: ${inserted} new, ${updated} updated. Total: ${totalCount}`);
+        console.log(`[${masonId}] ✓ Synced: ${inserted} new, ${updated} updated. Total: ${totalCount} (${palletCount} pallet, ${placementCount} placement)`);
         
         res.json({
             success: true,
             message: `Successfully synced ${inserted} new + ${updated} updated placements`,
             lastPlacementNumber: totalCount,
+            palletCount: palletCount,
+            placementCount: placementCount,
             inserted: inserted,
             updated: updated,
             duplicatesSkipped: newPlacements.length - inserted - updated
@@ -514,14 +521,18 @@ app.get('/api/placements/last', requireAuth, async (req, res) => {
     }
     
     try {
-        const lastNumber = await dbPlacements.getCountByMasonId(masonId);
+        const palletCount = await dbPlacements.getCountByMasonId(masonId, 'pallet');
+        const placementCount = await dbPlacements.getCountByMasonId(masonId, 'placement');
+        const lastNumber = palletCount + placementCount;
         
-        console.log(`✓ Last placement number: ${lastNumber}`);
+        console.log(`✓ Last placement number: ${lastNumber} (${palletCount} pallet, ${placementCount} placement)`);
         
         res.json({
             success: true,
             message: 'Success',
-            lastPlacementNumber: lastNumber
+            lastPlacementNumber: lastNumber,
+            palletCount: palletCount,
+            placementCount: placementCount
         });
     } catch (err) {
         console.error('Error getting last placement:', err);
@@ -637,6 +648,7 @@ app.get('/api/placements/mason/:masonId', requireAuth, async (req, res) => {
                 readsInWindow: p.reads_in_window,
                 powerLevel: p.power_level,
                 decisionStatus: p.decision_status,
+                scanType: p.scan_type || 'placement',
                 // GPS fields
                 latitude: p.latitude,
                 longitude: p.longitude,
@@ -710,6 +722,7 @@ app.get('/api/placements/recent', requireAuth, async (req, res) => {
                 readsInWindow: p.reads_in_window,
                 powerLevel: p.power_level,
                 decisionStatus: p.decision_status,
+                scanType: p.scan_type || 'placement',
                 latitude: p.latitude,
                 longitude: p.longitude,
                 altitude: p.altitude,
@@ -877,7 +890,7 @@ app.get('/api/statistics/efficiency', requireAuth, async (req, res) => {
             
             console.log('Simple query worked, rows:', rows);
             
-            // Now try the complex query
+            // Now try the complex query - only count actual placements for efficiency
             const query = `
                 SELECT 
                     mason_id,
@@ -888,6 +901,7 @@ app.get('/api/statistics/efficiency', requireAuth, async (req, res) => {
                     CAST(COUNT(*) AS FLOAT) / MAX((MAX(timestamp) - MIN(timestamp)) / 3600000.0, 1.0) as placements_per_hour,
                     DATE(timestamp / 1000, 'unixepoch', 'localtime') as work_date
                 FROM placements
+                WHERE scan_type != 'pallet' OR scan_type IS NULL
                 GROUP BY mason_id, DATE(timestamp / 1000, 'unixepoch', 'localtime')
                 ORDER BY mason_id, work_date DESC
             `;
@@ -907,6 +921,8 @@ app.get('/api/statistics/efficiency', requireAuth, async (req, res) => {
                     SELECT 
                         mason_id,
                         COUNT(*) as total_placements,
+                        SUM(CASE WHEN scan_type = 'pallet' THEN 1 ELSE 0 END) as pallet_count,
+                        SUM(CASE WHEN scan_type != 'pallet' OR scan_type IS NULL THEN 1 ELSE 0 END) as placement_count,
                         MIN(timestamp) as first_placement_ever,
                         MAX(timestamp) as last_placement_ever,
                         COUNT(DISTINCT DATE(timestamp / 1000, 'unixepoch', 'localtime')) as days_worked,
@@ -940,6 +956,8 @@ app.get('/api/statistics/efficiency', requireAuth, async (req, res) => {
                         masonSummary: rows3.map(row => ({
                             masonId: row.mason_id,
                             totalPlacements: row.total_placements,
+                            palletCount: row.pallet_count || 0,
+                            placementCount: row.placement_count || 0,
                             daysWorked: row.days_worked,
                             avgPlacementsPerDay: parseFloat(row.avg_placements_per_day.toFixed(2)),
                             firstPlacementEver: row.first_placement_ever,

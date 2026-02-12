@@ -12,6 +12,8 @@
     <color name="cr_warm_white">#F5F0EB</color>
     <color name="cr_surface">#FFFFFF</color>
     <color name="cr_blue">#1565C0</color>
+    <color name="cr_green">#4CAF50</color>
+    <color name="cr_orange">#FF9800</color>
     <color name="purple_200">#FFBB86FC</color>
     <color name="purple_500">#CC0000</color>
     <color name="purple_700">#990000</color>

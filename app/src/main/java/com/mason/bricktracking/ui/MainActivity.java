@@ -1,6 +1,7 @@
 package com.mason.bricktracking.ui;
 
 import android.Manifest;
+import android.animation.ValueAnimator;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
@@ -19,8 +20,11 @@ import android.os.PowerManager;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.AccelerateDecelerateInterpolator;
+import android.widget.FrameLayout;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.graphics.Bitmap;
@@ -48,6 +52,7 @@ import com.mason.bricktracking.R;
 import com.mason.bricktracking.data.model.BrickPlacement;
 import com.mason.bricktracking.sync.SyncManager;
 import com.mason.bricktracking.service.BatteryTestService;
+import com.mason.bricktracking.util.NetworkMonitor;
 import com.rscja.deviceapi.RFIDWithUHFBLE;
 import com.rscja.deviceapi.entity.UHFTAGInfo;
 import com.rscja.deviceapi.interfaces.ConnectionStatus;
@@ -73,12 +78,27 @@ import androidx.core.content.FileProvider;
 
 public class MainActivity extends AppCompatActivity {
     
+    // Scanning modes
+    public enum ScanMode {
+        PALLET,     // Pallet scanning mode - counts as "Scans"
+        PLACEMENT   // Placement scanning mode - counts as "Placements"
+    }
+    
     private TextView tvPlacementCounter, tvSyncStatus, tvUnsyncedCount, tvLastTimestamp;
+    private TextView tvCounterLabel; // Label for counter (Placements/Scans)
     private ImageView ivBatteryStatus;
     private Button btnStart, btnStop, btnBack;
     
+    // Mode selector views
+    private LinearLayout btnModePallet, btnModePlacement;
+    private ImageView ivModePallet, ivModePlacement;
+    private TextView tvModePallet, tvModePlacement;
+    private View modeHighlight;
+    private ScanMode currentScanMode = ScanMode.PLACEMENT; // Default to placement mode
+    
     private RFIDWithUHFBLE uhf;
     private SyncManager syncManager;
+    private NetworkMonitor networkMonitor;
     private ToneGenerator toneGenerator;
     private Vibrator vibrator;
     private PowerManager.WakeLock wakeLock;
@@ -88,6 +108,10 @@ public class MainActivity extends AppCompatActivity {
     private String masonId;
     private Handler mainHandler;
     private Handler scanTimeoutHandler;
+    
+    // Banner background animation
+    private Bitmap bannerBgCurrent;   // Current fully-drawn background
+    private ValueAnimator bannerSweepAnimator;
     private Runnable scanTimeoutRunnable;
     
     // Build session tracking
@@ -176,31 +200,33 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main_brick);
         BannerAnimHelper.animateBanners((ViewGroup) findViewById(R.id.main_root_layout));
 
-        // Grid-paper background on Placements banner
+        // Size placements banner to fill from mode selector down to screen center
         final View bannerPlacements = findViewById(R.id.banner_placements);
-        bannerPlacements.post(() -> {
-            int w = bannerPlacements.getWidth();
-            int h = bannerPlacements.getHeight();
-            if (w > 0 && h > 0) {
-                Bitmap bmp = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
-                Canvas c = new Canvas(bmp);
-                // Base color
-                c.drawColor(0xFF4A5568);
-                Paint gridPaint = new Paint();
-                gridPaint.setColor(0x18FFFFFF);
-                gridPaint.setStrokeWidth(1f);
-                gridPaint.setAntiAlias(false);
-                int step = (int) (20 * getResources().getDisplayMetrics().density);
-                // Vertical lines
-                for (int x = step; x < w; x += step) {
-                    c.drawLine(x, 0, x, h, gridPaint);
-                }
-                // Horizontal lines
-                for (int y = step; y < h; y += step) {
-                    c.drawLine(0, y, w, y, gridPaint);
-                }
-                bannerPlacements.setBackground(
-                    new android.graphics.drawable.BitmapDrawable(getResources(), bmp));
+        final View modeBanner = findViewById(R.id.mode_selector_banner);
+        bannerPlacements.getViewTreeObserver().addOnGlobalLayoutListener(new android.view.ViewTreeObserver.OnGlobalLayoutListener() {
+            @Override
+            public void onGlobalLayout() {
+                bannerPlacements.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+                
+                // Calculate: half screen height minus mode selector banner height
+                int screenHeight = getResources().getDisplayMetrics().heightPixels;
+                int modeBannerHeight = modeBanner.getHeight();
+                int targetHeight = (screenHeight / 2) - modeBannerHeight;
+                
+                ViewGroup.LayoutParams lp = bannerPlacements.getLayoutParams();
+                lp.height = Math.max(targetHeight, (int)(150 * getResources().getDisplayMetrics().density)); // min 150dp
+                bannerPlacements.setLayoutParams(lp);
+                
+                // Draw initial background pattern after resize (placement mode = grid)
+                bannerPlacements.post(() -> {
+                    int w = bannerPlacements.getWidth();
+                    int h = bannerPlacements.getHeight();
+                    if (w > 0 && h > 0) {
+                        bannerBgCurrent = drawGridPattern(w, h);
+                        bannerPlacements.setBackground(
+                            new android.graphics.drawable.BitmapDrawable(getResources(), bannerBgCurrent));
+                    }
+                });
             }
         });
 
@@ -252,6 +278,7 @@ public class MainActivity extends AppCompatActivity {
     
     private void initViews() {
         tvPlacementCounter = findViewById(R.id.tv_placement_counter);
+        tvCounterLabel = findViewById(R.id.tv_counter_label);
         tvSyncStatus = findViewById(R.id.tv_sync_status);
         tvUnsyncedCount = findViewById(R.id.tv_unsynced_count);
 
@@ -261,12 +288,33 @@ public class MainActivity extends AppCompatActivity {
         btnStop = findViewById(R.id.btn_stop);
         btnBack = findViewById(R.id.btn_back);
         
+        // Mode selector views
+        btnModePallet = findViewById(R.id.btn_mode_pallet);
+        btnModePlacement = findViewById(R.id.btn_mode_placement);
+        ivModePallet = findViewById(R.id.iv_mode_pallet);
+        ivModePlacement = findViewById(R.id.iv_mode_placement);
+        tvModePallet = findViewById(R.id.tv_mode_pallet);
+        tvModePlacement = findViewById(R.id.tv_mode_placement);
+        modeHighlight = findViewById(R.id.mode_highlight);
+        
         btnStop.setEnabled(false);
         btnStop.setBackgroundResource(R.drawable.button_bg_disabled);
         
         mainHandler = new Handler(Looper.getMainLooper());
         scanTimeoutHandler = new Handler(Looper.getMainLooper());
         captureWindowHandler = new Handler(Looper.getMainLooper());
+        
+        // Initialize mode selector UI after layout is fully measured
+        FrameLayout modeBanner = findViewById(R.id.mode_selector_banner);
+        modeBanner.getViewTreeObserver().addOnGlobalLayoutListener(new android.view.ViewTreeObserver.OnGlobalLayoutListener() {
+            @Override
+            public void onGlobalLayout() {
+                modeBanner.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+                applyFinalModeState();
+                // Post once more so weights have taken effect before positioning highlight
+                modeBanner.post(() -> positionHighlight());
+            }
+        });
     }
     
     private void initRFID() {
@@ -431,13 +479,16 @@ public class MainActivity extends AppCompatActivity {
             }
             
             @Override
-            public void onSyncSuccess(int lastPlacementNumber) {
+            public void onSyncSuccess(int lastPlacementNumber, int palletCount, int placementCount) {
                 tvSyncStatus.setText("Synced");
                 tvSyncStatus.setTextColor(getResources().getColor(android.R.color.holo_green_dark));
                 
-                // Update counter from server - server is authoritative
-                // This handles cases where server rejects scans (duplicates, validation failures)
-                placementCounter = lastPlacementNumber;
+                // Update counter based on current mode - server is authoritative
+                if (currentScanMode == ScanMode.PALLET) {
+                    placementCounter = palletCount;
+                } else {
+                    placementCounter = placementCount;
+                }
                 updateCounterDisplay();
             }
             
@@ -445,6 +496,13 @@ public class MainActivity extends AppCompatActivity {
             public void onSyncFailed(String error) {
                 tvSyncStatus.setText("Sync Failed");
                 tvSyncStatus.setTextColor(getResources().getColor(android.R.color.holo_red_dark));
+            }
+            
+            @Override
+            public void onSyncRetrying(int attempt, long delayMs) {
+                String seconds = String.format("%.0f", delayMs / 1000.0);
+                tvSyncStatus.setText("Retry " + attempt + " in " + seconds + "s");
+                tvSyncStatus.setTextColor(getResources().getColor(android.R.color.holo_orange_dark));
             }
             
             @Override
@@ -461,6 +519,33 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
+        
+        // Initialize NetworkMonitor for auto-retry on connection restore
+        initNetworkMonitor();
+    }
+    
+    private void initNetworkMonitor() {
+        networkMonitor = new NetworkMonitor(this);
+        networkMonitor.setNetworkListener(new NetworkMonitor.NetworkListener() {
+            @Override
+            public void onNetworkAvailable() {
+                runOnUiThread(() -> {
+                    tvSyncStatus.setText("Connected");
+                    tvSyncStatus.setTextColor(getResources().getColor(android.R.color.holo_green_dark));
+                });
+                // Notify SyncManager to retry pending syncs
+                syncManager.onNetworkRestored();
+            }
+            
+            @Override
+            public void onNetworkLost() {
+                runOnUiThread(() -> {
+                    tvSyncStatus.setText("No Network");
+                    tvSyncStatus.setTextColor(getResources().getColor(android.R.color.holo_red_dark));
+                });
+            }
+        });
+        networkMonitor.startMonitoring();
     }
     
     private void loadMasonData() {
@@ -487,6 +572,8 @@ public class MainActivity extends AppCompatActivity {
         syncManager.fetchLastPlacementNumber(masonId, new SyncManager.FetchListener() {
             @Override
             public void onFetchSuccess(int lastPlacementNumber) {
+                // Counter will show mode-specific count after first sync
+                // For initial load, use total count
                 placementCounter = lastPlacementNumber;
                 updateCounterDisplay();
                 tvSyncStatus.setText("Ready");
@@ -512,6 +599,211 @@ public class MainActivity extends AppCompatActivity {
         btnStart.setOnClickListener(v -> startScanning());
         btnStop.setOnClickListener(v -> stopScanning());
         btnBack.setOnClickListener(v -> goBack());
+        
+        // Mode selector listeners
+        btnModePallet.setOnClickListener(v -> setMode(ScanMode.PALLET));
+        btnModePlacement.setOnClickListener(v -> setMode(ScanMode.PLACEMENT));
+    }
+    
+    private void setMode(ScanMode mode) {
+        if (currentScanMode == mode) return;
+        
+        currentScanMode = mode;
+        animateModeTransition();
+        
+        // Animate the banner background sweep
+        animateBannerBackgroundSweep();
+        
+        // Reset counter when switching modes
+        placementCounter = 0;
+        tvPlacementCounter.setText("0");
+    }
+    
+    private void updateModeSelector() {
+        // Initial state setup (no animation) - called after layout measured
+        applyFinalModeState();
+        btnModePlacement.post(() -> positionHighlight());
+    }
+    
+    private void animateModeTransition() {
+        // Capture highlight start position BEFORE snapping weights
+        float startX = modeHighlight.getX();
+        float startWidth = modeHighlight.getWidth();
+        
+        // Snap weights and text visibility instantly
+        applyFinalModeState();
+        
+        // After layout recalculates, animate highlight from old to new position
+        btnModePallet.post(() -> {
+            LinearLayout targetBtn = (currentScanMode == ScanMode.PALLET) ? btnModePallet : btnModePlacement;
+            float endX = targetBtn.getLeft();
+            float endWidth = targetBtn.getWidth();
+            int containerHeight = ((FrameLayout) modeHighlight.getParent()).getHeight();
+            
+            if (endWidth <= 0) {
+                positionHighlight();
+                return;
+            }
+            
+            ValueAnimator animator = ValueAnimator.ofFloat(0f, 1f);
+            animator.setDuration(300);
+            animator.setInterpolator(new android.view.animation.OvershootInterpolator(0.6f));
+            
+            animator.addUpdateListener(animation -> {
+                float fraction = (float) animation.getAnimatedValue();
+                float currentX = startX + (endX - startX) * fraction;
+                float currentWidth = startWidth + (endWidth - startWidth) * fraction;
+                
+                modeHighlight.setX(currentX);
+                ViewGroup.LayoutParams p = modeHighlight.getLayoutParams();
+                p.width = (int) currentWidth;
+                p.height = containerHeight;
+                modeHighlight.setLayoutParams(p);
+            });
+            
+            animator.addListener(new android.animation.AnimatorListenerAdapter() {
+                @Override
+                public void onAnimationEnd(android.animation.Animator animation) {
+                    positionHighlight();
+                }
+            });
+            
+            animator.start();
+        });
+        
+        // Animate colors separately
+        applyModeColors(true);
+    }
+    
+    private void positionHighlight() {
+        LinearLayout targetBtn = (currentScanMode == ScanMode.PALLET) ? btnModePallet : btnModePlacement;
+        FrameLayout container = (FrameLayout) modeHighlight.getParent();
+        int containerHeight = container.getHeight();
+        
+        int targetX = targetBtn.getLeft();
+        int targetWidth = targetBtn.getWidth();
+        
+        if (targetWidth <= 0 || containerHeight <= 0) {
+            targetBtn.post(this::positionHighlight);
+            return;
+        }
+        
+        modeHighlight.setX(targetX);
+        ViewGroup.LayoutParams params = modeHighlight.getLayoutParams();
+        params.width = targetWidth;
+        params.height = containerHeight;
+        modeHighlight.setLayoutParams(params);
+    }
+    
+    private void applyModeColors(boolean animate) {
+        int activeColor = getResources().getColor(R.color.white);
+        int inactiveColor = 0xFF888888; // Gray
+        float activeAlpha = 1.0f;
+        float inactiveAlpha = 0.5f;
+        
+        if (animate) {
+            // Animate color/alpha transitions
+            ValueAnimator colorAnimator = ValueAnimator.ofFloat(0f, 1f);
+            colorAnimator.setDuration(300);
+            colorAnimator.setInterpolator(new AccelerateDecelerateInterpolator());
+            
+            // Capture starting values
+            final float palletStartAlpha = ivModePallet.getAlpha();
+            final float placementStartAlpha = ivModePlacement.getAlpha();
+            
+            final float palletEndAlpha = (currentScanMode == ScanMode.PALLET) ? activeAlpha : inactiveAlpha;
+            final float placementEndAlpha = (currentScanMode == ScanMode.PLACEMENT) ? activeAlpha : inactiveAlpha;
+            
+            colorAnimator.addUpdateListener(animation -> {
+                float fraction = (float) animation.getAnimatedValue();
+                
+                // Animate icon alphas
+                ivModePallet.setAlpha(palletStartAlpha + (palletEndAlpha - palletStartAlpha) * fraction);
+                ivModePlacement.setAlpha(placementStartAlpha + (placementEndAlpha - placementStartAlpha) * fraction);
+                
+                // Animate text colors using color blending
+                if (currentScanMode == ScanMode.PALLET) {
+                    int palletColor = blendColors(inactiveColor, activeColor, fraction);
+                    int placementColor = blendColors(activeColor, inactiveColor, fraction);
+                    tvModePallet.setTextColor(palletColor);
+                    tvModePlacement.setTextColor(placementColor);
+                } else {
+                    int palletColor = blendColors(activeColor, inactiveColor, fraction);
+                    int placementColor = blendColors(inactiveColor, activeColor, fraction);
+                    tvModePallet.setTextColor(palletColor);
+                    tvModePlacement.setTextColor(placementColor);
+                }
+            });
+            
+            colorAnimator.addListener(new android.animation.AnimatorListenerAdapter() {
+                @Override
+                public void onAnimationEnd(android.animation.Animator animation) {
+                    applyFinalModeState();
+                }
+            });
+            
+            colorAnimator.start();
+        } else {
+            applyFinalModeState();
+        }
+    }
+    
+    private int blendColors(int colorFrom, int colorTo, float ratio) {
+        float inverseRatio = 1f - ratio;
+        int a = (int) (Color.alpha(colorFrom) * inverseRatio + Color.alpha(colorTo) * ratio);
+        int r = (int) (Color.red(colorFrom) * inverseRatio + Color.red(colorTo) * ratio);
+        int g = (int) (Color.green(colorFrom) * inverseRatio + Color.green(colorTo) * ratio);
+        int b = (int) (Color.blue(colorFrom) * inverseRatio + Color.blue(colorTo) * ratio);
+        return Color.argb(a, r, g, b);
+    }
+    
+    private void applyFinalModeState() {
+        int activeColor = getResources().getColor(R.color.white);
+        int inactiveColor = 0xFF888888; // Gray
+        float activeAlpha = 1.0f;
+        float inactiveAlpha = 0.5f;
+        
+        // Selected mode weights
+        float selectedWeight = 1f;    // compact - icon only
+        float unselectedWeight = 2f;  // expanded - icon + text, easy to tap
+        
+        LinearLayout.LayoutParams palletParams = (LinearLayout.LayoutParams) btnModePallet.getLayoutParams();
+        LinearLayout.LayoutParams placementParams = (LinearLayout.LayoutParams) btnModePlacement.getLayoutParams();
+        
+        if (currentScanMode == ScanMode.PALLET) {
+            // Pallet selected: compact (icon only)
+            palletParams.weight = selectedWeight;
+            tvModePallet.setVisibility(View.GONE);
+            tvModePallet.setTextColor(activeColor);
+            ivModePallet.setAlpha(activeAlpha);
+            
+            // Placement unselected: expanded (icon + text, easy tap target)
+            placementParams.weight = unselectedWeight;
+            tvModePlacement.setVisibility(View.VISIBLE);
+            tvModePlacement.setAlpha(1f);
+            tvModePlacement.setTextColor(inactiveColor);
+            ivModePlacement.setAlpha(inactiveAlpha);
+            
+            tvCounterLabel.setText(R.string.brick_scans);
+        } else {
+            // Placement selected: compact (icon only)
+            placementParams.weight = selectedWeight;
+            tvModePlacement.setVisibility(View.GONE);
+            tvModePlacement.setTextColor(activeColor);
+            ivModePlacement.setAlpha(activeAlpha);
+            
+            // Pallet unselected: expanded (icon + text, easy tap target)
+            palletParams.weight = unselectedWeight;
+            tvModePallet.setVisibility(View.VISIBLE);
+            tvModePallet.setAlpha(1f);
+            tvModePallet.setTextColor(inactiveColor);
+            ivModePallet.setAlpha(inactiveAlpha);
+            
+            tvCounterLabel.setText(R.string.brick_placements);
+        }
+        
+        btnModePallet.setLayoutParams(palletParams);
+        btnModePlacement.setLayoutParams(placementParams);
     }
     
     @Override
@@ -535,22 +827,8 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
         
-        // Check GPS accuracy before allowing scan
-        if (lastKnownLocation == null) {
-            return;
-        }
-        
-        if (lastLocationAccuracy > MAX_ACCEPTABLE_ACCURACY) {
-            new AlertDialog.Builder(this)
-                .setTitle("GPS Accuracy Poor")
-                .setMessage(String.format("GPS accuracy is ±%.1fm. For reliable duplicate detection, accuracy should be better than ±%.0fm.\n\nMove to an open area and wait for better signal, or scan anyway?", 
-                    lastLocationAccuracy, MAX_ACCEPTABLE_ACCURACY))
-                .setPositiveButton("Scan Anyway", (dialog, which) -> proceedWithScanning())
-                .setNegativeButton("Wait", null)
-                .show();
-            return;
-        }
-        
+        // Validation now happens in ConnectionActivity when scanner connects
+        // Proceed directly with scanning
         proceedWithScanning();
     }
     
@@ -894,9 +1172,10 @@ public class MainActivity extends AppCompatActivity {
             BrickPlacement placement = new BrickPlacement(masonId, epc, scanTimestamp, finalLatitude, finalLongitude, finalAltitude, finalAccuracy,
                 currentBuildSessionId, eventSeq, avgRssi, peakRssi, readCount, finalDecisionStatus);
             placement.setPowerLevel(currentScanPowerLevel); // Track power level used
+            placement.setScanType(currentScanMode == ScanMode.PALLET ? "pallet" : "placement"); // Track scan mode
             
-            android.util.Log.d("PLACEMENT_DEBUG", String.format("Saving placement: masonId=%s, EPC=%s, session=%s, seq=%d", 
-                masonId, epc, currentBuildSessionId, eventSeq));
+            android.util.Log.d("PLACEMENT_DEBUG", String.format("Saving %s scan: masonId=%s, EPC=%s, session=%s, seq=%d", 
+                placement.getScanType(), masonId, epc, currentBuildSessionId, eventSeq));
             
             syncManager.addPlacement(placement);
             
@@ -912,6 +1191,192 @@ public class MainActivity extends AppCompatActivity {
     
     private void updateCounterDisplay() {
         tvPlacementCounter.setText(String.valueOf(placementCounter));
+    }
+    
+    // --- Banner background pattern drawing ---
+    
+    /** Grid-paper pattern for PLACEMENT mode */
+    private Bitmap drawGridPattern(int w, int h) {
+        Bitmap bmp = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
+        Canvas c = new Canvas(bmp);
+        c.drawColor(0xFF3D4755);
+        Paint gridPaint = new Paint();
+        gridPaint.setColor(0x18FFFFFF);
+        gridPaint.setStrokeWidth(1f);
+        gridPaint.setAntiAlias(false);
+        int step = (int) (20 * getResources().getDisplayMetrics().density);
+        for (int x = step; x < w; x += step) {
+            c.drawLine(x, 0, x, h, gridPaint);
+        }
+        for (int y = step; y < h; y += step) {
+            c.drawLine(0, y, w, y, gridPaint);
+        }
+        return bmp;
+    }
+    
+    /** Top-view pallet wireframe for PALLET mode — realistic GMA pallet proportions */
+    private Bitmap drawPalletPattern(int w, int h) {
+        Bitmap bmp = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
+        Canvas c = new Canvas(bmp);
+        c.drawColor(0xFF3D4755);
+        
+        float density = getResources().getDisplayMetrics().density;
+        
+        // Match the grid line color exactly: 0x18FFFFFF, 1px stroke
+        int lineColor = 0x18FFFFFF;
+        
+        // Paint for board outlines
+        Paint boardPaint = new Paint();
+        boardPaint.setColor(lineColor);
+        boardPaint.setStrokeWidth(1f);
+        boardPaint.setStyle(Paint.Style.STROKE);
+        boardPaint.setAntiAlias(false);
+        
+        // Paint for stringer lines (same color)
+        Paint stringerPaint = new Paint();
+        stringerPaint.setColor(lineColor);
+        stringerPaint.setStrokeWidth(1f);
+        stringerPaint.setAntiAlias(false);
+        
+        // Paint for nail dots (same color, tiny)
+        Paint nailPaint = new Paint();
+        nailPaint.setColor(lineColor);
+        nailPaint.setStyle(Paint.Style.FILL);
+        nailPaint.setAntiAlias(true);
+        float nailRadius = 1.5f * density;
+        
+        // --- Pallet fills the entire container edge to edge ---
+        float left = 0;
+        float top = 0;
+        float palletW = w;
+        float palletH = h;
+        
+        // --- 3 stringers (vertical runners — two lines flanking outside of nails) ---
+        float nailOffset = 2.5f * density; // matches nail X offset from stringer center
+        float stringerGap = nailOffset + nailRadius + 3f * density; // just outside the nails
+        float stringerInset = palletW * 0.08f;
+        float[] stringerXs = {
+            left + stringerInset,
+            left + palletW / 2f,
+            left + palletW - stringerInset
+        };
+        
+        // --- 7 deck boards: 3 wide (top, center, bottom) + 4 narrow ---
+        float gap = palletH * 0.012f;
+        float wideBoard = palletH * 0.16f;
+        float narrowBoard = palletH * 0.105f;
+        
+        float[] boardHeights = { wideBoard, narrowBoard, narrowBoard, wideBoard, narrowBoard, narrowBoard, wideBoard };
+        
+        float totalBoardH = 0;
+        for (float bh : boardHeights) totalBoardH += bh;
+        totalBoardH += (boardHeights.length - 1) * gap;
+        float boardTop = top + (palletH - totalBoardH) / 2f;
+        
+        // Compute board Y positions so we can draw stringers only in gaps
+        float[] boardTops = new float[boardHeights.length];
+        float[] boardBottoms = new float[boardHeights.length];
+        float curY = boardTop;
+        for (int i = 0; i < boardHeights.length; i++) {
+            boardTops[i] = curY;
+            boardBottoms[i] = curY + boardHeights[i];
+            curY += boardHeights[i] + gap;
+        }
+        
+        // Draw stringer lines only in the visible gaps (not behind boards)
+        for (float sx : stringerXs) {
+            // Above first board
+            if (boardTops[0] > top) {
+                c.drawLine(sx - stringerGap, top, sx - stringerGap, boardTops[0], stringerPaint);
+                c.drawLine(sx + stringerGap, top, sx + stringerGap, boardTops[0], stringerPaint);
+            }
+            // Between each pair of boards
+            for (int i = 0; i < boardHeights.length - 1; i++) {
+                float gapTop = boardBottoms[i];
+                float gapBot = boardTops[i + 1];
+                c.drawLine(sx - stringerGap, gapTop, sx - stringerGap, gapBot, stringerPaint);
+                c.drawLine(sx + stringerGap, gapTop, sx + stringerGap, gapBot, stringerPaint);
+            }
+            // Below last board
+            if (boardBottoms[boardHeights.length - 1] < top + palletH) {
+                c.drawLine(sx - stringerGap, boardBottoms[boardHeights.length - 1], sx - stringerGap, top + palletH, stringerPaint);
+                c.drawLine(sx + stringerGap, boardBottoms[boardHeights.length - 1], sx + stringerGap, top + palletH, stringerPaint);
+            }
+        }
+        
+        // Draw boards and nails
+        curY = boardTop;
+        for (float bh : boardHeights) {
+            // Board outline only
+            c.drawRect(left, curY, left + palletW, curY + bh, boardPaint);
+            
+            // Nail dots where boards cross stringers
+            for (float sx : stringerXs) {
+                float nailY1 = curY + bh * 0.35f;
+                float nailY2 = curY + bh * 0.65f;
+                c.drawCircle(sx - 2.5f * density, nailY1, nailRadius, nailPaint);
+                c.drawCircle(sx + 2.5f * density, nailY2, nailRadius, nailPaint);
+            }
+            
+            curY += bh + gap;
+        }
+        
+        return bmp;
+    }
+    
+    /** Animate banner background from old pattern to new, sweeping in the appropriate direction */
+    private void animateBannerBackgroundSweep() {
+        final View banner = findViewById(R.id.banner_placements);
+        int w = banner.getWidth();
+        int h = banner.getHeight();
+        if (w <= 0 || h <= 0) return;
+        
+        // Cancel any in-progress sweep
+        if (bannerSweepAnimator != null && bannerSweepAnimator.isRunning()) {
+            bannerSweepAnimator.cancel();
+        }
+        
+        // Old = what's on screen now; New = the target pattern
+        final Bitmap oldBg = bannerBgCurrent != null ? bannerBgCurrent : drawGridPattern(w, h);
+        final Bitmap newBg = (currentScanMode == ScanMode.PALLET) ? drawPalletPattern(w, h) : drawGridPattern(w, h);
+        
+        // Pallet mode sweeps L→R; Placement mode sweeps R→L
+        final boolean sweepLeftToRight = (currentScanMode == ScanMode.PALLET);
+        
+        bannerSweepAnimator = ValueAnimator.ofFloat(0f, 1f);
+        bannerSweepAnimator.setDuration(400);
+        bannerSweepAnimator.setInterpolator(new AccelerateDecelerateInterpolator());
+        
+        bannerSweepAnimator.addUpdateListener(animation -> {
+            float fraction = (float) animation.getAnimatedValue();
+            int splitX = (int) (w * fraction);
+            
+            Bitmap frame = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
+            Canvas fc = new Canvas(frame);
+            
+            if (sweepLeftToRight) {
+                // New pattern fills from left, old remains on right
+                fc.drawBitmap(newBg, new Rect(0, 0, splitX, h), new Rect(0, 0, splitX, h), null);
+                fc.drawBitmap(oldBg, new Rect(splitX, 0, w, h), new Rect(splitX, 0, w, h), null);
+            } else {
+                // New pattern fills from right, old remains on left
+                int rightEdge = w - splitX;
+                fc.drawBitmap(oldBg, new Rect(0, 0, rightEdge, h), new Rect(0, 0, rightEdge, h), null);
+                fc.drawBitmap(newBg, new Rect(rightEdge, 0, w, h), new Rect(rightEdge, 0, w, h), null);
+            }
+            
+            banner.setBackground(new android.graphics.drawable.BitmapDrawable(getResources(), frame));
+        });
+        
+        bannerSweepAnimator.addListener(new android.animation.AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationEnd(android.animation.Animator animation) {
+                bannerBgCurrent = newBg;
+                banner.setBackground(new android.graphics.drawable.BitmapDrawable(getResources(), newBg));
+            }
+        });
+        
+        bannerSweepAnimator.start();
     }
     
     // Calculate distance between two GPS coordinates in meters
@@ -1152,6 +1617,10 @@ public class MainActivity extends AppCompatActivity {
         }
         if (toneGenerator != null) {
             toneGenerator.release();
+        }
+        // Stop network monitoring
+        if (networkMonitor != null) {
+            networkMonitor.stopMonitoring();
         }
         if (syncManager != null) {
             syncManager.shutdown();

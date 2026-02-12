@@ -16,6 +16,95 @@
         android:clipChildren="false"
         android:clipToPadding="false">
 
+        <!-- Mode Selector Banner -->
+        <FrameLayout
+            android:id="@+id/mode_selector_banner"
+            android:layout_width="match_parent"
+            android:layout_height="84dp"
+            android:background="@color/cr_charcoal"
+            android:elevation="14dp">
+
+            <!-- Sliding highlight background -->
+            <View
+                android:id="@+id/mode_highlight"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:background="@drawable/mode_selector_active"/>
+
+            <!-- Mode buttons container -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="horizontal">
+
+                <!-- Pallet Mode Button -->
+                <LinearLayout
+                    android:id="@+id/btn_mode_pallet"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:orientation="horizontal"
+                    android:gravity="center"
+                    android:clickable="true"
+                    android:focusable="true">
+
+                    <ImageView
+                        android:id="@+id/iv_mode_pallet"
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        android:src="@drawable/pallet_mode_icon"
+                        android:scaleType="fitCenter"
+                        android:alpha="0.5"
+                        android:contentDescription="Pallet Mode" />
+
+                    <TextView
+                        android:id="@+id/tv_mode_pallet"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="PALLET"
+                        android:textColor="#888888"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:fontFamily="@font/barlow_semi_condensed"
+                        android:letterSpacing="0.05"
+                        android:layout_marginStart="10dp"/>
+                </LinearLayout>
+
+                <!-- Placement Mode Button -->
+                <LinearLayout
+                    android:id="@+id/btn_mode_placement"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:orientation="horizontal"
+                    android:gravity="center"
+                    android:clickable="true"
+                    android:focusable="true">
+
+                    <ImageView
+                        android:id="@+id/iv_mode_placement"
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        android:src="@drawable/placement_mode_icon"
+                        android:scaleType="fitCenter"
+                        android:alpha="1.0"
+                        android:contentDescription="Placement Mode" />
+
+                    <TextView
+                        android:id="@+id/tv_mode_placement"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="PLACEMENT"
+                        android:textColor="@color/white"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:fontFamily="@font/barlow_semi_condensed"
+                        android:letterSpacing="0.05"
+                        android:layout_marginStart="10dp"/>
+                </LinearLayout>
+            </LinearLayout>
+        </FrameLayout>
+
         <!-- Banner 1: Charcoal header - highest z-order -->
         <LinearLayout
             android:id="@+id/banner_placements"
@@ -24,25 +113,26 @@
             android:orientation="vertical"
             android:background="@drawable/banner_light_charcoal"
             android:elevation="12dp"
-            android:padding="20dp"
+            android:paddingHorizontal="40dp"
             android:gravity="center">
 
             <TextView
+                android:id="@+id/tv_counter_label"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Placements"
-                android:textSize="14sp"
+                android:textSize="18sp"
                 android:fontFamily="@font/barlow_semi_condensed"
                 android:textAllCaps="true"
                 android:letterSpacing="0.08"
-                android:textColor="#BBBBBB"/>
+                android:textColor="@color/white"/>
 
             <TextView
                 android:id="@+id/tv_placement_counter"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="0"
-                android:textSize="52sp"
+                android:textSize="72sp"
                 android:textStyle="bold"
                 android:fontFamily="@font/barlow_semi_condensed"
                 android:textColor="@color/white"/>

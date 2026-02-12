@@ -8,7 +8,7 @@ import androidx.room.RoomDatabase;
 
 import com.mason.bricktracking.data.model.BrickPlacement;
 
-@Database(entities = {BrickPlacement.class}, version = 5, exportSchema = false)
+@Database(entities = {BrickPlacement.class}, version = 6, exportSchema = false)
 public abstract class AppDatabase extends RoomDatabase {
     private static AppDatabase instance;
     

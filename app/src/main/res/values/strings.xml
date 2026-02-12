@@ -26,6 +26,9 @@
     
     <!-- Main Activity -->
     <string name="brick_placements">Placements</string>
+    <string name="brick_scans">Scans</string>
+    <string name="mode_pallet">Pallet</string>
+    <string name="mode_placement">Placement</string>
     <string name="last_brick_none">Last Brick: None</string>
     <string name="status_ready">Ready</string>
     <string name="start_scanning">START SCANNING</string>

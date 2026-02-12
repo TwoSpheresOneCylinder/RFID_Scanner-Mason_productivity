@@ -32,6 +32,9 @@ public class BrickPlacement {
     // Decision status
     private String decisionStatus;  // ACCEPTED, AMBIGUOUS, REJECTED_NO_GPS, ACCEPTED_NO_GPS, etc.
     
+    // Scan type: "pallet" for inventory scans, "placement" for placement scans
+    private String scanType;
+    
     public BrickPlacement() {
     }
     
@@ -44,6 +47,7 @@ public class BrickPlacement {
         this.longitude = 0.0;
         this.altitude = 0.0;
         this.accuracy = 0.0;
+        this.scanType = "placement";
     }
     
     public BrickPlacement(String masonId, String brickNumber, long timestamp, double latitude, double longitude) {
@@ -54,6 +58,7 @@ public class BrickPlacement {
         this.latitude = latitude;
         this.longitude = longitude;
         this.accuracy = 0.0;
+        this.scanType = "placement";
     }
     
     public BrickPlacement(String masonId, String brickNumber, long timestamp, double latitude, double longitude, double altitude, double accuracy) {
@@ -71,6 +76,7 @@ public class BrickPlacement {
         this.rssiPeak = 0;
         this.readsInWindow = 0;
         this.decisionStatus = "ACCEPTED";
+        this.scanType = "placement";
     }
     
     // Full constructor with all fields
@@ -91,6 +97,7 @@ public class BrickPlacement {
         this.readsInWindow = readsInWindow;
         this.powerLevel = 0; // Will be set separately
         this.decisionStatus = decisionStatus;
+        this.scanType = "placement"; // Will be set separately
     }
     
     // Getters and Setters
@@ -220,5 +227,13 @@ public class BrickPlacement {
     
     public void setDecisionStatus(String decisionStatus) {
         this.decisionStatus = decisionStatus;
+    }
+    
+    public String getScanType() {
+        return scanType;
+    }
+    
+    public void setScanType(String scanType) {
+        this.scanType = scanType;
     }
 }

@@ -800,20 +800,24 @@
             <!-- Overview Tab -->
             <div id="overview-tab" class="tab-content active">
             <div class="stats-grid">
-                <div class="stat-card">
-                    <h3>Total Placements</h3>
+                <div class="stat-card" style="border-top:3px solid #10b981;">
+                    <h3>Blocks Placed</h3>
                     <div class="value" id="totalPlacements">0</div>
+                </div>
+                <div class="stat-card" style="border-top:3px solid #3b82f6;">
+                    <h3>Blocks Indexed</h3>
+                    <div class="value" id="totalIndexed">0</div>
                 </div>
                 <div class="stat-card">
                     <h3>Days Worked</h3>
                     <div class="value" id="daysWorked">0</div>
                 </div>
                 <div class="stat-card">
-                    <h3>Average Per Day</h3>
+                    <h3>Placements / Day</h3>
                     <div class="value" id="avgPerDay">0</div>
                 </div>
                 <div class="stat-card">
-                    <h3>Current Efficiency</h3>
+                    <h3>Placements / Hour</h3>
                     <div class="value" id="currentEfficiency">0</div>
                 </div>
             </div>
@@ -833,7 +837,14 @@
             </div>
             
             <div class="placement-log">
-                <h2>Live Placement Log</h2>
+                <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:12px;">
+                    <h2 style="margin:0;">Live Scan Log</h2>
+                    <div id="logFilterBtns" style="display:flex;gap:6px;">
+                        <button onclick="setLogFilter('all')" id="filterAll" style="padding:4px 12px;border-radius:6px;border:1px solid #ccc;background:#2D3436;color:white;font-size:0.8rem;font-weight:600;cursor:pointer;">All</button>
+                        <button onclick="setLogFilter('placement')" id="filterPlacement" style="padding:4px 12px;border-radius:6px;border:1px solid #ccc;background:transparent;color:#555;font-size:0.8rem;font-weight:600;cursor:pointer;">Placements</button>
+                        <button onclick="setLogFilter('pallet')" id="filterPallet" style="padding:4px 12px;border-radius:6px;border:1px solid #ccc;background:transparent;color:#555;font-size:0.8rem;font-weight:600;cursor:pointer;">Pallet</button>
+                    </div>
+                </div>
                 <div id="placementLog">
                     <div class="no-placements">Loading placements...</div>
                 </div>
@@ -901,6 +912,7 @@
         let allPlacements = [];
         let lastPlacementCount = 0;
         let isUpdating = false;
+        let logFilter = 'all'; // 'all', 'placement', 'pallet'
         
         // Role awareness
         const userRole = localStorage.getItem('dashboard_role') || 'user';
@@ -1771,7 +1783,9 @@
                             
                             allPlacements = todayPlacements;
                             updatePlacementLog(allPlacements);
-                            updateLiveChartMultiMason(allPlacements);
+                            // Charts only show actual placements (not pallet scans)
+                            const chartPlacements = allPlacements.filter(p => (p.scan_type || p.scanType || 'placement') !== 'pallet');
+                            updateLiveChartMultiMason(chartPlacements);
                         }
                     }
                 } else {
@@ -1791,7 +1805,9 @@
                             
                             allPlacements = todayPlacements;
                             updatePlacementLog(allPlacements);
-                            updateLiveChart(allPlacements);
+                            // Charts only show actual placements (not pallet scans)
+                            const chartPlacements = allPlacements.filter(p => (p.scan_type || p.scanType || 'placement') !== 'pallet');
+                            updateLiveChart(chartPlacements);
                         }
                     }
                 }
@@ -1806,15 +1822,28 @@
             const logDiv = document.getElementById('placementLog');
             
             if (!placements || placements.length === 0) {
-                logDiv.innerHTML = '<div class="no-placements">No placements recorded yet</div>';
+                logDiv.innerHTML = '<div class="no-placements">No scans recorded yet</div>';
+                return;
+            }
+            
+            // Apply log filter
+            let filtered = placements;
+            if (logFilter === 'placement') {
+                filtered = placements.filter(p => (p.scan_type || p.scanType || 'placement') !== 'pallet');
+            } else if (logFilter === 'pallet') {
+                filtered = placements.filter(p => (p.scan_type || p.scanType || 'placement') === 'pallet');
+            }
+            
+            if (filtered.length === 0) {
+                logDiv.innerHTML = '<div class="no-placements">No ' + (logFilter === 'pallet' ? 'pallet' : 'placement') + ' scans found</div>';
                 return;
             }
             
             // Sort by timestamp descending (newest first)
-            placements.sort((a, b) => b.timestamp - a.timestamp);
+            filtered.sort((a, b) => b.timestamp - a.timestamp);
             
             // Take only the most recent 50
-            const recentPlacements = placements.slice(0, 50);
+            const recentPlacements = filtered.slice(0, 50);
             
             // Track new placements for animation
             const newIds = new Set(recentPlacements.map(p => p.id));
@@ -1868,11 +1897,16 @@
                 const rssiInfo = rssiAvg ? `<div style="font-size:0.8rem;color:#4ade80;">RSSI: ${rssiAvg}dBm (peak ${rssiPeak}, reads ${readsInWindow})</div>` : '';
                 const statusInfo = decisionStatus && decisionStatus !== 'ACCEPTED' ? `<div style="font-size:0.8rem;color:#ff6b6b;font-weight:600;">[${escapeHtml(decisionStatus)}]</div>` : '';
                 
+                // Scan type badge
+                const scanType = placement.scan_type || placement.scanType || 'placement';
+                const isPallet = scanType === 'pallet';
+                const scanTypeBadge = `<span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin-left:8px;${isPallet ? 'background:#3b82f6;color:white;' : 'background:#10b981;color:white;'}">${isPallet ? 'Pallet' : 'Placement'}</span>`;
+                
                 return `
                     <div class="placement-item${newClass}">
                         <div class="placement-timestamp">${escapeHtml(timeString)}</div>
                         <div class="placement-details">
-                            <div class="placement-mason">${escapeHtml(placement.mason_id || placement.masonId || 'Unknown')}</div>
+                            <div class="placement-mason">${escapeHtml(placement.mason_id || placement.masonId || 'Unknown')}${scanTypeBadge}</div>
                             <div class="placement-brick">${displayText}</div>
                             ${sessionInfo}
                             ${rssiInfo}
@@ -1881,6 +1915,22 @@
                     </div>
                 `;
             }).join('');
+        }
+        
+        // Scan log filter toggle
+        function setLogFilter(filter) {
+            logFilter = filter;
+            // Update button styles
+            ['All', 'Placement', 'Pallet'].forEach(name => {
+                const btn = document.getElementById('filter' + name);
+                if (btn) {
+                    const isActive = name.toLowerCase() === filter || (name === 'All' && filter === 'all');
+                    btn.style.background = isActive ? '#2D3436' : 'transparent';
+                    btn.style.color = isActive ? 'white' : '#555';
+                }
+            });
+            // Re-render log with current data
+            updatePlacementLog(allPlacements);
         }
         
         // Refresh dashboard data (stats only, don't reload placements)
@@ -1925,22 +1975,30 @@
                 if (masonId) {
                     // Single mason - show their data
                     const summary = summaryData[0];
-                    document.getElementById('totalPlacements').textContent = summary.totalPlacements.toLocaleString();
+                    const placed = summary.placementCount || 0;
+                    const indexed = summary.palletCount || 0;
+                    document.getElementById('totalPlacements').textContent = placed.toLocaleString();
+                    document.getElementById('totalIndexed').textContent = indexed.toLocaleString();
                     document.getElementById('daysWorked').textContent = summary.daysWorked;
-                    document.getElementById('avgPerDay').textContent = summary.avgPlacementsPerDay.toFixed(1);
+                    // Avg per day based on placements only
+                    const avgPerDay = summary.daysWorked > 0 ? (placed / summary.daysWorked).toFixed(1) : '0.0';
+                    document.getElementById('avgPerDay').textContent = avgPerDay;
                 } else {
                     // All masons - aggregate the data
-                    const totalPlacements = summaryData.reduce((sum, s) => sum + s.totalPlacements, 0);
+                    const totalPlaced = summaryData.reduce((sum, s) => sum + (s.placementCount || 0), 0);
+                    const totalIndexed = summaryData.reduce((sum, s) => sum + (s.palletCount || 0), 0);
                     const maxDaysWorked = Math.max(...summaryData.map(s => s.daysWorked));
-                    const avgPerDay = (totalPlacements / maxDaysWorked).toFixed(1);
+                    const avgPerDay = maxDaysWorked > 0 ? (totalPlaced / maxDaysWorked).toFixed(1) : '0.0';
                     
-                    document.getElementById('totalPlacements').textContent = totalPlacements.toLocaleString();
+                    document.getElementById('totalPlacements').textContent = totalPlaced.toLocaleString();
+                    document.getElementById('totalIndexed').textContent = totalIndexed.toLocaleString();
                     document.getElementById('daysWorked').textContent = maxDaysWorked;
                     document.getElementById('avgPerDay').textContent = avgPerDay;
                 }
             } else {
                 // No data yet
                 document.getElementById('totalPlacements').textContent = '0';
+                document.getElementById('totalIndexed').textContent = '0';
                 document.getElementById('daysWorked').textContent = '0';
                 document.getElementById('avgPerDay').textContent = '0.0';
             }

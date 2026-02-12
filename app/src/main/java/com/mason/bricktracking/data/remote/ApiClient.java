@@ -18,9 +18,10 @@ public class ApiClient {
     // - Android Emulator: use "http://10.0.2.2:8080/api/"
     // - Physical Device: use your computer's IP (run "ipconfig" and find IPv4 Address)
     //   Example: "http://192.168.1.100:8080/api/"
+    // - ngrok tunnel: use the public URL from ngrok
     // 
-    // Current setup: Physical device connected to same WiFi network
-    private static final String BASE_URL = "http://192.168.10.124:8080/api/";
+    // Current setup: ngrok tunnel for development (works from any network)
+    private static final String BASE_URL = "https://unparadoxical-sallie-waywardly.ngrok-free.dev/api/";
     private static Retrofit retrofit;
     private static ApiService apiService;
     

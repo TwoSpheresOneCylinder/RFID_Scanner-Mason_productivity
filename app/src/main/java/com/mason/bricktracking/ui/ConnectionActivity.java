@@ -7,10 +7,10 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
-import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -21,6 +21,8 @@ import androidx.core.app.ActivityCompat;
 
 import com.mason.bricktracking.MasonApp;
 import com.mason.bricktracking.R;
+import com.mason.bricktracking.util.NetworkMonitor;
+import com.mason.bricktracking.util.PreScanValidator;
 import com.rscja.deviceapi.RFIDWithUHFBLE;
 import com.rscja.deviceapi.interfaces.ConnectionStatus;
 import com.rscja.deviceapi.interfaces.ConnectionStatusCallback;
@@ -38,6 +40,20 @@ public class ConnectionActivity extends AppCompatActivity {
     private RFIDWithUHFBLE uhf;
     private BluetoothAdapter bluetoothAdapter;
     private BluetoothDevice selectedDevice;
+    
+    // Pre-scan validation
+    private PreScanValidator preScanValidator;
+    private NetworkMonitor networkMonitor;
+    private boolean validationPassed = false;
+    
+    // Validation banner views
+    private LinearLayout layoutValidationBanner;
+    private ProgressBar progressValidation;
+    private TextView tvValidationTitle, tvValidationStatus;
+    private TextView tvBatteryIcon, tvBatteryStatus;
+    private TextView tvBleIcon, tvBleStatus;
+    private TextView tvGpsIcon, tvGpsStatus;
+    private TextView tvNetworkIcon, tvNetworkStatus;
     
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,6 +75,7 @@ public class ConnectionActivity extends AppCompatActivity {
         
         initViews();
         initRFID();
+        initValidation();
         checkPermissions();
         setupListeners();
         
@@ -73,6 +90,20 @@ public class ConnectionActivity extends AppCompatActivity {
         btnConnect = findViewById(R.id.btn_connect);
         btnContinue = findViewById(R.id.btn_continue);
         progressBar = findViewById(R.id.progress_bar);
+        
+        // Validation banner views
+        layoutValidationBanner = findViewById(R.id.layout_validation_banner);
+        progressValidation = findViewById(R.id.progress_validation);
+        tvValidationTitle = findViewById(R.id.tv_validation_title);
+        tvValidationStatus = findViewById(R.id.tv_validation_status);
+        tvBatteryIcon = findViewById(R.id.tv_check_battery_icon);
+        tvBatteryStatus = findViewById(R.id.tv_check_battery_status);
+        tvBleIcon = findViewById(R.id.tv_check_ble_icon);
+        tvBleStatus = findViewById(R.id.tv_check_ble_status);
+        tvGpsIcon = findViewById(R.id.tv_check_gps_icon);
+        tvGpsStatus = findViewById(R.id.tv_check_gps_status);
+        tvNetworkIcon = findViewById(R.id.tv_check_network_icon);
+        tvNetworkStatus = findViewById(R.id.tv_check_network_status);
         
         btnConnect.setEnabled(false);
         btnContinue.setEnabled(false);
@@ -103,6 +134,12 @@ public class ConnectionActivity extends AppCompatActivity {
                 });
             }
         });
+    }
+    
+    private void initValidation() {
+        // Initialize network monitor
+        networkMonitor = new NetworkMonitor(this);
+        networkMonitor.startMonitoring();
     }
     
     private void checkPermissions() {
@@ -259,7 +296,7 @@ public class ConnectionActivity extends AppCompatActivity {
         btnConnect.setText("Disconnect");
         btnConnect.setBackgroundResource(R.drawable.button_bg_red);
         btnConnect.setEnabled(true);
-        btnContinue.setEnabled(true);
+        btnContinue.setEnabled(false); // Will be enabled after validation passes
         btnSearchDevices.setEnabled(false);
         btnSearchDevices.setBackgroundResource(R.drawable.button_bg_disabled);
         
@@ -279,6 +316,9 @@ public class ConnectionActivity extends AppCompatActivity {
                 selectedDevice.getName() != null ? selectedDevice.getName() : selectedDevice.getAddress()
             );
         }
+        
+        // Run pre-scan validation
+        showValidationBanner();
     }
     
     private void onDeviceDisconnected() {
@@ -288,8 +328,12 @@ public class ConnectionActivity extends AppCompatActivity {
         btnConnect.setBackgroundResource(R.drawable.button_bg_gray);
         btnConnect.setEnabled(selectedDevice != null);
         btnContinue.setEnabled(false);
+        btnContinue.setBackgroundResource(R.drawable.button_bg_blue);
         btnSearchDevices.setEnabled(true);
         btnSearchDevices.setBackgroundResource(R.drawable.button_bg_green);
+        
+        // Hide validation banner
+        hideValidationBanner();
     }
     
     private void updateConnectionStatus(String status, boolean connected) {
@@ -348,6 +392,153 @@ public class ConnectionActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        // Clean up validation resources
+        if (preScanValidator != null) {
+            preScanValidator.cancelValidation();
+        }
+        if (networkMonitor != null) {
+            networkMonitor.stopMonitoring();
+        }
         // Don't disconnect here, keep connection for MainActivity
+    }
+    
+    // ========== Pre-Scan Validation ==========
+    
+    private void showValidationBanner() {
+        // Initialize validator if needed
+        if (preScanValidator == null) {
+            preScanValidator = new PreScanValidator(this, uhf, networkMonitor);
+        }
+        
+        // Reset icons to pending state
+        resetValidationIcons();
+        
+        // Show the validation banner
+        layoutValidationBanner.setVisibility(View.VISIBLE);
+        progressValidation.setVisibility(View.VISIBLE);
+        tvValidationStatus.setText("");
+        
+        // Set validation listener
+        preScanValidator.setValidationListener(new PreScanValidator.ValidationListener() {
+            @Override
+            public void onValidationProgress(String message, int step, int totalSteps) {
+                // Progress is shown via step icons updating
+            }
+            
+            @Override
+            public void onCheckComplete(String checkName, PreScanValidator.CheckStatus status, String message) {
+                switch (checkName) {
+                    case "battery":
+                        updateCheckIcon(tvBatteryIcon, status);
+                        updateStatusText(tvBatteryStatus, status, message);
+                        break;
+                    case "ble":
+                        updateCheckIcon(tvBleIcon, status);
+                        updateStatusText(tvBleStatus, status, message);
+                        break;
+                    case "gps":
+                        updateCheckIcon(tvGpsIcon, status);
+                        updateStatusText(tvGpsStatus, status, message);
+                        break;
+                    case "network":
+                        updateCheckIcon(tvNetworkIcon, status);
+                        updateStatusText(tvNetworkStatus, status, message);
+                        break;
+                }
+            }
+            
+            @Override
+            public void onValidationComplete(PreScanValidator.ValidationResult result) {
+                // Hide progress spinner
+                progressValidation.setVisibility(View.GONE);
+                
+                // Show overall status
+                if (result.overallStatus == PreScanValidator.CheckStatus.PASSED) {
+                    tvValidationStatus.setText("✓ READY");
+                    tvValidationStatus.setTextColor(getResources().getColor(R.color.cr_green));
+                    validationPassed = true;
+                    btnContinue.setEnabled(true);
+                    btnContinue.setBackgroundResource(R.drawable.button_bg_green);
+                } else if (result.overallStatus == PreScanValidator.CheckStatus.WARNING) {
+                    tvValidationStatus.setText("⚠ READY");
+                    tvValidationStatus.setTextColor(getResources().getColor(R.color.cr_orange));
+                    validationPassed = true;
+                    btnContinue.setEnabled(true);
+                    btnContinue.setBackgroundResource(R.drawable.button_bg_green);
+                } else {
+                    tvValidationStatus.setText("✗ FAILED");
+                    tvValidationStatus.setTextColor(getResources().getColor(R.color.cr_red));
+                    validationPassed = false;
+                    btnContinue.setEnabled(false);
+                    btnContinue.setBackgroundResource(R.drawable.button_bg_disabled);
+                }
+            }
+        });
+        
+        // Start validation
+        preScanValidator.startValidation();
+    }
+    
+    private void resetValidationIcons() {
+        int pendingColor = getResources().getColor(R.color.gray2);
+        tvBatteryIcon.setText("○");
+        tvBatteryIcon.setTextColor(pendingColor);
+        tvBatteryStatus.setText("...");
+        tvBleIcon.setText("○");
+        tvBleIcon.setTextColor(pendingColor);
+        tvBleStatus.setText("...");
+        tvGpsIcon.setText("○");
+        tvGpsIcon.setTextColor(pendingColor);
+        tvGpsStatus.setText("...");
+        tvNetworkIcon.setText("○");
+        tvNetworkIcon.setTextColor(pendingColor);
+        tvNetworkStatus.setText("...");
+    }
+    
+    private void hideValidationBanner() {
+        layoutValidationBanner.setVisibility(View.GONE);
+        if (preScanValidator != null) {
+            preScanValidator.cancelValidation();
+        }
+        validationPassed = false;
+    }
+    
+    private void updateCheckIcon(TextView iconView, PreScanValidator.CheckStatus status) {
+        switch (status) {
+            case PASSED:
+                iconView.setText("✓");
+                iconView.setTextColor(getResources().getColor(R.color.cr_green));
+                break;
+            case WARNING:
+                iconView.setText("⚠");
+                iconView.setTextColor(getResources().getColor(R.color.cr_orange));
+                break;
+            case FAILED:
+                iconView.setText("✗");
+                iconView.setTextColor(getResources().getColor(R.color.cr_red));
+                break;
+            default:
+                iconView.setText("○");
+                iconView.setTextColor(getResources().getColor(R.color.gray2));
+                break;
+        }
+    }
+    
+    private void updateStatusText(TextView statusView, PreScanValidator.CheckStatus status, String message) {
+        statusView.setText(message);
+        switch (status) {
+            case PASSED:
+                statusView.setTextColor(getResources().getColor(R.color.cr_green));
+                break;
+            case WARNING:
+                statusView.setTextColor(getResources().getColor(R.color.cr_orange));
+                break;
+            case FAILED:
+                statusView.setTextColor(getResources().getColor(R.color.cr_red));
+                break;
+            default:
+                statusView.setTextColor(getResources().getColor(R.color.cr_charcoal_light));
+                break;
+        }
     }
 }

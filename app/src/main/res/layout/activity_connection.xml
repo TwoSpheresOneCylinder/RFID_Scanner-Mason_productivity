@@ -95,6 +95,197 @@
                 android:textColor="@color/cr_charcoal_light" />
         </LinearLayout>
 
+        <!-- Banner 4: Validation checks (hidden until connected) -->
+        <LinearLayout
+            android:id="@+id/layout_validation_banner"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/card_elevated"
+            android:elevation="8dp"
+            android:visibility="gone">
+
+            <!-- Validation header -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:background="@color/cr_charcoal"
+                android:padding="10dp"
+                android:gravity="center">
+
+                <ProgressBar
+                    android:id="@+id/progress_validation"
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
+                    android:layout_marginEnd="8dp"
+                    android:indeterminateTint="@color/white" />
+
+                <TextView
+                    android:id="@+id/tv_validation_title"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="SCANNER READY CHECK"
+                    android:textSize="13sp"
+                    android:textStyle="bold"
+                    android:textAllCaps="true"
+                    android:letterSpacing="0.02"
+                    android:textColor="@color/white" />
+
+                <TextView
+                    android:id="@+id/tv_validation_status"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:text=""
+                    android:textSize="13sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/white" />
+            </LinearLayout>
+
+            <!-- Validation checks grid -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:padding="8dp"
+                android:background="@color/white">
+
+                <!-- Battery -->
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:gravity="center"
+                    android:padding="4dp">
+
+                    <TextView
+                        android:id="@+id/tv_check_battery_icon"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="○"
+                        android:textSize="18sp"
+                        android:textColor="@color/gray2" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Battery"
+                        android:textSize="10sp"
+                        android:textColor="@color/cr_charcoal_light" />
+
+                    <TextView
+                        android:id="@+id/tv_check_battery_status"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="..."
+                        android:textSize="9sp"
+                        android:textColor="@color/cr_charcoal_light" />
+                </LinearLayout>
+
+                <!-- BLE -->
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:gravity="center"
+                    android:padding="4dp">
+
+                    <TextView
+                        android:id="@+id/tv_check_ble_icon"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="○"
+                        android:textSize="18sp"
+                        android:textColor="@color/gray2" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Scanner"
+                        android:textSize="10sp"
+                        android:textColor="@color/cr_charcoal_light" />
+
+                    <TextView
+                        android:id="@+id/tv_check_ble_status"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="..."
+                        android:textSize="9sp"
+                        android:textColor="@color/cr_charcoal_light" />
+                </LinearLayout>
+
+                <!-- GPS -->
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:gravity="center"
+                    android:padding="4dp">
+
+                    <TextView
+                        android:id="@+id/tv_check_gps_icon"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="○"
+                        android:textSize="18sp"
+                        android:textColor="@color/gray2" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="GPS"
+                        android:textSize="10sp"
+                        android:textColor="@color/cr_charcoal_light" />
+
+                    <TextView
+                        android:id="@+id/tv_check_gps_status"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="..."
+                        android:textSize="9sp"
+                        android:textColor="@color/cr_charcoal_light" />
+                </LinearLayout>
+
+                <!-- Network -->
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:gravity="center"
+                    android:padding="4dp">
+
+                    <TextView
+                        android:id="@+id/tv_check_network_icon"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="○"
+                        android:textSize="18sp"
+                        android:textColor="@color/gray2" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Network"
+                        android:textSize="10sp"
+                        android:textColor="@color/cr_charcoal_light" />
+
+                    <TextView
+                        android:id="@+id/tv_check_network_status"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="..."
+                        android:textSize="9sp"
+                        android:textColor="@color/cr_charcoal_light" />
+                </LinearLayout>
+
+            </LinearLayout>
+        </LinearLayout>
+
         <!-- Content area -->
         <LinearLayout
             android:layout_width="match_parent"

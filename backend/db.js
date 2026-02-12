@@ -171,6 +171,15 @@ function createTables(resolve, reject) {
                 });
                 // Note: event_id UNIQUE constraint already creates an implicit index
                 // Note: idx_mason_id, idx_mason_time, idx_event_id removed (redundant)
+                
+                // Migrate: add scan_type column if missing (existing DBs)
+                db.run(`ALTER TABLE placements ADD COLUMN scan_type TEXT DEFAULT 'placement'`, (alterErr) => {
+                    if (alterErr && !alterErr.message.includes('duplicate column')) {
+                        console.error('Warning: Could not add scan_type column to placements:', alterErr.message);
+                    } else if (!alterErr) {
+                        console.log('✓ Migrated placements table: added scan_type column');
+                    }
+                });
                 checkComplete();
             }
         });
@@ -239,6 +248,15 @@ function createTables(resolve, reject) {
                 db.run(`CREATE INDEX IF NOT EXISTS idx_history_mason ON placement_history(mason_id, timestamp)`, (err) => {
                     if (err) console.error('Error creating history mason index:', err.message);
                     else console.log('✓ Index idx_history_mason created');
+                });
+                
+                // Migrate: add scan_type column if missing (existing DBs)
+                db.run(`ALTER TABLE placement_history ADD COLUMN scan_type TEXT DEFAULT 'placement'`, (alterErr) => {
+                    if (alterErr && !alterErr.message.includes('duplicate column')) {
+                        console.error('Warning: Could not add scan_type column to placement_history:', alterErr.message);
+                    } else if (!alterErr) {
+                        console.log('✓ Migrated placement_history table: added scan_type column');
+                    }
                 });
                 checkComplete();
             }
@@ -496,14 +514,37 @@ const dbPlacements = {
                         const timeDiff = placement.timestamp - existingForMason.timestamp;
                         const timeDiffSeconds = Math.round(timeDiff / 1000);
                         
+                        // RSSI-based directional confidence scoring
+                        // Higher RSSI = scanner was pointed more directly at tag = more accurate position
+                        // MR20 UHF is directional (~60-70° beam), so RSSI strongly correlates with positioning accuracy
+                        const RSSI_SIGNIFICANT_IMPROVEMENT = 3; // dB threshold for "significantly better" directional read
+                        const rssiDiff = placement.rssiPeak - existingForMason.rssi_peak;
+                        
+                        // Calculate directional confidence (0-100 scale based on RSSI)
+                        // Typical RSSI range: -70dB (weak/edge) to -30dB (strong/direct)
+                        const calcConfidence = (rssi) => {
+                            if (rssi === 0) return 0;
+                            // Map -70 to -30 dB range to 0-100 confidence
+                            const normalized = Math.max(0, Math.min(100, (rssi + 70) * 2.5));
+                            return Math.round(normalized);
+                        };
+                        const newConfidence = calcConfidence(placement.rssiPeak);
+                        const oldConfidence = calcConfidence(existingForMason.rssi_peak);
+                        
                         // Validation checks - NEW scan must meet at least one criteria:
                         const isNewer = timeDiff > 30000; // At least 30 seconds newer
                         const hasBetterAccuracy = placement.accuracy > 0 && 
                                                  (existingForMason.accuracy === 0 || 
                                                   placement.accuracy < existingForMason.accuracy);
-                        const hasStrongerSignal = placement.rssiPeak > existingForMason.rssi_peak;
+                        const hasStrongerSignal = rssiDiff > 0;
+                        const hasSignificantlyStrongerSignal = rssiDiff >= RSSI_SIGNIFICANT_IMPROVEMENT;
                         const hasValidGPS = placement.latitude !== 0 && placement.longitude !== 0 &&
                                           (existingForMason.latitude === 0 || existingForMason.longitude === 0);
+                        
+                        // Directional positioning improvement: stronger RSSI with valid GPS = more accurate position
+                        const hasBetterDirectionalPosition = hasSignificantlyStrongerSignal && 
+                                                             placement.latitude !== 0 && 
+                                                             placement.longitude !== 0;
                         
                         // Reject if scan is older or too recent
                         if (timeDiff < 0) {
@@ -517,20 +558,26 @@ const dbPlacements = {
                         }
                         
                         // Check if new scan is actually better
-                        if (!hasBetterAccuracy && !hasStrongerSignal && !hasValidGPS) {
-                            console.log(`[${masonId}] ✗ Rejected: ${placement.brickNumber} - no improvement (accuracy: ${placement.accuracy}m vs ${existingForMason.accuracy}m, RSSI: ${placement.rssiPeak} vs ${existingForMason.rssi_peak}) - skipping`);
+                        if (!hasBetterAccuracy && !hasStrongerSignal && !hasValidGPS && !hasBetterDirectionalPosition) {
+                            console.log(`[${masonId}] ✗ Rejected: ${placement.brickNumber} - no improvement (accuracy: ${placement.accuracy}m vs ${existingForMason.accuracy}m, RSSI: ${placement.rssiPeak}dB vs ${existingForMason.rssi_peak}dB, confidence: ${newConfidence}% vs ${oldConfidence}%) - skipping`);
                             continue;
                         }
                         
-                        // Valid UPDATE - log why it's being updated
+                        // Valid UPDATE - log why it's being updated with directional confidence
                         let updateReasons = [];
                         if (isNewer) updateReasons.push(`${timeDiffSeconds}s newer`);
-                        if (hasBetterAccuracy) updateReasons.push(`better accuracy: ${placement.accuracy}m vs ${existingForMason.accuracy}m`);
-                        if (hasStrongerSignal) updateReasons.push(`stronger signal: ${placement.rssiPeak}dB vs ${existingForMason.rssi_peak}dB`);
-                        if (hasValidGPS) updateReasons.push(`added GPS`);
+                        if (hasBetterAccuracy) updateReasons.push(`better GPS accuracy: ${placement.accuracy}m vs ${existingForMason.accuracy}m`);
+                        if (hasSignificantlyStrongerSignal) {
+                            updateReasons.push(`stronger directional read: ${placement.rssiPeak}dB vs ${existingForMason.rssi_peak}dB (+${rssiDiff}dB)`);
+                        } else if (hasStrongerSignal) {
+                            updateReasons.push(`slightly stronger signal: ${placement.rssiPeak}dB vs ${existingForMason.rssi_peak}dB`);
+                        }
+                        if (hasValidGPS) updateReasons.push(`added GPS coordinates`);
+                        if (hasBetterDirectionalPosition) updateReasons.push(`better directional position (confidence: ${newConfidence}% vs ${oldConfidence}%)`);
                         
                         console.log(`[${masonId}] ↻ Valid update for ${placement.brickNumber}: ${updateReasons.join(', ')}`);
                         placement.existingId = existingForMason.id;
+                        placement.directionalConfidence = newConfidence; // Store for potential future use
                         toUpdate.push(placement);
                         continue;
                     }
@@ -617,8 +664,8 @@ const dbPlacements = {
                         INSERT INTO placements (
                             mason_id, brick_number, rfid_tag, timestamp, received_at, 
                             latitude, longitude, altitude, accuracy,
-                            build_session_id, event_seq, rssi_avg, rssi_peak, reads_in_window, power_level, decision_status, event_id
-                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                            build_session_id, event_seq, rssi_avg, rssi_peak, reads_in_window, power_level, decision_status, event_id, scan_type
+                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     `);
 
                     toInsert.forEach(placement => {
@@ -642,6 +689,7 @@ const dbPlacements = {
                             placement.powerLevel || 0,
                             placement.decisionStatus || 'ACCEPTED',
                             eventId,
+                            placement.scanType || 'placement',
                             (err) => {
                                 if (err) {
                                     console.error(`[${masonId}] Insert error:`, err);
@@ -664,13 +712,13 @@ const dbPlacements = {
                             placement_id, mason_id, brick_number, rfid_tag, timestamp, received_at,
                             latitude, longitude, altitude, accuracy,
                             build_session_id, event_seq, rssi_avg, rssi_peak, reads_in_window, power_level, 
-                            decision_status, event_id, action_type
+                            decision_status, event_id, action_type, scan_type
                         )
                         SELECT 
                             id, mason_id, brick_number, rfid_tag, timestamp, received_at,
                             latitude, longitude, altitude, accuracy,
                             build_session_id, event_seq, rssi_avg, rssi_peak, reads_in_window, power_level,
-                            decision_status, event_id, 'UPDATE'
+                            decision_status, event_id, 'UPDATE', scan_type
                         FROM placements
                         WHERE id = ?
                     `);
@@ -702,7 +750,8 @@ const dbPlacements = {
                             reads_in_window = ?,
                             power_level = ?,
                             decision_status = ?,
-                            event_id = ?
+                            event_id = ?,
+                            scan_type = ?
                         WHERE id = ?
                     `);
 
@@ -724,6 +773,7 @@ const dbPlacements = {
                             placement.powerLevel || 0,
                             placement.decisionStatus || 'ACCEPTED',
                             eventId,
+                            placement.scanType || 'placement',
                             placement.existingId,
                             (err) => {
                                 if (err) {
@@ -761,12 +811,15 @@ const dbPlacements = {
     },
 
     // Get total count for a mason
-    getCountByMasonId: (masonId) => {
+    getCountByMasonId: (masonId, scanType = null) => {
         return new Promise((resolve, reject) => {
-            db.get(
-                `SELECT COUNT(*) as count FROM placements WHERE mason_id = ?`,
-                [masonId],
-                (err, row) => {
+            let query = `SELECT COUNT(*) as count FROM placements WHERE mason_id = ?`;
+            const params = [masonId];
+            if (scanType) {
+                query += ` AND scan_type = ?`;
+                params.push(scanType);
+            }
+            db.get(query, params, (err, row) => {
                     if (err) reject(err);
                     else resolve(row ? row.count : 0);
                 }

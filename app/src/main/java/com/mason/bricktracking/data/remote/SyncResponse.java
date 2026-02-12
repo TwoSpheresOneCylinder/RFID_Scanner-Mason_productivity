@@ -4,6 +4,8 @@ public class SyncResponse {
     private boolean success;
     private String message;
     private int lastPlacementNumber;
+    private int palletCount;
+    private int placementCount;
     
     public boolean isSuccess() {
         return success;
@@ -27,5 +29,21 @@ public class SyncResponse {
     
     public void setLastPlacementNumber(int lastPlacementNumber) {
         this.lastPlacementNumber = lastPlacementNumber;
+    }
+    
+    public int getPalletCount() {
+        return palletCount;
+    }
+    
+    public void setPalletCount(int palletCount) {
+        this.palletCount = palletCount;
+    }
+    
+    public int getPlacementCount() {
+        return placementCount;
+    }
+    
+    public void setPlacementCount(int placementCount) {
+        this.placementCount = placementCount;
     }
 }
