@@ -187,30 +187,13 @@
             android:paddingEnd="16dp"
             android:gravity="center_vertical">
 
-            <!-- Scanner Battery -->
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="horizontal"
-                android:gravity="center_vertical">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Battery"
-                    android:textSize="13sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/cr_charcoal"/>
-
-                <ImageView
-                    android:id="@+id/iv_battery_status"
-                    android:layout_width="28dp"
-                    android:layout_height="28dp"
-                    android:layout_marginStart="6dp"
-                    android:scaleType="fitCenter"
-                    android:contentDescription="Scanner Battery Level" />
-            </LinearLayout>
+            <!-- Scanner Battery (icon only) -->
+            <ImageView
+                android:id="@+id/iv_battery_status"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
+                android:scaleType="fitCenter"
+                android:contentDescription="Scanner Battery Level" />
 
             <!-- Sync Status -->
             <TextView
@@ -224,61 +207,60 @@
                 android:gravity="end"/>
         </LinearLayout>
 
-        <!-- Content area -->
+        <!-- Content area - edge to edge -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
             android:orientation="vertical"
-            android:padding="16dp">
+            android:paddingTop="16dp"
+            android:paddingBottom="16dp">
 
-            <!-- Button Container -->
+            <!-- Control Buttons -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:background="@drawable/button_container_bg"
-                android:padding="16dp">
+                android:orientation="horizontal"
+                android:layout_marginBottom="8dp"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp">
 
-                <!-- Control Buttons -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:layout_marginBottom="8dp">
-
-                    <Button
-                        android:id="@+id/btn_start"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="SCAN"
-                        android:background="@drawable/button_bg_green"
-                        app:backgroundTint="@null"
-                        android:textColor="@color/white"
-                        android:layout_marginEnd="8dp"/>
-
-                    <Button
-                        android:id="@+id/btn_stop"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="STOP"
-                        android:background="@drawable/button_bg_red"
-                        app:backgroundTint="@null"
-                        android:textColor="@color/white"/>
-                </LinearLayout>
-
-                <!-- Back Button -->
                 <Button
-                    android:id="@+id/btn_back"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="BACK"
-                    android:background="@drawable/button_bg_blue"
+                    android:id="@+id/btn_start"
+                    android:layout_width="0dp"
+                    android:layout_height="56dp"
+                    android:layout_weight="1"
+                    android:text="SCAN"
+                    android:textSize="16sp"
+                    android:background="@drawable/button_bg_green"
+                    app:backgroundTint="@null"
+                    android:textColor="@color/white"
+                    android:layout_marginEnd="8dp"/>
+
+                <Button
+                    android:id="@+id/btn_stop"
+                    android:layout_width="0dp"
+                    android:layout_height="56dp"
+                    android:layout_weight="1"
+                    android:text="STOP"
+                    android:textSize="16sp"
+                    android:background="@drawable/button_bg_red"
                     app:backgroundTint="@null"
                     android:textColor="@color/white"/>
             </LinearLayout>
+
+            <!-- Back Button -->
+            <Button
+                android:id="@+id/btn_back"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:text="BACK"
+                android:textSize="16sp"
+                android:background="@drawable/button_bg_blue"
+                app:backgroundTint="@null"
+                android:textColor="@color/white"
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="16dp"/>
         </LinearLayout>
 
     </LinearLayout>

@@ -286,68 +286,61 @@
             </LinearLayout>
         </LinearLayout>
 
-        <!-- Content area -->
+        <!-- Content area - edge to edge -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
             android:orientation="vertical"
-            android:padding="16dp">
+            android:paddingTop="16dp"
+            android:paddingBottom="16dp">
 
-            <!-- Button Container -->
+            <!-- Search & Connect side by side -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:background="@drawable/button_container_bg"
-                android:padding="16dp">
+                android:orientation="horizontal"
+                android:layout_marginBottom="8dp"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp">
 
-                <!-- Search & Connect side by side -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:layout_marginBottom="8dp">
-
-                    <Button
-                        android:id="@+id/btn_search_devices"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="@string/search_devices"
-                        android:textSize="16sp"
-                        android:padding="16dp"
-                        android:background="@drawable/button_bg_green"
-                        app:backgroundTint="@null"
-                        android:textColor="@color/white"
-                        android:layout_marginEnd="4dp" />
-
-                    <Button
-                        android:id="@+id/btn_connect"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="@string/connect"
-                        android:textSize="16sp"
-                        android:padding="16dp"
-                        android:background="@drawable/button_bg_gray"
-                        app:backgroundTint="@null"
-                        android:textColor="@color/white"
-                        android:layout_marginStart="4dp" />
-                </LinearLayout>
-
-                <!-- Continue full width -->
                 <Button
-                    android:id="@+id/btn_continue"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="@string/continue_to_tracking"
+                    android:id="@+id/btn_search_devices"
+                    android:layout_width="0dp"
+                    android:layout_height="56dp"
+                    android:layout_weight="1"
+                    android:text="@string/search_devices"
                     android:textSize="16sp"
-                    android:padding="16dp"
-                    android:background="@drawable/button_bg_blue"
+                    android:background="@drawable/button_bg_green"
                     app:backgroundTint="@null"
-                    android:textColor="@color/white" />
+                    android:textColor="@color/white"
+                    android:layout_marginEnd="4dp" />
+
+                <Button
+                    android:id="@+id/btn_connect"
+                    android:layout_width="0dp"
+                    android:layout_height="56dp"
+                    android:layout_weight="1"
+                    android:text="@string/connect"
+                    android:textSize="16sp"
+                    android:background="@drawable/button_bg_gray"
+                    app:backgroundTint="@null"
+                    android:textColor="@color/white"
+                    android:layout_marginStart="4dp" />
             </LinearLayout>
+
+            <!-- Continue full width -->
+            <Button
+                android:id="@+id/btn_continue"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:text="@string/continue_to_tracking"
+                android:textSize="16sp"
+                android:background="@drawable/button_bg_blue"
+                app:backgroundTint="@null"
+                android:textColor="@color/white"
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="16dp" />
         </LinearLayout>
 
     </LinearLayout>
