@@ -80,15 +80,21 @@ function generateToken(user) {
 // Auth middleware - verifies JWT Bearer token
 function requireAuth(req, res, next) {
     const authHeader = req.headers.authorization;
+    let token = null;
 
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+        token = authHeader.split(' ')[1];
+    } else if (req.query.token) {
+        // Allow token via query param (for report URLs opened in new tabs)
+        token = req.query.token;
+    }
+
+    if (!token) {
         return res.status(401).json({
             success: false,
             message: 'Authentication required. Provide Bearer token.'
         });
     }
-
-    const token = authHeader.split(' ')[1];
 
     try {
         const decoded = jwt.verify(token, JWT_SECRET);
@@ -283,6 +289,32 @@ app.post('/api/auth/register', async (req, res) => {
 // ============================================
 // USER/MASON ENDPOINTS
 // ============================================
+
+// GET /api/user/preferences - Get current user's preferences (widget layout, etc.)
+app.get('/api/user/preferences', requireAuth, async (req, res) => {
+    try {
+        const prefs = await dbUsers.getPreferences(req.user.masonId);
+        res.json({ success: true, preferences: prefs });
+    } catch (err) {
+        console.error('Error fetching preferences:', err);
+        res.status(500).json({ success: false, message: 'Failed to load preferences' });
+    }
+});
+
+// PUT /api/user/preferences - Update current user's preferences
+app.put('/api/user/preferences', requireAuth, async (req, res) => {
+    try {
+        const { preferences } = req.body;
+        if (!preferences || typeof preferences !== 'object') {
+            return res.status(400).json({ success: false, message: 'Invalid preferences object' });
+        }
+        const merged = await dbUsers.updatePreferences(req.user.masonId, preferences);
+        res.json({ success: true, preferences: merged });
+    } catch (err) {
+        console.error('Error saving preferences:', err);
+        res.status(500).json({ success: false, message: 'Failed to save preferences' });
+    }
+});
 
 // GET /api/users - Get users for dropdown (company-scoped for company admins)
 app.get('/api/users', requireAuth, async (req, res) => {
@@ -1128,8 +1160,9 @@ app.get('/api/report/mason/:masonId', requireAuth, async (req, res) => {
     const startDate = parseInt(req.query.startDate) || (Date.now() - 30 * 24 * 60 * 60 * 1000); // Default: last 30 days
     const endDate = parseInt(req.query.endDate) || Date.now();
     const format = req.query.format || 'html'; // 'html' or 'json'
+    const sections = req.query.sections ? req.query.sections.split(',') : null; // null = all
     
-    console.log(`[REPORT] Generate performance review for ${masonId}`);
+    console.log(`[REPORT] Generate performance review for ${masonId}, sections: ${sections ? sections.join(',') : 'all'}`);
     
     try {
         const { generatePerformanceReport, generateHTMLReport } = require('./reportGenerator');
@@ -1144,7 +1177,7 @@ app.get('/api/report/mason/:masonId', requireAuth, async (req, res) => {
         }
         
         // Generate HTML report
-        const htmlReport = generateHTMLReport(reportData);
+        const htmlReport = generateHTMLReport(reportData, sections);
         res.setHeader('Content-Type', 'text/html');
         res.send(htmlReport);
         

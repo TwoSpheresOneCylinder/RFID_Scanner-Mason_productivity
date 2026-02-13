@@ -18,21 +18,115 @@
         
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #f5f5f5;
+            background: #e8e8e8;
             min-height: 100vh;
             padding: 20px;
         }
         
         .container {
+            width: 100%;
             max-width: 1400px;
             margin: 0 auto;
             background: white;
             border-radius: 12px;
             padding: 0;
             box-shadow: 0 4px 16px rgba(0,0,0,0.1), 0 12px 40px rgba(0,0,0,0.15);
+            min-height: calc(100vh - 40px);
+            overflow: visible;
+        }
+
+        /* Fullscreen map mode */
+        body.map-fullscreen {
+            padding: 0;
             overflow: hidden;
         }
-        
+        body.map-fullscreen .container {
+            max-width: 100%;
+            border-radius: 0;
+            min-height: 100vh;
+        }
+        body.map-fullscreen .header,
+        body.map-fullscreen .user-bar,
+        body.map-fullscreen .controls,
+        body.map-fullscreen #loading,
+        body.map-fullscreen #error,
+        body.map-fullscreen .last-updated,
+        body.map-fullscreen .tabs {
+            display: none !important;
+        }
+        body.map-fullscreen #dashboard {
+            display: block !important;
+            margin-top: 0 !important;
+        }
+        body.map-fullscreen #map-tab {
+            display: block !important;
+            padding: 0;
+            height: 100vh;
+            position: relative;
+        }
+        body.map-fullscreen #map-tab h2 {
+            display: none;
+        }
+        body.map-fullscreen #map {
+            height: 100vh !important;
+            max-width: 100% !important;
+            border-radius: 0;
+        }
+        body.map-fullscreen .map-controls {
+            position: fixed !important;
+            top: 12px;
+            left: 12px;
+            right: 12px;
+            z-index: 10000;
+            background: rgba(255,255,255,0.95);
+            padding: 8px 12px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            display: flex !important;
+        }
+        body.map-fullscreen #overview-tab,
+        body.map-fullscreen #manage-users-tab {
+            display: none !important;
+        }
+        body.map-fullscreen .scroll-to-top {
+            display: none !important;
+        }
+
+        .scroll-to-top {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: #2D3436;
+            color: white;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.25s ease, visibility 0.25s ease, transform 0.25s ease;
+            transform: translateY(12px);
+        }
+        .scroll-to-top.visible {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+        .scroll-to-top:hover {
+            background: #444;
+            transform: translateY(-2px);
+        }
+        .scroll-to-top svg {
+            width: 22px;
+            height: 22px;
+        }
+
         .header {
             display: flex;
             align-items: stretch;
@@ -105,7 +199,7 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            border-radius: 0 0 10px 10px;
+            border-radius: 0;
             margin-top: -10px;
             margin-bottom: 0;
             font-size: 0.9rem;
@@ -244,12 +338,13 @@
             display: flex;
             background: white;
             border-radius: 0;
-            box-shadow: none;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
             margin-top: -10px;
             margin-bottom: 0;
             overflow: hidden;
-            position: relative;
-            z-index: 7;
+            position: sticky;
+            top: 0;
+            z-index: 100;
             padding-top: 10px;
         }
         
@@ -282,7 +377,7 @@
         .tab-content {
             display: none;
             background: white;
-            padding: 20px;
+            padding: 30px;
             border-radius: 0;
             box-shadow: none;
             position: relative;
@@ -295,7 +390,7 @@
         
         #map {
             width: 100%;
-            height: 600px;
+            height: 500px;
             border-radius: 8px;
         }
 
@@ -356,51 +451,247 @@
             box-shadow: 0 4px 8px rgba(0,0,0,0.2);
         }
         
-        .stats-grid {
+        /* === Widget Grid System === */
+        .widget-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 16px;
             margin-bottom: 20px;
         }
-        
-        .stat-card {
+
+        .widget {
             background: white;
-            padding: 25px;
-            border-radius: 10px;
+            border-radius: 12px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.08), 0 8px 24px rgba(0,0,0,0.12);
+            position: relative;
+            transition: transform 0.25s ease, box-shadow 0.25s ease;
+            user-select: none;
+            overflow: hidden;
+        }
+        .widget:hover { transform: translateY(-3px); box-shadow: 0 4px 12px rgba(0,0,0,0.10), 0 12px 32px rgba(0,0,0,0.18); }
+
+        /* KPI widgets stay in the grid flow */
+        .widget.widget-kpi {
+            padding: 22px 18px;
             text-align: center;
-            transition: transform 0.3s;
+            min-height: 100px;
         }
-        
-        .stat-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1), 0 12px 32px rgba(0,0,0,0.18);
-        }
-        
-        .stat-card h3 {
+        .widget.widget-kpi h3 {
             font-family: 'Barlow Semi Condensed', sans-serif;
             color: #555;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             text-transform: uppercase;
-            margin-bottom: 10px;
+            margin: 0 0 8px;
             letter-spacing: 1px;
             font-weight: 600;
         }
-        
-        .stat-card .value {
+        .widget.widget-kpi .widget-value {
             font-family: 'Barlow Semi Condensed', sans-serif;
-            font-size: 2.5rem;
+            font-size: 2.4rem;
             font-weight: 700;
             color: #333;
-            margin-bottom: 5px;
         }
-        
-        .stat-card .label {
-            color: #666;
-            font-size: 0.9rem;
+
+        /* Chart widgets span full width */
+        .widget.widget-chart {
+            grid-column: 1 / -1;
+            padding: 24px;
         }
-        
+        .widget.widget-chart h2 {
+            font-family: 'Barlow Semi Condensed', sans-serif;
+            color: #333;
+            margin: 0 0 16px;
+            text-align: center;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            font-size: 1.1rem;
+        }
+
+        /* Drag handle */
+        .widget .drag-handle {
+            display: none;
+            width: 100%;
+            padding: 6px 0;
+            text-align: center;
+            cursor: grab;
+            color: #bbb;
+            font-size: 14px;
+            letter-spacing: 3px;
+            user-select: none;
+            touch-action: none;
+            border-bottom: 1px solid #eee;
+            margin-bottom: 8px;
+        }
+        .widget .drag-handle:active { cursor: grabbing; }
+        .widget-grid.editing .widget .drag-handle { display: block; }
+
+        /* Edit mode */
+        .widget-grid.editing .widget {
+            box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+        }
+        .widget-grid.editing .widget:hover {
+            transform: none;
+        }
+
+        /* Remove button (X) */
+        .widget .widget-remove {
+            display: none;
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: #ff3b30;
+            color: white;
+            border: none;
+            font-size: 18px;
+            line-height: 28px;
+            text-align: center;
+            cursor: pointer;
+            z-index: 5;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+            padding: 0;
+            font-weight: bold;
+            transition: transform 0.15s, background 0.15s;
+        }
+        .widget .widget-remove:hover {
+            background: #d32f2f;
+            transform: scale(1.15);
+        }
+        .widget-grid.editing .widget .widget-remove {
+            display: block;
+        }
+
+        /* Drag indicator line */
+        .drop-indicator {
+            position: absolute;
+            height: 4px;
+            background: #CC0000;
+            border-radius: 2px;
+            z-index: 100;
+            pointer-events: none;
+        }
+        .widget.dragging {
+            opacity: 0.3;
+            animation: none !important;
+        }
+
+        /* Add widget button (in edit bar) */
+        .widget-add-btn {
+            display: none;
+            background: none;
+            border: 1px dashed #aaa;
+            cursor: pointer;
+            padding: 5px 14px;
+            border-radius: 8px;
+            color: #888;
+            transition: all 0.2s;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            align-items: center;
+            gap: 4px;
+        }
+        .widget-add-btn:hover {
+            border-color: #2D3436;
+            color: #2D3436;
+            background: #f0f0f0;
+        }
+        .widget-add-btn.visible {
+            display: flex;
+        }
+
+        /* Edit mode toggle */
+        .widget-edit-bar {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 10px;
+            gap: 8px;
+        }
+        .widget-edit-btn {
+            background: none;
+            border: 1px solid transparent;
+            cursor: pointer;
+            padding: 5px 12px;
+            border-radius: 8px;
+            color: #888;
+            transition: all 0.2s;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .widget-edit-btn:hover {
+            color: #2D3436;
+            background: #f0f0f0;
+        }
+        .widget-edit-btn.active {
+            color: white;
+            background: #2D3436;
+            border-color: #2D3436;
+        }
+
+        /* Widget gallery modal */
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+            padding: 4px;
+        }
+        .gallery-item {
+            background: #f8f8f8;
+            border: 2px solid #e5e5e5;
+            border-radius: 10px;
+            padding: 16px 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .gallery-item:hover {
+            border-color: #2D3436;
+            background: #f0f0f0;
+            transform: translateY(-2px);
+        }
+        .gallery-item.already-added {
+            background: #e8f5e9;
+            border-color: #4caf50;
+        }
+        .gallery-item.already-added .gallery-desc {
+            color: #2e7d32;
+            font-weight: 600;
+        }
+        .gallery-item .gallery-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 6px;
+        }
+        .gallery-item .gallery-icon svg {
+            width: 28px;
+            height: 28px;
+            stroke: #CC0000;
+        }
+        .gallery-item .gallery-name {
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: #333;
+        }
+        .gallery-item .gallery-desc {
+            font-size: 0.75rem;
+            color: #999;
+            margin-top: 4px;
+        }
+
         .chart-container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08), 0 8px 24px rgba(0,0,0,0.12);
+        }
             background: white;
             padding: 30px;
             border-radius: 10px;
@@ -581,83 +872,65 @@
         .modal-buttons .btn-cancel:hover {
             background: #d0d0d0;
         }
-        
-        .placement-log {
+
+        /* Report section presets & checkboxes */
+        .report-preset-btn {
+            padding: 5px 12px;
+            border: 1.5px solid #ccc;
+            border-radius: 6px;
             background: white;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08), 0 8px 24px rgba(0,0,0,0.12);
-            margin-bottom: 20px;
-            max-height: 500px;
-            overflow-y: auto;
-        }
-        
-        .placement-log h2 {
-            font-family: 'Barlow Semi Condensed', sans-serif;
-            color: #333;
-            margin-bottom: 20px;
-            text-align: center;
-            font-weight: 700;
-            letter-spacing: 0.5px;
-            text-transform: uppercase;
-        }
-        
-        .placement-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px 15px;
-            border-bottom: 1px solid #e0e0e0;
-            transition: background 0.2s;
-        }
-        
-        .placement-item:hover {
-            background: #f5f5f5;
-        }
-        
-        .placement-item:last-child {
-            border-bottom: none;
-        }
-        
-        .placement-item.new {
-            animation: highlight 1s;
-        }
-        
-        @keyframes highlight {
-            0% { background: #4ade80; }
-            100% { background: transparent; }
-        }
-        
-        .placement-timestamp {
-            font-family: 'Courier New', monospace;
-            color: #333;
-            font-weight: bold;
-            font-size: 0.95rem;
-        }
-        
-        .placement-details {
-            display: flex;
-            gap: 20px;
-            align-items: center;
-        }
-        
-        .placement-mason {
-            color: #2D3436;
+            font-size: 0.78rem;
             font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: #555;
         }
-        
-        .placement-brick {
-            color: #666;
-            font-size: 0.9rem;
-            font-family: 'Courier New', monospace;
+        .report-preset-btn:hover { border-color: #999; color: #333; }
+        .report-preset-btn.active {
+            background: #2D3436;
+            color: white;
+            border-color: #2D3436;
         }
-        
-        .no-placements {
-            text-align: center;
+        .report-sections-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px 16px;
+            max-height: 220px;
+            overflow-y: auto;
+            padding: 8px 0;
+        }
+        .report-sections-grid label {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            font-size: 0.82rem;
+            color: #444;
+            cursor: pointer;
+            padding: 4px 6px;
+            border-radius: 5px;
+            transition: background 0.15s;
+        }
+        .report-sections-grid label:hover { background: #f5f5f5; }
+        .report-sections-grid input[type="checkbox"] {
+            accent-color: #CC0000;
+            width: 15px;
+            height: 15px;
+        }
+        .report-section-divider {
+            grid-column: 1 / -1;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
             color: #999;
-            padding: 40px;
-            font-style: italic;
+            margin-top: 6px;
+            padding-bottom: 2px;
+            border-bottom: 1px solid #eee;
         }
+
+        /* KPI Config */
+
+
 
         /* Banner build-down animation — matches the Android app cascade */
         @keyframes bannerSlideDown {
@@ -679,7 +952,7 @@
         .user-bar,
         .controls,
         .tabs,
-        .stats-grid {
+        .widget-grid {
             will-change: transform, opacity;
             backface-visibility: hidden;
             -webkit-backface-visibility: hidden;
@@ -709,7 +982,7 @@
             animation-delay: 0.36s;
         }
 
-        .stats-grid {
+        .widget-grid {
             animation-duration: 0.47s;
             animation-delay: 0.48s;
         }
@@ -763,9 +1036,21 @@
             </button>
         </div>
         
+        <!-- Widget Gallery Modal -->
+        <div id="widgetGalleryModal" class="modal" onclick="if(event.target===this)closeWidgetGallery()">
+            <div class="modal-content" style="max-width:600px;">
+                <h2>Edit Widgets</h2>
+                <p style="color:#888;font-size:0.9rem;text-align:center;margin-bottom:16px;">Tap a widget to add or remove it from your dashboard</p>
+                <div class="gallery-grid" id="widgetGallery"></div>
+                <div class="modal-buttons">
+                    <button class="btn-cancel" onclick="closeWidgetGallery()">Close</button>
+                </div>
+            </div>
+        </div>
+
         <!-- Performance Review Modal -->
         <div id="reportModal" class="modal">
-            <div class="modal-content">
+            <div class="modal-content" style="max-width: 560px;">
                 <h2>Generate Performance Review</h2>
                 <div class="modal-field">
                     <label for="modalMasonSelect">User</label>
@@ -783,6 +1068,15 @@
                         <option value="365">Last Year</option>
                         <option value="all">All Time</option>
                     </select>
+                </div>
+                <div class="modal-field">
+                    <label>Report Sections</label>
+                    <div style="display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap;">
+                        <button type="button" class="report-preset-btn" onclick="reportPresetAll()">All</button>
+                        <button type="button" class="report-preset-btn active" onclick="reportPresetDashboard()">Same as Dashboard</button>
+                        <button type="button" class="report-preset-btn" onclick="reportPresetNone()">None</button>
+                    </div>
+                    <div id="reportSections" class="report-sections-grid"></div>
                 </div>
                 <div class="modal-buttons">
                     <button class="btn-cancel" onclick="closeReportModal()">Cancel</button>
@@ -804,71 +1098,32 @@
             
             <!-- Overview Tab -->
             <div id="overview-tab" class="tab-content active">
-            <div class="stats-grid">
-                <div class="stat-card" style="border-top:3px solid #10b981;">
-                    <h3>Blocks Placed</h3>
-                    <div class="value" id="totalPlacements">0</div>
-                </div>
-                <div class="stat-card" style="border-top:3px solid #3b82f6;">
-                    <h3>Blocks Indexed</h3>
-                    <div class="value" id="totalIndexed">0</div>
-                </div>
-                <div class="stat-card">
-                    <h3>Days Worked</h3>
-                    <div class="value" id="daysWorked">0</div>
-                </div>
-                <div class="stat-card">
-                    <h3>Placements / Day</h3>
-                    <div class="value" id="avgPerDay">0</div>
-                </div>
-                <div class="stat-card">
-                    <h3>Placements / Hour</h3>
-                    <div class="value" id="currentEfficiency">0</div>
-                </div>
+            <div class="widget-edit-bar">
+                <button class="widget-add-btn" id="widgetAddBtn" onclick="openWidgetGallery()">Edit Widgets</button>
+                <button class="widget-edit-btn" id="widgetEditBtn" onclick="toggleWidgetEdit()">Edit</button>
             </div>
-            
-            <div class="chart-container">
-                <h2>Live Placements Timeline</h2>
-                <div class="chart-wrapper">
-                    <canvas id="liveChart"></canvas>
-                </div>
-            </div>
-            
-            <div class="chart-container">
-                <h2>Daily Placement Totals</h2>
-                <div class="chart-wrapper">
-                    <canvas id="dailyChart"></canvas>
-                </div>
-            </div>
-            
-            <div class="placement-log">
-                <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:12px;">
-                    <h2 style="margin:0;">Live Scan Log</h2>
-                    <div id="logFilterBtns" style="display:flex;gap:6px;">
-                        <button onclick="setLogFilter('all')" id="filterAll" style="padding:4px 12px;border-radius:6px;border:1px solid #ccc;background:#2D3436;color:white;font-size:0.8rem;font-weight:600;cursor:pointer;">All</button>
-                        <button onclick="setLogFilter('placement')" id="filterPlacement" style="padding:4px 12px;border-radius:6px;border:1px solid #ccc;background:transparent;color:#555;font-size:0.8rem;font-weight:600;cursor:pointer;">Placements</button>
-                        <button onclick="setLogFilter('pallet')" id="filterPallet" style="padding:4px 12px;border-radius:6px;border:1px solid #ccc;background:transparent;color:#555;font-size:0.8rem;font-weight:600;cursor:pointer;">Pallet</button>
-                    </div>
-                </div>
-                <div id="placementLog">
-                    <div class="no-placements">Loading placements...</div>
-                </div>
+            <div class="widget-grid" id="widgetGrid">
+                <!-- Widgets rendered dynamically -->
             </div>
             </div>
             
             <!-- Map Tab -->
             <div id="map-tab" class="tab-content">
                 <h2 style="margin-bottom: 15px;">Placement Locations</h2>
-                <div class="map-controls">
+                <div class="map-controls" style="position:relative;">
                     <button onclick="fitMapBounds()">Fit All Markers</button>
                     <button onclick="refreshMapData()">Refresh Map</button>
+                    <button onclick="toggleMapFullscreen()" id="btnFullscreen" title="Toggle Fullscreen" style="padding:8px 12px;display:flex;align-items:center;gap:5px;">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="white"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>
+                        Fullscreen
+                    </button>
                     <div style="display:flex;gap:6px;margin-left:auto;">
                         <button onclick="setMapFilter('all')" id="mapFilterAll" style="padding:4px 12px;border-radius:6px;border:1px solid #ccc;background:#2D3436;color:white;font-size:0.8rem;font-weight:600;cursor:pointer;">All</button>
                         <button onclick="setMapFilter('placement')" id="mapFilterPlacement" style="padding:4px 12px;border-radius:6px;border:1px solid #ccc;background:transparent;color:#555;font-size:0.8rem;font-weight:600;cursor:pointer;">Placements</button>
                         <button onclick="setMapFilter('pallet')" id="mapFilterPallet" style="padding:4px 12px;border-radius:6px;border:1px solid #ccc;background:transparent;color:#555;font-size:0.8rem;font-weight:600;cursor:pointer;">Pallet</button>
                     </div>
                 </div>
-                <div id="map"></div>
+                <div id="map" style="max-width:1100px;margin:0 auto;"></div>
             </div>
             
             <!-- Manage Users Tab (admin only) -->
@@ -915,15 +1170,412 @@
         let authToken = localStorage.getItem('dashboard_token');
         let liveChart = null;
         let dailyChart = null;
+        let efficiencyChartInstance = null;
+        let masonCompareChartInstance = null;
+        let hourlyChartInstance = null;
+        let placedVsIndexedChartInstance = null;
         let currentMasonId = null;
         let allMasons = [];
         let refreshInterval = null;
-        let lastPlacementIds = new Set();
         let allPlacements = [];
         let lastPlacementCount = 0;
         let isUpdating = false;
-        let logFilter = 'all'; // 'all', 'placement', 'pallet'
         let mapFilter = 'all'; // 'all', 'placement', 'pallet'
+        let widgetEditMode = false;
+
+        // ═══════════════════════════════════════════
+        // === WIDGET SYSTEM (Apple-style drag/drop) ===
+        // ═══════════════════════════════════════════
+
+        const WIDGET_REGISTRY = {
+            // ── KPI widgets ──
+            totalPlacements:  { type: 'kpi', label: 'Blocks Placed',         icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>', description: 'Total placement scans recorded',          color: '#10b981' },
+            totalIndexed:     { type: 'kpi', label: 'Blocks Indexed',        icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg>', description: 'Total pallet/index scans recorded',       color: '#3b82f6' },
+            daysWorked:       { type: 'kpi', label: 'Days Worked',           icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>', description: 'Distinct days with activity',              color: '#6366f1' },
+            avgPerDay:        { type: 'kpi', label: 'Placements / Day',      icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>', description: 'Average placements per worked day',       color: '#f97316' },
+            currentEfficiency:{ type: 'kpi', label: 'Placements / Hour',     icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>', description: 'Placement rate for the most recent day',  color: '#ef4444' },
+            activeMasons:     { type: 'kpi', label: 'Active Users',          icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>', description: 'Number of users with recorded data',      color: '#f59e0b' },
+            totalScans:       { type: 'kpi', label: 'Total Scans',           icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 16.1A5 5 0 0 1 5.9 20M2 12.05A9 9 0 0 1 9.95 20M2 8V6a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-6"/><line x1="2" y1="20" x2="2.01" y2="20"/></svg>', description: 'Combined placed + indexed count',         color: '#8b5cf6' },
+            avgPerHourAllTime:{ type: 'kpi', label: 'Avg / Hour (All Time)', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>', description: 'Overall placement rate across all days',  color: '#14b8a6' },
+            // ── Chart widgets ──
+            liveChart:        { type: 'chart', label: 'Live Placements Timeline',  icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>', description: 'Real-time placement activity' },
+            dailyChart:       { type: 'chart', label: 'Daily Placement Totals',    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>', description: 'Daily totals bar chart' },
+            efficiencyChart:  { type: 'chart', label: 'Efficiency Over Time',      icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>', description: 'Placements per hour trend line' },
+            masonCompareChart:{ type: 'chart', label: 'User Comparison',           icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="22" y1="8" x2="22" y2="14"/><line x1="19" y1="11" x2="25" y2="11"/></svg>', description: 'Side-by-side user totals' },
+            hourlyChart:      { type: 'chart', label: 'Hourly Activity Pattern',   icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>', description: 'When placements happen by hour' },
+            placedVsIndexed:  { type: 'chart', label: 'Placed vs Indexed',         icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>', description: 'Placement vs index scan breakdown' }
+        };
+
+        const DEFAULT_LAYOUT = [
+            'totalPlacements', 'totalIndexed', 'daysWorked', 'avgPerDay', 'currentEfficiency',
+            'liveChart', 'dailyChart'
+        ];
+
+        function getWidgetLayout() {
+            try {
+                const saved = localStorage.getItem('dashboard_widget_layout');
+                if (saved) {
+                    const parsed = JSON.parse(saved);
+                    return parsed.filter(k => WIDGET_REGISTRY[k]);
+                }
+            } catch (e) {}
+            return [...DEFAULT_LAYOUT];
+        }
+
+        function saveWidgetLayout(layout) {
+            localStorage.setItem('dashboard_widget_layout', JSON.stringify(layout));
+            // Persist to server (async, fire-and-forget)
+            authFetch('/api/user/preferences', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ preferences: { widgetLayout: layout } })
+            }).catch(err => console.warn('Could not sync layout to server:', err));
+        }
+
+        // Load widget layout from server on login, merge into localStorage
+        async function loadServerWidgetLayout() {
+            try {
+                const resp = await authFetch('/api/user/preferences');
+                if (resp.ok) {
+                    const data = await resp.json();
+                    if (data.success && data.preferences && Array.isArray(data.preferences.widgetLayout)) {
+                        const serverLayout = data.preferences.widgetLayout.filter(k => WIDGET_REGISTRY[k]);
+                        if (serverLayout.length > 0) {
+                            localStorage.setItem('dashboard_widget_layout', JSON.stringify(serverLayout));
+                            renderWidgets();
+                            updateDashboard();
+                        }
+                    }
+                }
+            } catch (err) {
+                console.warn('Could not load layout from server, using local:', err);
+            }
+        }
+
+        // ── Render all widgets ──
+        function renderWidgets() {
+            // Destroy existing charts before re-rendering
+            if (liveChart) { liveChart.destroy(); liveChart = null; }
+            if (dailyChart) { dailyChart.destroy(); dailyChart = null; }
+            if (efficiencyChartInstance) { efficiencyChartInstance.destroy(); efficiencyChartInstance = null; }
+            if (masonCompareChartInstance) { masonCompareChartInstance.destroy(); masonCompareChartInstance = null; }
+            if (hourlyChartInstance) { hourlyChartInstance.destroy(); hourlyChartInstance = null; }
+            if (placedVsIndexedChartInstance) { placedVsIndexedChartInstance.destroy(); placedVsIndexedChartInstance = null; }
+
+            const grid = document.getElementById('widgetGrid');
+            if (!grid) return;
+            const layout = getWidgetLayout();
+
+            let html = layout.map(key => {
+                const w = WIDGET_REGISTRY[key];
+                if (!w) return '';
+
+                if (w.type === 'kpi') {
+                    const borderStyle = w.color ? ` style="border-top:3px solid ${w.color};"` : '';
+                    return `<div class="widget widget-kpi" data-widget-id="${key}"${borderStyle}>
+                        <div class="drag-handle">⋮⋮⋮</div>
+                        <button class="widget-remove" onclick="removeWidget('${key}')">&minus;</button>
+                        <h3>${w.label}</h3>
+                        <div class="widget-value" id="${key}">0</div>
+                    </div>`;
+                }
+
+                if (w.type === 'chart') {
+                    return `<div class="widget widget-chart" data-widget-id="${key}">
+                        <div class="drag-handle">⋮⋮⋮</div>
+                        <button class="widget-remove" onclick="removeWidget('${key}')">&minus;</button>
+                        <h2>${w.label}</h2>
+                        <div class="chart-wrapper"><canvas id="${key}"></canvas></div>
+                    </div>`;
+                }
+                return '';
+            }).join('');
+
+            grid.innerHTML = html;
+
+            // Re-apply edit mode state
+            if (widgetEditMode) enableDragOnWidgets();
+        }
+
+        // ── Toggle edit mode ──
+        function toggleWidgetEdit() {
+            widgetEditMode = !widgetEditMode;
+            const grid = document.getElementById('widgetGrid');
+            const btn = document.getElementById('widgetEditBtn');
+            if (widgetEditMode) {
+                grid.classList.add('editing');
+                btn.classList.add('active');
+                btn.textContent = 'Done';
+                document.getElementById('widgetAddBtn').classList.add('visible');
+                enableDragOnWidgets();
+            } else {
+                grid.classList.remove('editing');
+                btn.classList.remove('active');
+                btn.textContent = 'Edit';
+                document.getElementById('widgetAddBtn').classList.remove('visible');
+                disableDragOnWidgets();
+            }
+        }
+
+        // ── Drag & Drop (pointer-based, works on touch + mouse) ──
+        let dragState = null;
+        let autoScrollRAF = null;
+
+        function enableDragOnWidgets() {
+            document.querySelectorAll('#widgetGrid .widget .drag-handle').forEach(handle => {
+                handle.addEventListener('pointerdown', handlePointerDown);
+            });
+        }
+
+        function disableDragOnWidgets() {
+            document.querySelectorAll('#widgetGrid .widget .drag-handle').forEach(handle => {
+                handle.removeEventListener('pointerdown', handlePointerDown);
+            });
+        }
+
+        function startAutoScroll() {
+            function tick() {
+                if (!dragState) return;
+                const y = dragState.lastClientY;
+                const edge = 60; // px from edge to start scrolling
+                const maxSpeed = 18;
+                if (y < edge) {
+                    const speed = Math.ceil(maxSpeed * (1 - y / edge));
+                    window.scrollBy(0, -speed);
+                } else if (y > window.innerHeight - edge) {
+                    const speed = Math.ceil(maxSpeed * (1 - (window.innerHeight - y) / edge));
+                    window.scrollBy(0, speed);
+                }
+                autoScrollRAF = requestAnimationFrame(tick);
+            }
+            autoScrollRAF = requestAnimationFrame(tick);
+        }
+
+        function stopAutoScroll() {
+            if (autoScrollRAF) { cancelAnimationFrame(autoScrollRAF); autoScrollRAF = null; }
+        }
+
+        function handlePointerDown(e) {
+            e.preventDefault();
+            const widget = this.closest('.widget');
+            if (!widget) return;
+
+            const grid = document.getElementById('widgetGrid');
+            const rect = widget.getBoundingClientRect();
+
+            // Create a floating clone
+            const clone = widget.cloneNode(true);
+            clone.style.position = 'fixed';
+            clone.style.width = rect.width + 'px';
+            clone.style.height = rect.height + 'px';
+            clone.style.left = rect.left + 'px';
+            clone.style.top = rect.top + 'px';
+            clone.style.zIndex = '9999';
+            clone.style.opacity = '0.85';
+            clone.style.pointerEvents = 'none';
+            clone.style.boxShadow = '0 8px 32px rgba(0,0,0,0.25)';
+            clone.style.transition = 'none';
+            clone.style.transform = 'scale(1.03)';
+            document.body.appendChild(clone);
+
+            widget.classList.add('dragging');
+
+            dragState = {
+                widget,
+                clone,
+                widgetId: widget.dataset.widgetId,
+                offsetX: e.clientX - rect.left,
+                offsetY: e.clientY - rect.top,
+                lastClientY: e.clientY,
+                grid
+            };
+
+            startAutoScroll();
+            document.addEventListener('pointermove', handlePointerMove);
+            document.addEventListener('pointerup', handlePointerUp);
+        }
+
+        function removeDropIndicator() {
+            const old = document.querySelector('.drop-indicator');
+            if (old) old.remove();
+        }
+
+        function getVisualRow(targetWidget) {
+            // Find all widgets on the same visual row (same top position, ±2px tolerance)
+            const widgets = [...dragState.grid.querySelectorAll('.widget')];
+            const tRect = targetWidget.getBoundingClientRect();
+            const rowWidgets = widgets.filter(w => {
+                if (w === dragState.widget) return false;
+                const r = w.getBoundingClientRect();
+                return Math.abs(r.top - tRect.top) < 4;
+            });
+            // Sort by left position
+            rowWidgets.sort((a, b) => a.getBoundingClientRect().left - b.getBoundingClientRect().left);
+            return rowWidgets;
+        }
+
+        function getDropInfo(e) {
+            const widgets = [...dragState.grid.querySelectorAll('.widget')];
+            for (const w of widgets) {
+                if (w === dragState.widget) continue;
+                const r = w.getBoundingClientRect();
+                if (e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom) {
+                    const midY = r.top + r.height / 2;
+                    const before = e.clientY < midY;
+                    // Snap to row boundary: before → first in row, after → last in row
+                    const row = getVisualRow(w);
+                    if (row.length > 1) {
+                        const snapTarget = before ? row[0] : row[row.length - 1];
+                        return { target: snapTarget, before, row };
+                    }
+                    return { target: w, before, row };
+                }
+            }
+            return null;
+        }
+
+        function showDropIndicator(targetWidget, before, row) {
+            removeDropIndicator();
+            const indicator = document.createElement('div');
+            indicator.className = 'drop-indicator';
+
+            const grid = dragState.grid;
+            const gridRect = grid.getBoundingClientRect();
+
+            // Span full grid width for rows with multiple widgets
+            if (row && row.length > 1) {
+                const firstRect = row[0].getBoundingClientRect();
+                const lastRect = row[row.length - 1].getBoundingClientRect();
+                indicator.style.left = (firstRect.left - gridRect.left) + 'px';
+                indicator.style.width = (lastRect.right - firstRect.left) + 'px';
+                if (before) {
+                    indicator.style.top = (firstRect.top - gridRect.top - 6) + 'px';
+                } else {
+                    indicator.style.top = (lastRect.bottom - gridRect.top + 2) + 'px';
+                }
+            } else {
+                const tRect = targetWidget.getBoundingClientRect();
+                indicator.style.left = (tRect.left - gridRect.left) + 'px';
+                indicator.style.width = tRect.width + 'px';
+                if (before) {
+                    indicator.style.top = (tRect.top - gridRect.top - 6) + 'px';
+                } else {
+                    indicator.style.top = (tRect.bottom - gridRect.top + 2) + 'px';
+                }
+            }
+
+            grid.style.position = 'relative';
+            grid.appendChild(indicator);
+        }
+
+        function handlePointerMove(e) {
+            if (!dragState) return;
+            e.preventDefault();
+
+            dragState.lastClientY = e.clientY;
+
+            // Move clone
+            dragState.clone.style.left = (e.clientX - dragState.offsetX) + 'px';
+            dragState.clone.style.top = (e.clientY - dragState.offsetY) + 'px';
+
+            // Show drop indicator line
+            const info = getDropInfo(e);
+            if (info) {
+                showDropIndicator(info.target, info.before, info.row);
+                dragState.dropInfo = info;
+            } else {
+                removeDropIndicator();
+                dragState.dropInfo = null;
+            }
+        }
+
+        function handlePointerUp(e) {
+            if (!dragState) return;
+            stopAutoScroll();
+            document.removeEventListener('pointermove', handlePointerMove);
+            document.removeEventListener('pointerup', handlePointerUp);
+
+            removeDropIndicator();
+            dragState.widget.classList.remove('dragging');
+
+            // Use last known drop info
+            const info = dragState.dropInfo || getDropInfo(e);
+
+            // Remove clone
+            dragState.clone.remove();
+
+            if (info) {
+                const layout = getWidgetLayout();
+                const fromId = dragState.widgetId;
+                const toId = info.target.dataset.widgetId;
+                const fromIdx = layout.indexOf(fromId);
+                let toIdx = layout.indexOf(toId);
+
+                if (fromIdx !== -1 && toIdx !== -1) {
+                    layout.splice(fromIdx, 1);
+                    // Recalculate toIdx after removal
+                    toIdx = layout.indexOf(toId);
+                    // Insert before or after based on cursor position
+                    const insertIdx = info.before ? toIdx : toIdx + 1;
+                    layout.splice(insertIdx, 0, fromId);
+                    saveWidgetLayout(layout);
+                    renderWidgets();
+                    if (typeof refreshData === 'function') refreshData();
+                }
+            }
+
+            dragState = null;
+        }
+
+        // ── Remove widget ──
+        function removeWidget(key) {
+            const layout = getWidgetLayout();
+            const idx = layout.indexOf(key);
+            if (idx !== -1) {
+                layout.splice(idx, 1);
+                saveWidgetLayout(layout);
+                renderWidgets();
+                if (typeof refreshData === 'function') refreshData();
+            }
+        }
+
+        // ── Widget Gallery ──
+        function openWidgetGallery() {
+            const layout = getWidgetLayout();
+            const gallery = document.getElementById('widgetGallery');
+            gallery.innerHTML = Object.entries(WIDGET_REGISTRY).map(([key, w]) => {
+                const added = layout.includes(key);
+                return `<div class="gallery-item${added ? ' already-added' : ''}" onclick="toggleWidget('${key}')">
+                    <div class="gallery-icon">${w.icon}</div>
+                    <div class="gallery-name">${w.label}</div>
+                    <div class="gallery-desc">${added ? '✓ Added' : w.description}</div>
+                </div>`;
+            }).join('');
+            document.getElementById('widgetGalleryModal').classList.add('show');
+        }
+
+        function closeWidgetGallery() {
+            document.getElementById('widgetGalleryModal').classList.remove('show');
+        }
+
+        function toggleWidget(key) {
+            const layout = getWidgetLayout();
+            const idx = layout.indexOf(key);
+            if (idx >= 0) {
+                // Remove widget
+                layout.splice(idx, 1);
+            } else {
+                // Add widget at end — user can drag it wherever they want
+                layout.push(key);
+            }
+            saveWidgetLayout(layout);
+            renderWidgets();
+            openWidgetGallery();
+            if (typeof refreshData === 'function') refreshData();
+        }
+
+        // ── Initial render ──
+        renderWidgets();
         
         // Role awareness
         const userRole = localStorage.getItem('dashboard_role') || 'user';
@@ -1322,8 +1974,13 @@
                     markerW = 160;
                     pinHeight = bSize + 12;
                     
-                    // Toolbox SVG icon
-                    const toolSvg = `<svg viewBox="0 0 24 24" width="30" height="30" style="opacity:0.95;flex-shrink:0;"><path d="M22 8h-4V6c0-1.1-.9-2-2-2H8C6.9 4 6 4.9 6 6v2H2c-1.1 0-2 .9-2 2v4h4v-2h2v2h12v-2h2v2h4v-4c0-1.1-.9-2-2-2zM8 6h8v2H8V6zm14 12v2c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2v-2h4v-2h2v2h12v-2h2v2h4z" fill="white" opacity="0.95"/></svg>`;
+                    // Toolbox icon — white outline, no tools inside
+                    const toolSvg = `<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;opacity:0.95;">
+                      <path d="M9 5V3.5A1.5 1.5 0 0 1 10.5 2h3A1.5 1.5 0 0 1 15 3.5V5"/>
+                      <rect x="2" y="5" width="20" height="16" rx="2"/>
+                      <line x1="2" y1="12" x2="22" y2="12"/>
+                      <rect x="9" y="14.5" width="6" height="2" rx="1"/>
+                    </svg>`;
                     
                     innerHtml = `
                         <div style="
@@ -1719,6 +2376,25 @@
             }
         }
         
+        // Toggle fullscreen map mode
+        function toggleMapFullscreen() {
+            const isFS = document.body.classList.toggle('map-fullscreen');
+            const btn = document.getElementById('btnFullscreen');
+            if (isFS) {
+                btn.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16" fill="white"><path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"/></svg> Exit';
+            } else {
+                btn.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16" fill="white"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg> Fullscreen';
+            }
+            setTimeout(() => { if (map) map.invalidateSize(); }, 100);
+        }
+
+        // Escape key exits fullscreen
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && document.body.classList.contains('map-fullscreen')) {
+                toggleMapFullscreen();
+            }
+        });
+
         // Fit map bounds to show all markers
         function fitMapBounds() {
             if (!map || markers.length === 0) return;
@@ -2175,6 +2851,8 @@
                 }
                 
                 await loadMasons();
+                // Load user's widget layout from server (overrides localStorage if server has saved layout)
+                await loadServerWidgetLayout();
                 await refreshData();
                 await loadPlacements();
                 
@@ -2268,7 +2946,6 @@
                             const todayPlacements = data.placements.filter(p => p.timestamp >= todayTimestamp);
                             
                             allPlacements = todayPlacements;
-                            updatePlacementLog(allPlacements);
                             // Charts only show actual placements (not pallet scans)
                             const chartPlacements = allPlacements.filter(p => (p.scan_type || p.scanType || 'placement') !== 'pallet');
                             updateLiveChartMultiMason(chartPlacements);
@@ -2290,7 +2967,6 @@
                             const todayPlacements = (data.placements || []).filter(p => p.timestamp >= todayTimestamp);
                             
                             allPlacements = todayPlacements;
-                            updatePlacementLog(allPlacements);
                             // Charts only show actual placements (not pallet scans)
                             const chartPlacements = allPlacements.filter(p => (p.scan_type || p.scanType || 'placement') !== 'pallet');
                             updateLiveChart(chartPlacements);
@@ -2304,120 +2980,6 @@
             }
         }
         
-        function updatePlacementLog(placements) {
-            const logDiv = document.getElementById('placementLog');
-            
-            if (!placements || placements.length === 0) {
-                logDiv.innerHTML = '<div class="no-placements">No scans recorded yet</div>';
-                return;
-            }
-            
-            // Apply log filter
-            let filtered = placements;
-            if (logFilter === 'placement') {
-                filtered = placements.filter(p => (p.scan_type || p.scanType || 'placement') !== 'pallet');
-            } else if (logFilter === 'pallet') {
-                filtered = placements.filter(p => (p.scan_type || p.scanType || 'placement') === 'pallet');
-            }
-            
-            if (filtered.length === 0) {
-                logDiv.innerHTML = '<div class="no-placements">No ' + (logFilter === 'pallet' ? 'pallet' : 'placement') + ' scans found</div>';
-                return;
-            }
-            
-            // Sort by timestamp descending (newest first)
-            filtered.sort((a, b) => b.timestamp - a.timestamp);
-            
-            // Take only the most recent 50
-            const recentPlacements = filtered.slice(0, 50);
-            
-            // Track new placements for animation
-            const newIds = new Set(recentPlacements.map(p => p.id));
-            const justAdded = [...newIds].filter(id => !lastPlacementIds.has(id));
-            lastPlacementIds = newIds;
-            
-            logDiv.innerHTML = recentPlacements.map(placement => {
-                // Use GPS-based timezone if coordinates available
-                const date = new Date(placement.timestamp);
-                let timeString;
-                
-                if (placement.latitude && placement.longitude) {
-                    // Calculate timezone offset based on longitude (rough approximation)
-                    // 15 degrees longitude = 1 hour
-                    const timezoneOffset = Math.round(placement.longitude / 15);
-                    const localDate = new Date(date.getTime() + (timezoneOffset * 3600000));
-                    
-                    timeString = localDate.toISOString().replace('T', ' ').substring(0, 19) + 
-                                 ` (GPS: ${placement.latitude.toFixed(4)}, ${placement.longitude.toFixed(4)})`;
-                } else {
-                    timeString = date.toLocaleString('en-US', {
-                        year: 'numeric',
-                        month: '2-digit',
-                        day: '2-digit',
-                        hour: '2-digit',
-                        minute: '2-digit',
-                        second: '2-digit',
-                        hour12: false
-                    });
-                }
-                
-                const isNew = justAdded.includes(placement.id);
-                const newClass = isNew ? ' new' : '';
-                
-                // Display both brickNumber and rfidTag if available
-                const brickInfo = placement.brickNumber || placement.rfidTag || 'Unknown';
-                const displayText = brickInfo.length > 20 ? 
-                    `RFID: ${escapeHtml(brickInfo.substring(brickInfo.length - 8))}` : 
-                    `Brick #${escapeHtml(brickInfo)}`;
-                
-                // Show session + sequence for true ordering (use snake_case column names)
-                const sessionInfo = (placement.build_session_id || placement.buildSessionId) && (placement.event_seq || placement.eventSeq)
-                    ? `<div style="font-size:0.8rem;color:#888;">Session: ${escapeHtml((placement.build_session_id || placement.buildSessionId).substring(0, 8))}... | Seq: ${placement.event_seq || placement.eventSeq}</div>` 
-                    : '';
-                
-                // Show RSSI and decision status (use snake_case column names)
-                const rssiAvg = placement.rssi_avg || placement.rssiAvg;
-                const rssiPeak = placement.rssi_peak || placement.rssiPeak;
-                const readsInWindow = placement.reads_in_window || placement.readsInWindow;
-                const decisionStatus = placement.decision_status || placement.decisionStatus;
-                const rssiInfo = rssiAvg ? `<div style="font-size:0.8rem;color:#4ade80;">RSSI: ${rssiAvg}dBm (peak ${rssiPeak}, reads ${readsInWindow})</div>` : '';
-                const statusInfo = decisionStatus && decisionStatus !== 'ACCEPTED' ? `<div style="font-size:0.8rem;color:#ff6b6b;font-weight:600;">[${escapeHtml(decisionStatus)}]</div>` : '';
-                
-                // Scan type badge
-                const scanType = placement.scan_type || placement.scanType || 'placement';
-                const isPallet = scanType === 'pallet';
-                const scanTypeBadge = `<span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin-left:8px;${isPallet ? 'background:#3b82f6;color:white;' : 'background:#10b981;color:white;'}">${isPallet ? 'Pallet' : 'Placement'}</span>`;
-                
-                return `
-                    <div class="placement-item${newClass}">
-                        <div class="placement-timestamp">${escapeHtml(timeString)}</div>
-                        <div class="placement-details">
-                            <div class="placement-mason">${escapeHtml(placement.mason_id || placement.masonId || 'Unknown')}${scanTypeBadge}</div>
-                            <div class="placement-brick">${displayText}</div>
-                            ${sessionInfo}
-                            ${rssiInfo}
-                            ${statusInfo}
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        }
-        
-        // Scan log filter toggle
-        function setLogFilter(filter) {
-            logFilter = filter;
-            // Update button styles
-            ['All', 'Placement', 'Pallet'].forEach(name => {
-                const btn = document.getElementById('filter' + name);
-                if (btn) {
-                    const isActive = name.toLowerCase() === filter || (name === 'All' && filter === 'all');
-                    btn.style.background = isActive ? '#2D3436' : 'transparent';
-                    btn.style.color = isActive ? 'white' : '#555';
-                }
-            });
-            // Re-render log with current data
-            updatePlacementLog(allPlacements);
-        }
         
         // Refresh dashboard data (stats only, don't reload placements)
         async function refreshData() {
@@ -2456,56 +3018,86 @@
             const title = 'Efficiency Dashboard';
             document.getElementById('dashboardTitle').textContent = title;
             
-            // Update summary stats
+            // Helper: safely set KPI value (card may not be visible)
+            function setKpi(id, value) {
+                const el = document.getElementById(id);
+                if (el) el.textContent = value;
+            }
+
+            // Compute KPI values
+            let placed = 0, indexed = 0, daysWorked = 0, avgPerDay = '0.0', activeMasons = 0, totalScans = 0, avgPerHourAllTime = '0.0';
+            
             if (summaryData.length > 0) {
                 if (masonId) {
-                    // Single mason - show their data
                     const summary = summaryData[0];
-                    const placed = summary.placementCount || 0;
-                    const indexed = summary.palletCount || 0;
-                    document.getElementById('totalPlacements').textContent = placed.toLocaleString();
-                    document.getElementById('totalIndexed').textContent = indexed.toLocaleString();
-                    document.getElementById('daysWorked').textContent = summary.daysWorked;
-                    // Avg per day based on placements only
-                    const avgPerDay = summary.daysWorked > 0 ? (placed / summary.daysWorked).toFixed(1) : '0.0';
-                    document.getElementById('avgPerDay').textContent = avgPerDay;
+                    placed = summary.placementCount || 0;
+                    indexed = summary.palletCount || 0;
+                    daysWorked = summary.daysWorked || 0;
+                    avgPerDay = daysWorked > 0 ? (placed / daysWorked).toFixed(1) : '0.0';
+                    activeMasons = 1;
+                    totalScans = placed + indexed;
                 } else {
-                    // All masons - aggregate the data
-                    const totalPlaced = summaryData.reduce((sum, s) => sum + (s.placementCount || 0), 0);
-                    const totalIndexed = summaryData.reduce((sum, s) => sum + (s.palletCount || 0), 0);
-                    const maxDaysWorked = Math.max(...summaryData.map(s => s.daysWorked));
-                    const avgPerDay = maxDaysWorked > 0 ? (totalPlaced / maxDaysWorked).toFixed(1) : '0.0';
-                    
-                    document.getElementById('totalPlacements').textContent = totalPlaced.toLocaleString();
-                    document.getElementById('totalIndexed').textContent = totalIndexed.toLocaleString();
-                    document.getElementById('daysWorked').textContent = maxDaysWorked;
-                    document.getElementById('avgPerDay').textContent = avgPerDay;
+                    placed = summaryData.reduce((sum, s) => sum + (s.placementCount || 0), 0);
+                    indexed = summaryData.reduce((sum, s) => sum + (s.palletCount || 0), 0);
+                    daysWorked = Math.max(...summaryData.map(s => s.daysWorked || 0));
+                    avgPerDay = daysWorked > 0 ? (placed / daysWorked).toFixed(1) : '0.0';
+                    activeMasons = summaryData.length;
+                    totalScans = placed + indexed;
                 }
-            } else {
-                // No data yet
-                document.getElementById('totalPlacements').textContent = '0';
-                document.getElementById('totalIndexed').textContent = '0';
-                document.getElementById('daysWorked').textContent = '0';
-                document.getElementById('avgPerDay').textContent = '0.0';
             }
+            
+            // Compute all-time avg/hour from daily data
+            if (dailyData.length > 0) {
+                const totalHours = dailyData.reduce((sum, d) => sum + (d.hoursWorked || 0), 0);
+                const totalDailyPlacements = dailyData.reduce((sum, d) => sum + (d.totalPlacements || 0), 0);
+                avgPerHourAllTime = totalHours > 0 ? (totalDailyPlacements / totalHours).toFixed(1) : '0.0';
+            }
+
+            setKpi('totalPlacements', placed.toLocaleString());
+            setKpi('totalIndexed', indexed.toLocaleString());
+            setKpi('daysWorked', daysWorked);
+            setKpi('avgPerDay', avgPerDay);
+            setKpi('activeMasons', activeMasons);
+            setKpi('totalScans', totalScans.toLocaleString());
+            setKpi('avgPerHourAllTime', avgPerHourAllTime);
             
             // Update current efficiency (most recent day)
             if (dailyData.length > 0) {
                 if (masonId) {
-                    // Single mason
                     const latest = dailyData[0];
-                    document.getElementById('currentEfficiency').textContent = latest.placementsPerHour.toFixed(1);
+                    setKpi('currentEfficiency', latest.placementsPerHour.toFixed(1));
                 } else {
-                    // All masons - average efficiency across all masons' latest day
                     const avgEfficiency = (dailyData.reduce((sum, d) => sum + d.placementsPerHour, 0) / dailyData.length).toFixed(1);
-                    document.getElementById('currentEfficiency').textContent = avgEfficiency;
+                    setKpi('currentEfficiency', avgEfficiency);
                 }
             } else {
-                document.getElementById('currentEfficiency').textContent = '0.0';
+                setKpi('currentEfficiency', '0.0');
             }
             
-            // Update daily chart
-            updateDailyChart(dailyData);
+            // Update daily chart (only if the widget is present)
+            if (document.getElementById('dailyChart')) {
+                updateDailyChart(dailyData);
+            }
+
+            // Update efficiency chart
+            if (document.getElementById('efficiencyChart')) {
+                updateEfficiencyChart(dailyData);
+            }
+
+            // Update user comparison chart (show all users even when filtered)
+            if (document.getElementById('masonCompareChart')) {
+                updateMasonCompareChart(data.masonSummary || []);
+            }
+
+            // Update hourly activity chart
+            if (document.getElementById('hourlyChart')) {
+                updateHourlyChart(dailyData);
+            }
+
+            // Update placed vs indexed doughnut
+            if (document.getElementById('placedVsIndexed')) {
+                updatePlacedVsIndexedChart(placed, indexed);
+            }
             
             // Show dashboard
             document.getElementById('loading').style.display = 'none';
@@ -2515,6 +3107,7 @@
         // Update live placements chart for multiple masons
         function updateLiveChartMultiMason(placements) {
             if (!placements || placements.length === 0) return;
+            if (!document.getElementById('liveChart')) return;
             
             const masonGroups = {};
             placements.forEach(p => {
@@ -2645,6 +3238,7 @@
         // Update live placements chart for single mason
         function updateLiveChart(placements) {
             if (!placements || placements.length === 0) return;
+            if (!document.getElementById('liveChart')) return;
             
             // Sort by timestamp and take last 50
             const sorted = [...placements].sort((a, b) => a.timestamp - b.timestamp).slice(-50);
@@ -2770,6 +3364,7 @@
         
         // Update daily chart with aggregate data
         function updateDailyChart(dailyData) {
+            if (!document.getElementById('dailyChart')) return;
             // Sort by date ascending
             dailyData.sort((a, b) => new Date(a.date) - new Date(b.date));
             
@@ -2959,6 +3554,352 @@
             });
         }
         
+        // ── Efficiency Over Time (line chart of placements/hour by date) ──
+        function updateEfficiencyChart(dailyData) {
+            if (!document.getElementById('efficiencyChart')) return;
+            if (!dailyData || dailyData.length === 0) return;
+
+            const sorted = [...dailyData].sort((a, b) => new Date(a.date) - new Date(b.date));
+            const masonId = document.getElementById('masonSelect').value;
+
+            let datasets, labels;
+
+            if (!masonId && sorted.length > 0) {
+                // Multi-mason: one line per mason
+                const dateSet = new Set();
+                const masonMap = {};
+                sorted.forEach(d => {
+                    dateSet.add(d.date);
+                    if (!masonMap[d.masonId]) masonMap[d.masonId] = {};
+                    masonMap[d.masonId][d.date] = d.placementsPerHour;
+                });
+                labels = [...dateSet].sort();
+                const masonIds = Object.keys(masonMap).sort();
+                datasets = masonIds.map(mId => {
+                    const color = getMasonColor(mId, masonIds);
+                    return {
+                        label: mId,
+                        data: labels.map(date => masonMap[mId][date] || 0),
+                        borderColor: color,
+                        backgroundColor: color + '22',
+                        tension: 0.3,
+                        fill: false,
+                        pointRadius: 3,
+                        borderWidth: 2
+                    };
+                });
+            } else {
+                // Single mason
+                labels = sorted.map(d => d.date);
+                const color = sorted.length > 0 ? getMasonColor(sorted[0].masonId) : '#CC0000';
+                datasets = [{
+                    label: 'Placements / Hour',
+                    data: sorted.map(d => d.placementsPerHour),
+                    borderColor: color,
+                    backgroundColor: color + '22',
+                    tension: 0.3,
+                    fill: true,
+                    pointRadius: 3,
+                    borderWidth: 2
+                }];
+            }
+
+            if (efficiencyChartInstance) {
+                efficiencyChartInstance.data.labels = labels;
+                efficiencyChartInstance.data.datasets = datasets;
+                efficiencyChartInstance.update('none');
+                return;
+            }
+
+            const ctx = document.getElementById('efficiencyChart').getContext('2d');
+            efficiencyChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: { labels, datasets },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: true, position: 'top' },
+                        tooltip: { backgroundColor: 'rgba(0,0,0,0.8)', padding: 12, titleFont: { size: 14 }, bodyFont: { size: 13 } }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: { display: true, text: 'Placements / Hour', font: { size: 14, weight: 'bold' } },
+                            grid: { color: 'rgba(0,0,0,0.05)' }
+                        },
+                        x: {
+                            title: { display: true, text: 'Date', font: { size: 14, weight: 'bold' } },
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
+        }
+
+        // ── User Comparison (horizontal bar chart of total placements per user) ──
+        function updateMasonCompareChart(summaryData) {
+            if (!document.getElementById('masonCompareChart')) return;
+            if (!summaryData || summaryData.length === 0) return;
+
+            const sorted = [...summaryData].sort((a, b) => (b.placementCount || 0) - (a.placementCount || 0));
+            const masonIds = sorted.map(s => s.masonId);
+            const totals = sorted.map(s => s.placementCount || 0);
+            const colors = masonIds.map(mId => getMasonColor(mId, masonIds));
+
+            const datasets = [{
+                label: 'Total Placements',
+                data: totals,
+                backgroundColor: colors,
+                borderColor: colors,
+                borderWidth: 2,
+                borderRadius: 5
+            }];
+
+            if (masonCompareChartInstance) {
+                masonCompareChartInstance.data.labels = masonIds;
+                masonCompareChartInstance.data.datasets = datasets;
+                masonCompareChartInstance.update('none');
+                return;
+            }
+
+            const ctx = document.getElementById('masonCompareChart').getContext('2d');
+            masonCompareChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: { labels: masonIds, datasets },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { backgroundColor: 'rgba(0,0,0,0.8)', padding: 12, titleFont: { size: 14 }, bodyFont: { size: 13 } }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            title: { display: true, text: 'Total Placements', font: { size: 14, weight: 'bold' } },
+                            grid: { color: 'rgba(0,0,0,0.05)' }
+                        },
+                        y: {
+                            title: { display: true, text: 'User', font: { size: 14, weight: 'bold' } },
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
+        }
+
+        // ── Hourly Activity Pattern (bar chart of placements by hour-of-day) ──
+        function updateHourlyChart(dailyData) {
+            if (!document.getElementById('hourlyChart')) return;
+            if (!dailyData || dailyData.length === 0) return;
+
+            // Bucket placements by hour from firstPlacement timestamps
+            const hourBuckets = new Array(24).fill(0);
+            dailyData.forEach(d => {
+                if (d.firstPlacement) {
+                    const hour = new Date(d.firstPlacement).getHours();
+                    hourBuckets[hour] += d.totalPlacements || 0;
+                }
+            });
+
+            const labels = hourBuckets.map((_, i) => {
+                const h = i % 12 || 12;
+                return `${h}${i < 12 ? 'a' : 'p'}`;
+            });
+
+            const maxVal = Math.max(...hourBuckets);
+            const barColors = hourBuckets.map(v => {
+                const ratio = maxVal > 0 ? v / maxVal : 0;
+                // Gradient from light to strong red
+                const alpha = 0.25 + ratio * 0.75;
+                return `rgba(204, 0, 0, ${alpha})`;
+            });
+
+            const datasets = [{
+                label: 'Placements',
+                data: hourBuckets,
+                backgroundColor: barColors,
+                borderColor: '#CC0000',
+                borderWidth: 1,
+                borderRadius: 4
+            }];
+
+            if (hourlyChartInstance) {
+                hourlyChartInstance.data.labels = labels;
+                hourlyChartInstance.data.datasets = datasets;
+                hourlyChartInstance.update('none');
+                return;
+            }
+
+            const ctx = document.getElementById('hourlyChart').getContext('2d');
+            hourlyChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: { labels, datasets },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: 'rgba(0,0,0,0.8)', padding: 12,
+                            callbacks: {
+                                title: (items) => {
+                                    const i = items[0].dataIndex;
+                                    const h = i % 12 || 12;
+                                    return `${h}:00 ${i < 12 ? 'AM' : 'PM'}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: { display: true, text: 'Placements', font: { size: 14, weight: 'bold' } },
+                            grid: { color: 'rgba(0,0,0,0.05)' }
+                        },
+                        x: {
+                            title: { display: true, text: 'Hour of Day', font: { size: 14, weight: 'bold' } },
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
+        }
+
+        // ── Placed vs Indexed (doughnut chart) ──
+        function updatePlacedVsIndexedChart(placed, indexed) {
+            if (!document.getElementById('placedVsIndexed')) return;
+            if (placed === 0 && indexed === 0) return;
+
+            const data = [placed, indexed];
+            const bgColors = ['#10b981', '#3b82f6'];
+            const borderColors = ['#059669', '#2563eb'];
+
+            const datasets = [{
+                data: data,
+                backgroundColor: bgColors,
+                borderColor: borderColors,
+                borderWidth: 2,
+                hoverOffset: 8
+            }];
+
+            if (placedVsIndexedChartInstance) {
+                placedVsIndexedChartInstance.data.datasets[0].data = data;
+                placedVsIndexedChartInstance.update('none');
+                return;
+            }
+
+            const ctx = document.getElementById('placedVsIndexed').getContext('2d');
+            placedVsIndexedChartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Placed', 'Indexed'],
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: true, position: 'bottom', labels: { padding: 16, font: { size: 13 } } },
+                        tooltip: {
+                            backgroundColor: 'rgba(0,0,0,0.8)', padding: 12,
+                            callbacks: {
+                                label: (ctx) => {
+                                    const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
+                                    const pct = total > 0 ? ((ctx.raw / total) * 100).toFixed(1) : '0.0';
+                                    return `${ctx.label}: ${ctx.raw.toLocaleString()} (${pct}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // ── Report Section Registry ──
+        const REPORT_SECTIONS = {
+            daysWorked:        { type: 'kpi',   label: 'Days Worked' },
+            totalPlacements:   { type: 'kpi',   label: 'Total Placements' },
+            totalIndexed:      { type: 'kpi',   label: 'Blocks Indexed' },
+            avgPerDay:         { type: 'kpi',   label: 'Avg Per Day' },
+            peakHour:          { type: 'kpi',   label: 'Peak Hour' },
+            currentEfficiency: { type: 'kpi',   label: 'Placements / Hour' },
+            activeMasons:      { type: 'kpi',   label: 'Active Users' },
+            totalScans:        { type: 'kpi',   label: 'Total Scans' },
+            avgPerHourAllTime: { type: 'kpi',   label: 'Avg / Hour (All Time)' },
+            uniqueBricks:      { type: 'kpi',   label: 'Unique Bricks' },
+            dailyChart:        { type: 'chart', label: 'Daily Productivity' },
+            hourlyChart:       { type: 'chart', label: 'Hourly Activity Pattern' }
+        };
+
+        // Map dashboard widget keys → report section keys
+        const DASH_TO_REPORT = {
+            totalPlacements: 'totalPlacements',
+            totalIndexed: 'totalIndexed',
+            daysWorked: 'daysWorked',
+            avgPerDay: 'avgPerDay',
+            currentEfficiency: 'currentEfficiency',
+            activeMasons: 'activeMasons',
+            totalScans: 'totalScans',
+            avgPerHourAllTime: 'avgPerHourAllTime',
+            liveChart: 'dailyChart',
+            dailyChart: 'dailyChart',
+            hourlyChart: 'hourlyChart'
+        };
+
+        function renderReportSections(selectedKeys) {
+            const container = document.getElementById('reportSections');
+            const kpis = Object.entries(REPORT_SECTIONS).filter(([,v]) => v.type === 'kpi');
+            const charts = Object.entries(REPORT_SECTIONS).filter(([,v]) => v.type === 'chart');
+            let html = '<div class="report-section-divider">KPIs</div>';
+            kpis.forEach(([key, s]) => {
+                html += `<label><input type="checkbox" value="${key}" ${selectedKeys.has(key) ? 'checked' : ''} onchange="reportPresetClear()"> ${s.label}</label>`;
+            });
+            html += '<div class="report-section-divider">Charts</div>';
+            charts.forEach(([key, s]) => {
+                html += `<label><input type="checkbox" value="${key}" ${selectedKeys.has(key) ? 'checked' : ''} onchange="reportPresetClear()"> ${s.label}</label>`;
+            });
+            container.innerHTML = html;
+        }
+
+        function getReportSelectedSections() {
+            return [...document.querySelectorAll('#reportSections input[type="checkbox"]:checked')].map(cb => cb.value);
+        }
+
+        function setReportCheckboxes(keys) {
+            document.querySelectorAll('#reportSections input[type="checkbox"]').forEach(cb => {
+                cb.checked = keys.has(cb.value);
+            });
+        }
+
+        function reportPresetClear() {
+            document.querySelectorAll('.report-preset-btn').forEach(b => b.classList.remove('active'));
+        }
+
+        function reportPresetAll() {
+            reportPresetClear();
+            setReportCheckboxes(new Set(Object.keys(REPORT_SECTIONS)));
+            event.target.classList.add('active');
+        }
+
+        function reportPresetNone() {
+            reportPresetClear();
+            setReportCheckboxes(new Set());
+            event.target.classList.add('active');
+        }
+
+        function reportPresetDashboard() {
+            reportPresetClear();
+            const layout = getWidgetLayout();
+            const reportKeys = new Set();
+            layout.forEach(k => { if (DASH_TO_REPORT[k]) reportKeys.add(DASH_TO_REPORT[k]); });
+            // Always add peakHour if any KPI is selected (it's report-specific and useful)
+            setReportCheckboxes(reportKeys);
+            event.target.classList.add('active');
+        }
+
         // Show performance review modal
         function showReportModal() {
             const modal = document.getElementById('reportModal');
@@ -2978,6 +3919,12 @@
                     modalMasonSelect.appendChild(opt);
                 }
             });
+
+            // Default to "Same as Dashboard" preset
+            const layout = getWidgetLayout();
+            const reportKeys = new Set();
+            layout.forEach(k => { if (DASH_TO_REPORT[k]) reportKeys.add(DASH_TO_REPORT[k]); });
+            renderReportSections(reportKeys);
             
             modal.classList.add('show');
         }
@@ -2992,6 +3939,12 @@
         function generateReport() {
             const masonId = document.getElementById('modalMasonSelect').value;
             const periodDays = document.getElementById('modalPeriodSelect').value;
+            const sections = getReportSelectedSections();
+
+            if (sections.length === 0) {
+                alert('Please select at least one report section.');
+                return;
+            }
             
             // Calculate date range based on selected period
             const endDate = Date.now();
@@ -3004,8 +3957,8 @@
                 startDate = endDate - (days * 24 * 60 * 60 * 1000);
             }
             
-            // Open report in new tab
-            const reportUrl = `${API_BASE}/api/report/mason/${masonId}?startDate=${startDate}&endDate=${endDate}`;
+            // Open report in new tab (pass token and sections as query params)
+            const reportUrl = `${API_BASE}/api/report/mason/${masonId}?startDate=${startDate}&endDate=${endDate}&sections=${sections.join(',')}&token=${encodeURIComponent(authToken)}`;
             window.open(reportUrl, '_blank');
             
             // Close modal
@@ -3055,6 +4008,19 @@
                 clearInterval(refreshInterval);
             }
         });
+    </script>
+    <button class="scroll-to-top" id="scrollToTop" title="Scroll to top" onclick="window.scrollTo({top:0,behavior:'smooth'})">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
+    </button>
+    <script>
+    (function(){
+        const btn=document.getElementById('scrollToTop');
+        window.addEventListener('scroll',function(){
+            const scrollTop=window.scrollY||document.documentElement.scrollTop;
+            const docHeight=document.documentElement.scrollHeight-window.innerHeight;
+            if(docHeight>0 && scrollTop/docHeight>0.5){btn.classList.add('visible')}else{btn.classList.remove('visible')}
+        },{passive:true});
+    })();
     </script>
 </body>
 </html>

@@ -106,6 +106,14 @@ function createTables(resolve, reject) {
                         db.run(`UPDATE users SET role = 'super_admin' WHERE mason_id = 'MASON_ADMIN' OR username = 'admin'`);
                     }
                 });
+                // Migrate: add preferences column if missing (stores JSON user preferences like widget layout)
+                db.run(`ALTER TABLE users ADD COLUMN preferences TEXT DEFAULT '{}'`, (alterErr) => {
+                    if (alterErr && !alterErr.message.includes('duplicate column')) {
+                        console.error('Warning: Could not add preferences column:', alterErr.message);
+                    } else if (!alterErr) {
+                        console.log('✓ Migrated users table: added preferences column');
+                    }
+                });
                 // Seed default super admin accounts
                 seedDefaultSuperAdmins();
                 checkComplete();
@@ -472,6 +480,48 @@ const dbUsers = {
                     else resolve(row);
                 }
             );
+        });
+    },
+
+    // Get user preferences (JSON blob)
+    getPreferences: (masonId) => {
+        return new Promise((resolve, reject) => {
+            db.get(
+                `SELECT preferences FROM users WHERE mason_id = ?`,
+                [masonId],
+                (err, row) => {
+                    if (err) reject(err);
+                    else {
+                        try {
+                            resolve(row ? JSON.parse(row.preferences || '{}') : {});
+                        } catch (e) {
+                            resolve({});
+                        }
+                    }
+                }
+            );
+        });
+    },
+
+    // Update user preferences (merge with existing)
+    updatePreferences: (masonId, preferences) => {
+        return new Promise(async (resolve, reject) => {
+            try {
+                // Get existing preferences first
+                const existing = await dbUsers.getPreferences(masonId);
+                const merged = { ...existing, ...preferences };
+                const json = JSON.stringify(merged);
+                db.run(
+                    `UPDATE users SET preferences = ? WHERE mason_id = ?`,
+                    [json, masonId],
+                    function(err) {
+                        if (err) reject(err);
+                        else resolve(merged);
+                    }
+                );
+            } catch (err) {
+                reject(err);
+            }
         });
     }
 };
