@@ -22,6 +22,12 @@
             min-height: 100vh;
             padding: 20px;
         }
+        body.modal-open {
+            overflow: hidden;
+            position: fixed;
+            width: 100%;
+            top: 0;
+        }
         
         .container {
             width: 100%;
@@ -90,6 +96,236 @@
         }
         body.map-fullscreen .scroll-to-top {
             display: none !important;
+        }
+        body.map-fullscreen .help-fab {
+            display: none !important;
+        }
+
+        /* Help FAB — fades into background */
+        .help-fab {
+            position: fixed;
+            bottom: 24px;
+            left: 24px;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: #d4d4d4;
+            color: #b0b0b0;
+            border: none;
+            cursor: pointer;
+            box-shadow: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            font-family: 'Barlow Semi Condensed', sans-serif;
+            font-size: 1.3rem;
+            font-weight: 700;
+            transition: background 0.3s, color 0.3s, box-shadow 0.3s, transform 0.3s;
+        }
+        .help-fab:hover {
+            background: #2D3436;
+            color: white;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.3);
+            transform: translateY(-2px);
+        }
+
+        /* Help ticket modal */
+        .help-modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.45);
+            z-index: 10001;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.25s, visibility 0.25s;
+        }
+        .help-modal-overlay.open {
+            opacity: 1;
+            visibility: visible;
+        }
+        .help-modal {
+            background: white;
+            border-radius: 14px;
+            width: 440px;
+            max-width: 94vw;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 12px 48px rgba(0,0,0,0.3);
+            transform: translateY(20px) scale(0.96);
+            transition: transform 0.25s;
+        }
+        .help-modal-overlay.open .help-modal {
+            transform: translateY(0) scale(1);
+        }
+        .help-modal-header {
+            background: #2D3436;
+            color: white;
+            padding: 20px 24px;
+            border-radius: 14px 14px 0 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .help-modal-header h2 {
+            margin: 0;
+            font-family: 'Barlow Semi Condensed', sans-serif;
+            font-size: 1.2rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .help-modal-close {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            font-size: 1.5rem;
+            line-height: 1;
+            opacity: 0.7;
+            transition: opacity 0.15s;
+            padding: 0;
+        }
+        .help-modal-close:hover { opacity: 1; }
+        .help-modal-body {
+            padding: 24px;
+        }
+        .help-type-selector {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+        .help-type-btn {
+            flex: 1;
+            padding: 10px 6px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            background: white;
+            cursor: pointer;
+            text-align: center;
+            transition: border-color 0.2s, background 0.2s, color 0.2s;
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: #666;
+        }
+        .help-type-btn svg {
+            display: block;
+            margin: 0 auto 6px;
+            width: 22px;
+            height: 22px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+        .help-type-btn.active {
+            border-color: #CC0000;
+            background: #fff5f5;
+            color: #CC0000;
+        }
+        .help-type-btn:hover:not(.active) {
+            border-color: #bbb;
+        }
+        .help-field {
+            margin-bottom: 16px;
+        }
+        .help-field label {
+            display: block;
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: #555;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-family: 'Barlow Semi Condensed', sans-serif;
+        }
+        .help-field input,
+        .help-field textarea,
+        .help-field select {
+            width: 100%;
+            padding: 10px 14px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 0.92rem;
+            font-family: inherit;
+            transition: border-color 0.2s;
+            background: #fafafa;
+            box-sizing: border-box;
+        }
+        .help-field input:focus,
+        .help-field textarea:focus,
+        .help-field select:focus {
+            outline: none;
+            border-color: #CC0000;
+            background: white;
+        }
+        .help-field textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+        .help-submit-row {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+        .help-btn {
+            padding: 10px 22px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: background 0.2s, transform 0.15s;
+        }
+        .help-btn:hover { transform: translateY(-1px); }
+        .help-btn-cancel {
+            background: #e8e8e8;
+            color: #555;
+        }
+        .help-btn-cancel:hover { background: #ddd; }
+        .help-btn-submit {
+            background: #CC0000;
+            color: white;
+        }
+        .help-btn-submit:hover { background: #a00; }
+        .help-btn-submit:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .help-success {
+            text-align: center;
+            padding: 30px 20px;
+        }
+        .help-success svg {
+            width: 56px;
+            height: 56px;
+            stroke: #10b981;
+            fill: none;
+            stroke-width: 2;
+            margin-bottom: 16px;
+        }
+        .help-success h3 {
+            margin: 0 0 8px;
+            color: #333;
+            font-family: 'Barlow Semi Condensed', sans-serif;
+        }
+        .help-success p {
+            color: #888;
+            font-size: 0.9rem;
+            margin: 0 0 4px;
+        }
+        .help-success .ticket-id {
+            font-family: 'Barlow Semi Condensed', sans-serif;
+            font-weight: 700;
+            color: #CC0000;
+            font-size: 1rem;
+            margin-top: 10px;
         }
 
         .scroll-to-top {
@@ -1932,10 +2168,12 @@
                 </div>`;
             }).join('');
             document.getElementById('widgetGalleryModal').classList.add('show');
+            lockScroll();
         }
 
         function closeWidgetGallery() {
             document.getElementById('widgetGalleryModal').classList.remove('show');
+            unlockScroll();
         }
 
         function toggleWidget(key) {
@@ -3314,6 +3552,7 @@
             }
 
             modal.style.display = 'flex';
+            lockScroll();
         }
 
         function toggleNewCompanyFields() {
@@ -3324,6 +3563,7 @@
 
         function closeCreateUserModal() {
             document.getElementById('createUserModal').style.display = 'none';
+            unlockScroll();
             // Re-enable company select in case it was disabled
             document.getElementById('newCompany').disabled = false;
             const ncFields = document.getElementById('newCompanyFields');
@@ -4571,6 +4811,7 @@
             renderReportSections(reportKeys);
             
             modal.classList.add('show');
+            lockScroll();
         }
         
         // Filter modal user dropdown by modal company select (super admin)
@@ -4594,6 +4835,7 @@
         function closeReportModal() {
             const modal = document.getElementById('reportModal');
             modal.classList.remove('show');
+            unlockScroll();
         }
         
         // Generate report from modal
@@ -4708,9 +4950,151 @@
             }
         });
     </script>
+    <button class="help-fab" id="helpFab" title="Help & Support" onclick="openHelpModal()">?</button>
+
+    <!-- Help Ticket Modal -->
+    <div class="help-modal-overlay" id="helpModalOverlay" onclick="if(event.target===this)closeHelpModal()">
+        <div class="help-modal">
+            <div class="help-modal-header">
+                <h2>Submit a Ticket</h2>
+                <button class="help-modal-close" onclick="closeHelpModal()">&times;</button>
+            </div>
+            <div class="help-modal-body" id="helpModalBody">
+                <div class="help-type-selector">
+                    <button type="button" class="help-type-btn active" data-type="bug" onclick="selectHelpType(this)">
+                        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                        Report a Bug
+                    </button>
+                    <button type="button" class="help-type-btn" data-type="support" onclick="selectHelpType(this)">
+                        <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                        Get Support
+                    </button>
+                    <button type="button" class="help-type-btn" data-type="feature" onclick="selectHelpType(this)">
+                        <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                        Suggest Feature
+                    </button>
+                </div>
+                <div class="help-field">
+                    <label for="helpSubject">Subject</label>
+                    <input type="text" id="helpSubject" placeholder="Brief summary of your request">
+                </div>
+                <div class="help-field">
+                    <label for="helpDescription">Description</label>
+                    <textarea id="helpDescription" placeholder="Please provide details..."></textarea>
+                </div>
+                <div class="help-field">
+                    <label for="helpPriority">Priority</label>
+                    <select id="helpPriority">
+                        <option value="low">Low — Nice to have</option>
+                        <option value="medium" selected>Medium — Impacts my work</option>
+                        <option value="high">High — Blocking my work</option>
+                    </select>
+                </div>
+                <div class="help-submit-row">
+                    <button class="help-btn help-btn-cancel" onclick="closeHelpModal()">Cancel</button>
+                    <button class="help-btn help-btn-submit" id="helpSubmitBtn" onclick="submitHelpTicket()">Submit Ticket</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <button class="scroll-to-top" id="scrollToTop" title="Scroll to top" onclick="window.scrollTo({top:0,behavior:'smooth'})">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
     </button>
+    <script>
+    // ── Scroll lock for modals ──
+    let _scrollLockY = 0;
+    function lockScroll() {
+        _scrollLockY = window.scrollY;
+        document.body.style.top = `-${_scrollLockY}px`;
+        document.body.classList.add('modal-open');
+    }
+    function unlockScroll() {
+        document.body.classList.remove('modal-open');
+        document.body.style.top = '';
+        window.scrollTo(0, _scrollLockY);
+    }
+    </script>
+    <script>
+    let helpTicketType = 'bug';
+
+    function openHelpModal() {
+        helpTicketType = 'bug';
+        document.getElementById('helpSubject').value = '';
+        document.getElementById('helpDescription').value = '';
+        document.getElementById('helpPriority').value = 'medium';
+        document.querySelectorAll('.help-type-btn').forEach(b => b.classList.remove('active'));
+        document.querySelector('.help-type-btn[data-type="bug"]').classList.add('active');
+        // Reset to form view
+        document.getElementById('helpModalBody').querySelectorAll('.help-success').forEach(el => el.remove());
+        document.querySelectorAll('#helpModalBody > .help-type-selector, #helpModalBody > .help-field, #helpModalBody > .help-submit-row').forEach(el => el.style.display = '');
+        document.getElementById('helpSubmitBtn').disabled = false;
+        document.getElementById('helpSubmitBtn').textContent = 'Submit Ticket';
+        document.getElementById('helpModalOverlay').classList.add('open');
+        lockScroll();
+    }
+
+    function closeHelpModal() {
+        document.getElementById('helpModalOverlay').classList.remove('open');
+        unlockScroll();
+    }
+
+    function selectHelpType(btn) {
+        document.querySelectorAll('.help-type-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        helpTicketType = btn.dataset.type;
+        // Update placeholder hints
+        const desc = document.getElementById('helpDescription');
+        if (helpTicketType === 'bug') desc.placeholder = 'Steps to reproduce:\n1. \n2. \n3. \n\nExpected behavior:\n\nActual behavior:';
+        else if (helpTicketType === 'support') desc.placeholder = 'How can we help? Please describe your issue...';
+        else desc.placeholder = 'Describe the feature you\'d like and why it would be useful...';
+    }
+
+    async function submitHelpTicket() {
+        const subject = document.getElementById('helpSubject').value.trim();
+        const description = document.getElementById('helpDescription').value.trim();
+        const priority = document.getElementById('helpPriority').value;
+        const btn = document.getElementById('helpSubmitBtn');
+
+        if (!subject) { document.getElementById('helpSubject').focus(); return alert('Please enter a subject.'); }
+        if (!description) { document.getElementById('helpDescription').focus(); return alert('Please enter a description.'); }
+
+        btn.disabled = true;
+        btn.textContent = 'Submitting...';
+
+        try {
+            const resp = await fetch(`${API_BASE}/api/support-ticket`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + authToken },
+                body: JSON.stringify({ type: helpTicketType, subject, description, priority })
+            });
+            const data = await resp.json();
+            if (data.success) {
+                // Show success view
+                const body = document.getElementById('helpModalBody');
+                document.querySelectorAll('#helpModalBody > .help-type-selector, #helpModalBody > .help-field, #helpModalBody > .help-submit-row').forEach(el => el.style.display = 'none');
+                const success = document.createElement('div');
+                success.className = 'help-success';
+                success.innerHTML = `
+                    <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="9 12 12 15 16 10"/></svg>
+                    <h3>Ticket Submitted!</h3>
+                    <p>${data.message || 'We\'ll get back to you soon.'}</p>
+                    <div class="ticket-id">${data.ticketId}</div>
+                `;
+                body.appendChild(success);
+                setTimeout(() => closeHelpModal(), 3500);
+            } else {
+                alert(data.message || 'Failed to submit ticket.');
+                btn.disabled = false;
+                btn.textContent = 'Submit Ticket';
+            }
+        } catch (err) {
+            alert('Network error. Please try again.');
+            btn.disabled = false;
+            btn.textContent = 'Submit Ticket';
+        }
+    }
+    </script>
     <script>
     (function(){
         const btn=document.getElementById('scrollToTop');

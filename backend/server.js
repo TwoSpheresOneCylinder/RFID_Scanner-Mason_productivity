@@ -5,6 +5,7 @@ const cors = require('cors');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const rateLimit = require('express-rate-limit');
+const nodemailer = require('nodemailer');
 const { initializeDatabase, dbUsers, dbPlacements, dbCompanies, dbSessions, closeDatabase } = require('./db');
 
 const app = express();
@@ -1352,6 +1353,85 @@ app.get('/api/report/mason/:masonId', requireAuth, async (req, res) => {
             error: err.message
         });
     }
+});
+
+// ── Support Ticket Email ──
+const supportTransporter = nodemailer.createTransport({
+    host: 'smtp.gmail.com',
+    port: 587,
+    secure: false,
+    auth: {
+        user: process.env.SUPPORT_EMAIL || '',
+        pass: process.env.SUPPORT_EMAIL_PASS || ''
+    }
+});
+
+app.post('/api/support-ticket', requireAuth, async (req, res) => {
+    const { type, subject, description, priority } = req.body;
+    const user = req.user;
+
+    if (!type || !subject || !description) {
+        return res.status(400).json({ success: false, message: 'Type, subject, and description are required.' });
+    }
+
+    const typeLabels = { bug: 'Bug Report', support: 'Support Request', feature: 'Feature Request' };
+    const priorityLabels = { low: 'Low', medium: 'Medium', high: 'High' };
+    const ticketId = 'TKT-' + Date.now().toString(36).toUpperCase();
+    const timestamp = new Date().toLocaleString();
+
+    const htmlBody = `
+        <div style="font-family:Segoe UI,sans-serif;max-width:600px;margin:0 auto">
+            <div style="background:#2D3436;color:white;padding:20px 24px;border-radius:8px 8px 0 0">
+                <h2 style="margin:0;font-size:1.3rem">${typeLabels[type] || type} — ${ticketId}</h2>
+            </div>
+            <div style="background:#CC0000;color:white;padding:10px 24px;font-size:0.85rem">
+                <strong>Priority:</strong> ${priorityLabels[priority] || 'Medium'} &nbsp;|&nbsp; <strong>From:</strong> ${user.username} (${user.masonId}) &nbsp;|&nbsp; <strong>Role:</strong> ${user.role}
+            </div>
+            <div style="background:white;padding:24px;border:1px solid #e0e0e0;border-top:none;border-radius:0 0 8px 8px">
+                <h3 style="margin:0 0 12px;color:#333">${subject}</h3>
+                <p style="color:#555;line-height:1.6;white-space:pre-wrap">${description.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</p>
+                <hr style="border:none;border-top:1px solid #eee;margin:20px 0">
+                <p style="color:#999;font-size:0.8rem;margin:0">Submitted: ${timestamp}<br>User Agent: Dashboard Web App</p>
+            </div>
+        </div>
+    `;
+
+    const plainText = `[${typeLabels[type] || type}] ${ticketId}\nPriority: ${priorityLabels[priority] || 'Medium'}\nFrom: ${user.username} (${user.masonId}), Role: ${user.role}\n\nSubject: ${subject}\n\n${description}\n\nSubmitted: ${timestamp}`;
+
+    // Try to send via SMTP if configured, otherwise log to console
+    const emailTo = 'ccangemi@construction-robotics.com';
+    const emailSubject = `[${typeLabels[type] || type}] ${subject} — ${ticketId}`;
+
+    if (process.env.SUPPORT_EMAIL && process.env.SUPPORT_EMAIL_PASS) {
+        try {
+            await supportTransporter.sendMail({
+                from: `"Efficiency Tracker" <${process.env.SUPPORT_EMAIL}>`,
+                to: emailTo,
+                subject: emailSubject,
+                text: plainText,
+                html: htmlBody
+            });
+            console.log(`[SUPPORT] Ticket ${ticketId} emailed to ${emailTo}`);
+        } catch (emailErr) {
+            console.error(`[SUPPORT] Email send failed for ${ticketId}:`, emailErr.message);
+            // Fall through — still log and return success so user isn't blocked
+        }
+    } else {
+        console.log(`[SUPPORT] SMTP not configured. Ticket logged to console:`);
+    }
+
+    // Always log the ticket
+    console.log(`[SUPPORT] ──────────────────────────────`);
+    console.log(`[SUPPORT] Ticket: ${ticketId}`);
+    console.log(`[SUPPORT] Type: ${typeLabels[type] || type}`);
+    console.log(`[SUPPORT] Priority: ${priorityLabels[priority] || 'Medium'}`);
+    console.log(`[SUPPORT] From: ${user.username} (${user.masonId}), Role: ${user.role}`);
+    console.log(`[SUPPORT] Subject: ${subject}`);
+    console.log(`[SUPPORT] Description: ${description}`);
+    console.log(`[SUPPORT] Time: ${timestamp}`);
+    console.log(`[SUPPORT] ──────────────────────────────`);
+
+    res.json({ success: true, ticketId, message: 'Your ticket has been submitted. We\'ll get back to you soon!' });
 });
 
 // 404 handler - must be after all other routes
