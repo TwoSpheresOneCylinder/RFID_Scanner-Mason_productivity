@@ -298,6 +298,11 @@
             height: 600px;
             border-radius: 8px;
         }
+
+        .pallet-bubble-marker {
+            background: none !important;
+            border: none !important;
+        }
         
         .map-controls {
             margin-bottom: 15px;
@@ -857,6 +862,11 @@
                 <div class="map-controls">
                     <button onclick="fitMapBounds()">Fit All Markers</button>
                     <button onclick="refreshMapData()">Refresh Map</button>
+                    <div style="display:flex;gap:6px;margin-left:auto;">
+                        <button onclick="setMapFilter('all')" id="mapFilterAll" style="padding:4px 12px;border-radius:6px;border:1px solid #ccc;background:#2D3436;color:white;font-size:0.8rem;font-weight:600;cursor:pointer;">All</button>
+                        <button onclick="setMapFilter('placement')" id="mapFilterPlacement" style="padding:4px 12px;border-radius:6px;border:1px solid #ccc;background:transparent;color:#555;font-size:0.8rem;font-weight:600;cursor:pointer;">Placements</button>
+                        <button onclick="setMapFilter('pallet')" id="mapFilterPallet" style="padding:4px 12px;border-radius:6px;border:1px solid #ccc;background:transparent;color:#555;font-size:0.8rem;font-weight:600;cursor:pointer;">Pallet</button>
+                    </div>
                 </div>
                 <div id="map"></div>
             </div>
@@ -913,6 +923,7 @@
         let lastPlacementCount = 0;
         let isUpdating = false;
         let logFilter = 'all'; // 'all', 'placement', 'pallet'
+        let mapFilter = 'all'; // 'all', 'placement', 'pallet'
         
         // Role awareness
         const userRole = localStorage.getItem('dashboard_role') || 'user';
@@ -992,6 +1003,9 @@
         let markers = [];
         let markerGroup = null;
         let wallPolygons = [];
+        let cachedPlacementScans = null;
+        let cachedPalletScans = null;
+        let isZoomRender = false;
         
         // Color palette for different masons
         const masonColors = [
@@ -1018,9 +1032,65 @@
         }
         
         // Clustering parameters
-        const WALL_CLUSTER_DISTANCE = 10; // meters - scans within 10m are part of same wall
-        const MIN_WALL_SIZE = 3; // minimum 3 scans to form a wall
-        const TIME_WINDOW = 24 * 60 * 60 * 1000; // 24 hours - placements within this time are more likely same wall
+        // Zoom-based cluster distance: zoomed out = absorb, zoomed in = break apart
+        // Even at max zoom, overlapping points within 3m merge so you can click them
+        function getClusterDistance(zoom) {
+            // Conservative clustering — only merge truly nearby scans
+            if (zoom >= 20) return 3;
+            if (zoom >= 19) return 5;
+            if (zoom >= 18) return 8;
+            if (zoom >= 17) return 12;
+            if (zoom >= 16) return 18;
+            if (zoom >= 15) return 30;
+            if (zoom >= 14) return 50;
+            if (zoom >= 13) return 120;
+            if (zoom >= 12) return 250;
+            if (zoom >= 10) return 600;
+            if (zoom >= 8) return 2000;
+            return 5000;
+        }
+
+        // After geographic clustering, merge any clusters whose markers
+        // would visually overlap on screen. Guarantees zero icon stacking.
+        function mergeOverlappingClusters(clusters, markerSizePx) {
+            if (!map || clusters.length <= 1) return clusters;
+
+            // Markers display at scale(0.5), so visual size is half
+            const minPixelDist = markerSizePx * 0.55;
+            let merged = clusters.map(c => [...c]); // deep copy
+            let changed = true;
+
+            while (changed) {
+                changed = false;
+                for (let i = 0; i < merged.length; i++) {
+                    const ci = merged[i];
+                    const latI = ci.reduce((s, p) => s + p.latitude, 0) / ci.length;
+                    const lngI = ci.reduce((s, p) => s + p.longitude, 0) / ci.length;
+                    const pxI = map.latLngToContainerPoint(L.latLng(latI, lngI));
+
+                    for (let j = i + 1; j < merged.length; j++) {
+                        const cj = merged[j];
+                        const latJ = cj.reduce((s, p) => s + p.latitude, 0) / cj.length;
+                        const lngJ = cj.reduce((s, p) => s + p.longitude, 0) / cj.length;
+                        const pxJ = map.latLngToContainerPoint(L.latLng(latJ, lngJ));
+
+                        const dx = pxI.x - pxJ.x;
+                        const dy = pxI.y - pxJ.y;
+                        const dist = Math.sqrt(dx * dx + dy * dy);
+
+                        if (dist < minPixelDist) {
+                            // Merge j into i
+                            merged[i] = ci.concat(cj);
+                            merged.splice(j, 1);
+                            changed = true;
+                            break;
+                        }
+                    }
+                    if (changed) break; // restart outer loop after merge
+                }
+            }
+            return merged;
+        }
         
         // Tab switching function
         function switchTab(tabName) {
@@ -1063,7 +1133,32 @@
             // Create marker group for easy management
             markerGroup = L.layerGroup().addTo(map);
             
+            // Re-render on zoom change so markers cluster/uncluster dynamically
+            map.on('zoomend', function() {
+                if (cachedPlacementScans || cachedPalletScans) {
+                    renderMapFromCache();
+                }
+            });
+            
             loadMapData();
+        }
+        
+        // Re-render map from cached data (called on zoom change)
+        function renderMapFromCache() {
+            isZoomRender = true;
+            const zoom = map.getZoom();
+            const clusterDist = getClusterDistance(zoom);
+            
+            if (mapFilter === 'pallet') {
+                if (cachedPalletScans) updateMapWithPalletBubbles(cachedPalletScans);
+            } else if (mapFilter === 'placement') {
+                if (cachedPlacementScans) renderPlacementBubbles(cachedPlacementScans);
+            } else {
+                // "all" mode: always use combined renderer
+                const allScans = [...(cachedPlacementScans || []), ...(cachedPalletScans || [])];
+                if (allScans.length > 0) renderCombinedBubbles(allScans);
+            }
+            isZoomRender = false;
         }
         
         // Load placement data for map
@@ -1078,7 +1173,20 @@
                 const data = await response.json();
                 
                 if (data.success && data.placements) {
-                    updateMapWithWalls(data.placements);
+                    const all = data.placements;
+                    
+                    // Cache the data for zoom-based re-rendering
+                    cachedPlacementScans = all.filter(p => (p.scan_type || p.scanType || 'placement') !== 'pallet');
+                    cachedPalletScans = all.filter(p => (p.scan_type || p.scanType || 'placement') === 'pallet');
+                    
+                    if (mapFilter === 'pallet') {
+                        updateMapWithPalletBubbles(cachedPalletScans);
+                    } else if (mapFilter === 'placement') {
+                        renderPlacementBubbles(cachedPlacementScans);
+                    } else {
+                        // 'all' — always use combined renderer
+                        renderCombinedBubbles([...cachedPlacementScans, ...cachedPalletScans]);
+                    }
                 }
             } catch (error) {
                 console.error('Error loading map data:', error);
@@ -1101,400 +1209,409 @@
             return R * c;
         }
         
-        // Calculate bearing (direction) between two GPS points in degrees (0-360)
-        function calculateBearing(lat1, lon1, lat2, lon2) {
-            const phi1 = lat1 * Math.PI / 180;
-            const phi2 = lat2 * Math.PI / 180;
-            const dLambda = (lon2 - lon1) * Math.PI / 180;
-            
-            const y = Math.sin(dLambda) * Math.cos(phi2);
-            const x = Math.cos(phi1) * Math.sin(phi2) -
-                    Math.sin(phi1) * Math.cos(phi2) * Math.cos(dLambda);
-            const theta = Math.atan2(y, x);
-            
-            return (theta * 180 / Math.PI + 360) % 360; // Normalize to 0-360
-        }
-        
-        // Calculate the smallest angle difference between two bearings
-        function angleDifference(bearing1, bearing2) {
-            let diff = Math.abs(bearing1 - bearing2);
-            if (diff > 180) diff = 360 - diff;
-            return diff;
-        }
-        
-        // Calculate average bearing for a cluster of placements
-        function calculateClusterBearing(placements) {
-            if (placements.length < 2) return null;
-            
-            let sumSin = 0, sumCos = 0;
-            let count = 0;
-            
-            // Calculate bearings between consecutive points
-            for (let i = 0; i < placements.length - 1; i++) {
-                const bearing = calculateBearing(
-                    placements[i].latitude, placements[i].longitude,
-                    placements[i + 1].latitude, placements[i + 1].longitude
-                );
-                sumSin += Math.sin(bearing * Math.PI / 180);
-                sumCos += Math.cos(bearing * Math.PI / 180);
-                count++;
+
+        // Build a diagonal CSS gradient from mason proportions in a cluster
+        // Returns a CSS background value: solid color for 1 mason, diagonal gradient for multi-mason
+        function getMasonGradient(cluster, uniqueMasons) {
+            const masons = [...new Set(cluster.map(p => p.mason_id || p.masonId))];
+            if (masons.length === 1) {
+                const idx = uniqueMasons.indexOf(masons[0]);
+                return idx >= 0 ? masonColors[idx % masonColors.length] : '#CC0000';
             }
-            
-            if (count === 0) return null;
-            
-            const avgBearing = Math.atan2(sumSin / count, sumCos / count) * 180 / Math.PI;
-            return (avgBearing + 360) % 360;
+            // Count per mason, sorted by count descending
+            const counts = masons.map(m => ({
+                mason: m,
+                count: cluster.filter(p => (p.mason_id || p.masonId) === m).length,
+                color: (() => { const i = uniqueMasons.indexOf(m); return i >= 0 ? masonColors[i % masonColors.length] : '#CC0000'; })()
+            })).sort((a, b) => b.count - a.count);
+            const total = cluster.length;
+            // Build gradient stops
+            let pct = 0;
+            const stops = [];
+            counts.forEach(c => {
+                const end = pct + (c.count / total) * 100;
+                stops.push(`${c.color} ${pct.toFixed(1)}%`);
+                stops.push(`${c.color} ${end.toFixed(1)}%`);
+                pct = end;
+            });
+            return `linear-gradient(135deg, ${stops.join(', ')})`;
         }
         
-        // Split a cluster into sub-clusters based on wall direction/orientation
-        // Helps separate walls that are close but face different directions
-        function splitByDirection(cluster) {
-            if (cluster.length < 3) return [cluster]; // Too small to determine direction
-            
-            const MAX_BEARING_DIFF = 45; // degrees - walls with >45 degrees difference are separate
-            const subclusters = [];
-            const used = new Set();
-            
-            // Sort by timestamp for sequential processing
-            const sorted = [...cluster].sort((a, b) => a.timestamp - b.timestamp);
-            
-            for (let i = 0; i < sorted.length; i++) {
-                if (used.has(i)) continue;
-                
-                const subcluster = [sorted[i]];
-                used.add(i);
-                
-                // Add nearby points with similar bearing
-                for (let j = i + 1; j < sorted.length; j++) {
-                    if (used.has(j)) continue;
-                    
-                    // Check if this point fits the current subcluster's direction
-                    const testCluster = [...subcluster, sorted[j]];
-                    const bearing = calculateClusterBearing(testCluster);
-                    
-                    if (bearing !== null) {
-                        // Check bearing consistency with all points in subcluster
-                        let consistent = true;
-                        for (let k = 0; k < subcluster.length - 1; k++) {
-                            const segmentBearing = calculateBearing(
-                                subcluster[k].latitude, subcluster[k].longitude,
-                                subcluster[k + 1].latitude, subcluster[k + 1].longitude
-                            );
-                            if (angleDifference(bearing, segmentBearing) > MAX_BEARING_DIFF) {
-                                consistent = false;
-                                break;
-                            }
-                        }
-                        
-                        if (consistent) {
-                            subcluster.push(sorted[j]);
-                            used.add(j);
-                        }
-                    }
-                }
-                
-                subclusters.push(subcluster);
-            }
-            
-            return subclusters;
-        }
-        
-        // Cluster placements into walls using DBSCAN-like algorithm with directional checks
-        // Groups placements by proximity, time, AND direction (walls have orientation)
-        function clusterIntoWalls(placements) {
-            const walls = [];
+        // Simple proximity-only clustering (no time/direction constraints)
+        // Used when zoomed out so everything merges properly
+        function clusterByProximity(placements, maxDist) {
+            const clusters = [];
             const visited = new Set();
-            let wallCounter = 1;
-            
-            // Sort by timestamp to process chronologically
-            const sorted = [...placements].sort((a, b) => a.timestamp - b.timestamp);
-            
-            sorted.forEach((placement, idx) => {
+            placements.forEach((p, idx) => {
                 if (visited.has(idx)) return;
-                
-                const cluster = [placement];
-                const queue = [placement];
+                const cluster = [p];
+                const queue = [p];
                 visited.add(idx);
-                
-                // DBSCAN-like expansion: find all connected neighbors
                 while (queue.length > 0) {
                     const current = queue.shift();
-                    
-                    sorted.forEach((other, otherIdx) => {
+                    placements.forEach((other, otherIdx) => {
                         if (visited.has(otherIdx)) return;
-                        
-                        const spatialDist = calculateDistance(
+                        const dist = calculateDistance(
                             current.latitude, current.longitude,
                             other.latitude, other.longitude
                         );
-                        
-                        const temporalDist = Math.abs(current.timestamp - other.timestamp);
-                        
-                        // Consider both spatial and temporal proximity
-                        // Close in space AND reasonably close in time = same wall
-                        if (spatialDist <= WALL_CLUSTER_DISTANCE && temporalDist <= TIME_WINDOW) {
+                        if (dist <= maxDist) {
                             cluster.push(other);
                             queue.push(other);
                             visited.add(otherIdx);
                         }
                     });
                 }
-                
-                // Split cluster by direction if it has different wall orientations
-                const directionClusters = splitByDirection(cluster);
-                
-                directionClusters.forEach(subCluster => {
-                    if (subCluster.length >= MIN_WALL_SIZE) {
-                        // Multi-mason wall
-                        const masons = [...new Set(subCluster.map(p => p.mason_id || p.masonId))];
-                        const brickCounts = {};
-                        masons.forEach(m => {
-                            brickCounts[m] = subCluster.filter(p => (p.mason_id || p.masonId) === m).length;
-                        });
-                        
-                        walls.push({
-                            id: `WALL_${wallCounter++}`,
-                            placements: subCluster,
-                            masons: masons,
-                            brickCounts: brickCounts,
-                            isMultiMason: masons.length > 1
-                        });
-                    } else {
-                        // Individual placements (not part of a wall)
-                        subCluster.forEach(p => {
-                            walls.push({
-                                id: null,
-                                placements: [p],
-                                masons: [p.mason_id || p.masonId],
-                                brickCounts: {},
-                                isMultiMason: false
-                            });
-                        });
-                    }
-                });
+                clusters.push(cluster);
             });
-            
-            return walls;
+            return clusters;
         }
         
-        // Update map with wall visualization
-        function updateMapWithWalls(placements) {
+        // Render ALL scans (placements + pallets) as unified combined bubbles
+        // Used in "all" mode at every zoom level.
+        // Zoom <= 14: "Job Site #N" neutral bubbles (everything clusters into sites)
+        // Zoom > 14: individual/combined bubbles with brick + pallet icons
+        function renderCombinedBubbles(allScans) {
             if (!map || !markerGroup) return;
             
-            // Clear existing markers and polygons
             markerGroup.clearLayers();
             markers = [];
             wallPolygons.forEach(p => p.remove());
             wallPolygons = [];
             
-            // Filter placements with valid GPS
-            const validPlacements = placements.filter(p => 
-                p.latitude && p.longitude && 
+            const valid = allScans.filter(p =>
+                p.latitude && p.longitude &&
                 p.latitude !== 0 && p.longitude !== 0
             );
+            if (valid.length === 0) return;
             
-            if (validPlacements.length === 0) {
-                alert('No placements with GPS coordinates found');
-                return;
-            }
-            
-            // Cluster into walls
-            const walls = clusterIntoWalls(validPlacements);
+            const zoom = map.getZoom();
+            const clusterDist = getClusterDistance(zoom);
+            const geoClusters = clusterByProximity(valid, clusterDist);
+            const isJobSiteMode = zoom <= 14;
+            const mergePx = isJobSiteMode ? 120 : 100;
+            const clusters = mergeOverlappingClusters(geoClusters, mergePx);
             const bounds = L.latLngBounds();
-            const uniqueMasons = [...new Set(validPlacements.map(p => p.mason_id || p.masonId))];
+            const uniqueMasons = [...new Set(valid.map(p => p.mason_id || p.masonId))];
             
-            walls.forEach((wall, wallIdx) => {
-                if (!wall.id) {
-                    // Individual placement (not part of a wall)
-                    const p = wall.placements[0];
-                    const latlng = [p.latitude, p.longitude];
-                    const masonId = p.mason_id || p.masonId;
-                    const masonIndex = uniqueMasons.indexOf(masonId);
-                    const color = masonIndex >= 0 ? 
-                        masonColors[masonIndex % masonColors.length] : 
-                        '#CC0000';
+            clusters.forEach((cluster, clusterIndex) => {
+                const avgLat = cluster.reduce((s, p) => s + p.latitude, 0) / cluster.length;
+                const avgLng = cluster.reduce((s, p) => s + p.longitude, 0) / cluster.length;
+                const latlng = [avgLat, avgLng];
+                
+                const placementItems = cluster.filter(p => (p.scan_type || p.scanType || 'placement') !== 'pallet');
+                const palletItems = cluster.filter(p => (p.scan_type || p.scanType || 'placement') === 'pallet');
+                const pCount = placementItems.length;
+                const kCount = palletItems.length;
+                const total = cluster.length;
+                const hasBoth = pCount > 0 && kCount > 0;
+                const palletOnly = pCount === 0 && kCount > 0;
+                
+                const masons = [...new Set(cluster.map(p => p.mason_id || p.masonId))];
+                const primaryMason = masons[0];
+                const masonIndex = uniqueMasons.indexOf(primaryMason);
+                const bgStyle = getMasonGradient(cluster, uniqueMasons);
+                const popupColor = masonIndex >= 0 ? masonColors[masonIndex % masonColors.length] : '#555';
+                
+                let innerHtml, markerW, pinHeight;
+                
+                if (isJobSiteMode) {
+                    // === JOB SITE MODE: neutral square-rounded bubble with "Job Site #N" ===
+                    const siteNum = clusterIndex + 1;
+                    const bSize = 68;
+                    markerW = 160;
+                    pinHeight = bSize + 12;
                     
-                    const icon = L.divIcon({
-                        className: 'custom-marker',
-                        html: `<div style="background-color: ${color}; width: 16px; height: 16px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>`,
-                        iconSize: [16, 16],
-                        iconAnchor: [8, 8]
-                    });
+                    // Toolbox SVG icon
+                    const toolSvg = `<svg viewBox="0 0 24 24" width="30" height="30" style="opacity:0.95;flex-shrink:0;"><path d="M22 8h-4V6c0-1.1-.9-2-2-2H8C6.9 4 6 4.9 6 6v2H2c-1.1 0-2 .9-2 2v4h4v-2h2v2h12v-2h2v2h4v-4c0-1.1-.9-2-2-2zM8 6h8v2H8V6zm14 12v2c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2v-2h4v-2h2v2h12v-2h2v2h4z" fill="white" opacity="0.95"/></svg>`;
                     
-                    const marker = L.marker(latlng, { icon: icon });
-                    const altitude = p.altitude || 0;
-                    const popupContent = `
-                        <div style="padding: 10px; font-family: Arial; min-width: 200px;">
-                            <h3 style="margin: 0 0 10px 0; color: ${color};">${masonId || 'Unknown Mason'}</h3>
-                            <p style="margin: 5px 0;"><strong>RFID:</strong> ${p.rfidTag || p.brickNumber}</p>
-                            <p style="margin: 5px 0;"><strong>Time:</strong> ${new Date(p.timestamp).toLocaleString()}</p>
-                            <p style="margin: 5px 0;"><strong>Location:</strong> ${p.latitude.toFixed(6)}, ${p.longitude.toFixed(6)}</p>
-                            <p style="margin: 5px 0;"><strong>Altitude:</strong> ${altitude.toFixed(1)} m</p>
-                            <p style="margin: 5px 0;"><strong>Accuracy:</strong> Â±${p.accuracy ? p.accuracy.toFixed(1) : '999'} m</p>
-                            ${p.rssiAvg ? `<p style="margin: 5px 0;"><strong>RSSI:</strong> ${p.rssiAvg} dBm</p>` : ''}
+                    innerHtml = `
+                        <div style="
+                            height:${bSize}px;
+                            border-radius:10px;
+                            background:#5a6577;
+                            border:3px solid white;
+                            display:flex;align-items:center;justify-content:center;
+                            padding:0 16px;gap:10px;
+                        ">
+                            ${toolSvg}
+                            <span style="color:white;font-weight:800;font-size:18px;line-height:1;text-shadow:0 1px 2px rgba(0,0,0,0.5);white-space:nowrap;">Job Site ${siteNum}</span>
                         </div>
-                    `;
-                    marker.bindPopup(popupContent);
-                    marker.addTo(markerGroup);
-                    markers.push(marker);
-                    bounds.extend(latlng);
-                    return;
-                }
-                
-                // Wall with multiple placements
-                const points = wall.placements.map(p => [p.latitude, p.longitude]);
-                
-                // Determine wall color
-                let wallColor = '#CC0000';
-                if (wall.isMultiMason) {
-                    wallColor = '#2D3436'; // Charcoal for collaboration
+                        <div style="width:0;height:0;border-left:8px solid transparent;border-right:8px solid transparent;border-top:12px solid white;margin-top:-1px;"></div>`;
                 } else {
-                    const masonId = wall.masons[0];
-                    const masonIndex = uniqueMasons.indexOf(masonId);
-                    wallColor = masonIndex >= 0 ? 
-                        masonColors[masonIndex % masonColors.length] : 
-                        '#CC0000';
+                    // === DETAILED MODE: individual brick/pallet icons ===
+                    const bubbleSize = Math.max(36, Math.min(64, 28 + Math.log2(total + 1) * 8));
+                    
+                    // Brick SVG
+                    const brickSvg = `<svg viewBox="0 0 24 18" width="${bubbleSize * 0.5}" height="${bubbleSize * 0.38}" style="opacity:0.9;"><rect x="0" y="0" width="11" height="5" rx="0.5" fill="white" opacity="0.9"/><rect x="13" y="0" width="11" height="5" rx="0.5" fill="white" opacity="0.9"/><rect x="0" y="6.5" width="5" height="5" rx="0.5" fill="white" opacity="0.9"/><rect x="7" y="6.5" width="10" height="5" rx="0.5" fill="white" opacity="0.9"/><rect x="19" y="6.5" width="5" height="5" rx="0.5" fill="white" opacity="0.9"/><rect x="0" y="13" width="11" height="5" rx="0.5" fill="white" opacity="0.9"/><rect x="13" y="13" width="11" height="5" rx="0.5" fill="white" opacity="0.9"/></svg>`;
+                    
+                    // Pallet SVG
+                    const palletSvg = `<svg viewBox="0 0 32 32" width="${bubbleSize * 0.45}" height="${bubbleSize * 0.45}" style="opacity:0.9;"><rect x="1" y="3" width="30" height="4" rx="1" fill="white" opacity="0.9"/><rect x="1" y="13" width="30" height="4" rx="1" fill="white" opacity="0.9"/><rect x="1" y="23" width="30" height="4" rx="1" fill="white" opacity="0.9"/><rect x="3" y="8" width="2" height="4" fill="white" opacity="0.5"/><rect x="15" y="8" width="2" height="4" fill="white" opacity="0.5"/><rect x="27" y="8" width="2" height="4" fill="white" opacity="0.5"/><rect x="3" y="18" width="2" height="4" fill="white" opacity="0.5"/><rect x="15" y="18" width="2" height="4" fill="white" opacity="0.5"/><rect x="27" y="18" width="2" height="4" fill="white" opacity="0.5"/></svg>`;
+                    
+                    if (hasBoth) {
+                        // White bubble container with two separate colored square icons inside
+                        const placementBg = getMasonGradient(placementItems, uniqueMasons);
+                        const palletBg = getMasonGradient(palletItems, uniqueMasons);
+                        const iconSize = bubbleSize - 6;
+                        const gap = 6;
+                        markerW = iconSize * 2 + gap + 16;
+                        pinHeight = bubbleSize + 18;
+                        innerHtml = `
+                            <div style="
+                                display:flex;align-items:center;justify-content:center;
+                                border-radius:8px;
+                                background:white;
+                                padding:5px;
+                                gap:${gap}px;
+                            ">
+                                <div style="
+                                    width:${iconSize}px;height:${iconSize}px;
+                                    border-radius:5px;
+                                    background:${placementBg};
+                                    display:flex;flex-direction:column;align-items:center;justify-content:center;
+                                ">
+                                    ${brickSvg}
+                                    <span style="color:white;font-weight:800;font-size:${pCount > 99 ? 9 : 11}px;line-height:1;margin-top:2px;text-shadow:0 1px 2px rgba(0,0,0,0.5);">${pCount}</span>
+                                </div>
+                                <div style="
+                                    width:${iconSize}px;height:${iconSize}px;
+                                    border-radius:5px;
+                                    background:${palletBg};
+                                    display:flex;flex-direction:column;align-items:center;justify-content:center;
+                                ">
+                                    ${palletSvg}
+                                    <span style="color:white;font-weight:800;font-size:${kCount > 99 ? 9 : 11}px;line-height:1;margin-top:2px;text-shadow:0 1px 2px rgba(0,0,0,0.5);">${kCount}</span>
+                                </div>
+                            </div>
+                            <div style="width:0;height:0;border-left:8px solid transparent;border-right:8px solid transparent;border-top:12px solid white;margin-top:-1px;"></div>`;
+                    } else if (palletOnly) {
+                        markerW = bubbleSize;
+                        pinHeight = bubbleSize + 12;
+                        innerHtml = `
+                            <div style="
+                                width:${bubbleSize}px;height:${bubbleSize}px;
+                                border-radius:6px;
+                                background:${bgStyle};
+                                border:3px solid white;
+                                display:flex;flex-direction:column;align-items:center;justify-content:center;
+                            ">
+                                ${palletSvg}
+                                <span style="color:white;font-weight:800;font-size:${kCount > 99 ? 10 : 12}px;line-height:1;margin-top:2px;text-shadow:0 1px 2px rgba(0,0,0,0.5);">${kCount}</span>
+                            </div>
+                            <div style="width:0;height:0;border-left:8px solid transparent;border-right:8px solid transparent;border-top:12px solid white;margin-top:-1px;"></div>`;
+                    } else {
+                        markerW = bubbleSize;
+                        pinHeight = bubbleSize + 12;
+                        innerHtml = `
+                            <div style="
+                                width:${bubbleSize}px;height:${bubbleSize}px;
+                                border-radius:6px;
+                                background:${bgStyle};
+                                border:3px solid white;
+                                display:flex;flex-direction:column;align-items:center;justify-content:center;
+                            ">
+                                ${brickSvg}
+                                <span style="color:white;font-weight:800;font-size:${pCount > 99 ? 10 : 12}px;line-height:1;margin-top:2px;text-shadow:0 1px 2px rgba(0,0,0,0.5);">${pCount}</span>
+                            </div>
+                            <div style="width:0;height:0;border-left:8px solid transparent;border-right:8px solid transparent;border-top:12px solid white;margin-top:-1px;"></div>`;
+                    }
+                    
+                    if (!pinHeight) pinHeight = 48;
                 }
+
+                const icon = L.divIcon({
+                    className: 'pallet-bubble-marker',
+                    html: `<div class="combined-pin-inner" style="
+                        display:flex;flex-direction:column;align-items:center;
+                        cursor:pointer;filter:drop-shadow(0 3px 6px rgba(0,0,0,0.35));
+                        transform:scale(0.5);transition:transform 0.2s ease;transform-origin:bottom center;
+                    ">
+                        ${innerHtml}
+                    </div>`,
+                    iconSize: [markerW, pinHeight],
+                    iconAnchor: [markerW / 2, pinHeight]
+                });
                 
-                // Create polygon for wall
-                const polygon = L.polygon(points, {
-                    color: wallColor,
-                    fillColor: wallColor,
-                    fillOpacity: 0.25,
-                    weight: 4,
-                    dashArray: wall.isMultiMason ? '10, 5' : null
-                }).addTo(map);
+                const marker = L.marker(latlng, { icon: icon });
+                marker.on('mouseover', function() {
+                    const el = this._icon.querySelector('.combined-pin-inner');
+                    if (el) { el.style.transform = 'scale(1)'; this._icon.style.zIndex = 9999; }
+                });
+                marker.on('mouseout', function() {
+                    const el = this._icon.querySelector('.combined-pin-inner');
+                    if (el) { el.style.transform = 'scale(0.5)'; this._icon.style.zIndex = ''; }
+                });
                 
-                // Calculate wall dimensions for text scaling
-                const wallBounds = polygon.getBounds();
-                const wallWidth = wallBounds.getNorthEast().distanceTo(wallBounds.getNorthWest());
-                const wallHeight = wallBounds.getNorthEast().distanceTo(wallBounds.getSouthEast());
-                const wallArea = wallWidth * wallHeight;
-                const textSize = Math.min(20, Math.max(10, 8 + Math.log10(wallArea + 1) * 3));
-                
-                // Calculate wall statistics
-                const avgAltitude = wall.placements.reduce((sum, p) => sum + (p.altitude || 0), 0) / wall.placements.length;
-                const timeSpan = Math.max(...wall.placements.map(p => p.timestamp)) - Math.min(...wall.placements.map(p => p.timestamp));
-                const timeSpanHours = (timeSpan / (1000 * 60 * 60)).toFixed(1);
-                
-                // Build mason breakdown for popup
-                const masonBreakdown = wall.masons.map(m => {
-                    const count = wall.brickCounts[m];
-                    const masonIndex = uniqueMasons.indexOf(m);
-                    const masonColor = masonIndex >= 0 ? masonColors[masonIndex % masonColors.length] : '#CC0000';
-                    return `<span style="color: ${masonColor}; font-weight: bold;">${m}</span>: ${count} brick${count > 1 ? 's' : ''}`;
+                // Popup with full breakdown
+                const avgAlt = cluster.reduce((s, p) => s + (p.altitude || 0), 0) / cluster.length;
+                const timeRange = cluster.length > 1
+                    ? `${new Date(Math.min(...cluster.map(p => p.timestamp))).toLocaleString()} \u2014 ${new Date(Math.max(...cluster.map(p => p.timestamp))).toLocaleString()}`
+                    : new Date(cluster[0].timestamp).toLocaleString();
+                const masonBreakdown = masons.map(m => {
+                    const c = cluster.filter(p => (p.mason_id || p.masonId) === m).length;
+                    const mi = uniqueMasons.indexOf(m);
+                    const mc = mi >= 0 ? masonColors[mi % masonColors.length] : '#555';
+                    return `<span style="color:${mc};font-weight:bold;">${m}</span>: ${c} scan${c > 1 ? 's' : ''}`;
                 }).join('<br>');
                 
-                // Hover tooltip
-                const hoverContent = `
-                    <div style="padding: 8px; font-family: Arial;">
-                        <h4 style="margin: 0 0 5px 0; color: ${wallColor};">
-                            ${wall.id}
-                            ${wall.isMultiMason ? '<span style="font-size: 0.7em; background: #2D3436; color: white; padding: 2px 4px; border-radius: 2px; margin-left: 3px;">TEAM</span>' : ''}
-                        </h4>
-                        <p style="margin: 3px 0; font-size: 0.9em;"><strong>Bricks:</strong> ${wall.placements.length}</p>
-                        <p style="margin: 3px 0; font-size: 0.9em;"><strong>Masons:</strong> ${wall.masons.join(', ')}</p>
-                        <p style="margin: 3px 0; font-size: 0.9em;"><strong>Altitude:</strong> ${avgAltitude.toFixed(1)} m</p>
-                        <p style="margin: 3px 0; font-size: 0.85em; color: #666;">Click for details</p>
-                    </div>
-                `;
-                
-                polygon.bindTooltip(hoverContent, {
-                    sticky: true,
-                    opacity: 0.95
-                });
-                
-                // Click popup - shows detailed information
+                const siteLabel = isJobSiteMode ? `<h3 style="margin:0 0 4px 0;color:#5a6577;">Job Site ${clusterIndex + 1}</h3>` : '';
                 const popupContent = `
-                    <div style="max-width: 300px; font-family: Arial;">
-                        <h3 style="margin: 0 0 10px 0; color: ${wallColor};">
-                            ${wall.id}
-                            ${wall.isMultiMason ? '<span style="font-size: 0.7em; background: #2D3436; color: white; padding: 2px 6px; border-radius: 3px; margin-left: 5px;">COLLABORATIVE WALL</span>' : ''}
+                    <div style="padding:10px;font-family:Arial;min-width:220px;">
+                        ${siteLabel}
+                        <h3 style="margin:0 0 8px 0;color:${popupColor};">
+                            ${total} Scan${total > 1 ? 's' : ''}
                         </h3>
-                        
-                        <p style="margin: 5px 0;"><strong>Total Bricks:</strong> ${wall.placements.length}</p>
-                        <p style="margin: 5px 0;"><strong>Build Duration:</strong> ${timeSpanHours}h</p>
-                        <p style="margin: 5px 0;"><strong>Average Altitude:</strong> ${avgAltitude.toFixed(1)} m</p>
-                        <p style="margin: 5px 0;"><strong>Start Time:</strong> ${new Date(Math.min(...wall.placements.map(p => p.timestamp))).toLocaleString()}</p>
-                        
-                        <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #ddd;">
-                            <h4 style="margin: 0 0 5px 0;">Mason Breakdown:</h4>
-                            ${masonBreakdown}
-                        </div>
-                        
-                        <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #ddd; max-height: 200px; overflow-y: auto;">
-                            <h4 style="margin: 0 0 5px 0;">All Placements (${wall.placements.length}):</h4>
-                            ${wall.placements.map((p, idx) => `
-                                <div style="font-size: 0.85em; margin: 3px 0; padding: 2px 0;">
-                                    <strong>${idx + 1}.</strong> 
-                                    RFID: ${p.rfidTag || p.brickNumber} | 
-                                    Mason: <span style="color: ${masonColors[uniqueMasons.indexOf(p.mason_id || p.masonId) % masonColors.length] || '#CC0000'};">${p.mason_id || p.masonId}</span> | 
-                                    ${new Date(p.timestamp).toLocaleTimeString()}
-                                </div>
-                            `).join('')}
+                        ${pCount > 0 ? `<p style="margin:4px 0;font-size:0.9em;"><strong>Placements:</strong> ${pCount}</p>` : ''}
+                        ${kCount > 0 ? `<p style="margin:4px 0;font-size:0.9em;"><strong>Pallet:</strong> ${kCount}</p>` : ''}
+                        <p style="margin:4px 0;font-size:0.9em;"><strong>Masons:</strong> ${masons.length}</p>
+                        <p style="margin:4px 0;font-size:0.9em;"><strong>Location:</strong> ${avgLat.toFixed(6)}, ${avgLng.toFixed(6)}</p>
+                        <p style="margin:4px 0;font-size:0.9em;"><strong>Avg Altitude:</strong> ${avgAlt.toFixed(1)} m</p>
+                        <p style="margin:4px 0;font-size:0.9em;"><strong>Time:</strong> ${timeRange}</p>
+                        <div style="margin-top:8px;padding-top:8px;border-top:1px solid #ddd;">
+                            <strong>Mason Breakdown:</strong><br>${masonBreakdown}
                         </div>
                     </div>
                 `;
-                
-                polygon.bindPopup(popupContent, { maxWidth: 400 });
-                
-                // Add hover effects
-                polygon.on('mouseover', function() {
-                    this.setStyle({
-                        fillOpacity: 0.4,
-                        weight: 6
-                    });
-                });
-                
-                polygon.on('mouseout', function() {
-                    this.setStyle({
-                        fillOpacity: 0.25,
-                        weight: 4
-                    });
-                });
-                
-                wallPolygons.push(polygon);
-                
-                // Add individual placement dots within the wall
-                wall.placements.forEach(p => {
-                    const masonId = p.mason_id || p.masonId;
-                    const masonIndex = uniqueMasons.indexOf(masonId);
-                    const dotColor = masonIndex >= 0 ? 
-                        masonColors[masonIndex % masonColors.length] : 
-                        '#CC0000';
-                    
-                    const dotIcon = L.divIcon({
-                        className: 'custom-marker',
-                        html: `<div style="background-color: ${dotColor}; width: 12px; height: 12px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>`,
-                        iconSize: [12, 12],
-                        iconAnchor: [6, 6]
-                    });
-                    
-                    const dotMarker = L.marker([p.latitude, p.longitude], { icon: dotIcon });
-                    const altitude = p.altitude || 0;
-                    const dotPopup = `
-                        <div style="padding: 10px; font-family: Arial; min-width: 200px;">
-                            <h3 style="margin: 0 0 10px 0; color: ${dotColor};">${masonId || 'Unknown Mason'}</h3>
-                            <p style="margin: 5px 0;"><strong>RFID:</strong> ${p.rfidTag || p.brickNumber}</p>
-                            <p style="margin: 5px 0;"><strong>Time:</strong> ${new Date(p.timestamp).toLocaleString()}</p>
-                            <p style="margin: 5px 0;"><strong>Location:</strong> ${p.latitude.toFixed(6)}, ${p.longitude.toFixed(6)}</p>
-                            <p style="margin: 5px 0;"><strong>Altitude:</strong> ${altitude.toFixed(1)} m</p>
-                            <p style="margin: 5px 0;"><strong>Accuracy:</strong> Â±${p.accuracy ? p.accuracy.toFixed(1) : '999'} m</p>
-                            ${p.rssiAvg ? `<p style="margin: 5px 0;"><strong>RSSI:</strong> ${p.rssiAvg} dBm</p>` : ''}
-                        </div>
-                    `;
-                    dotMarker.bindPopup(dotPopup);
-                    dotMarker.addTo(markerGroup);
-                    markers.push(dotMarker);
-                });
-                
-                points.forEach(p => bounds.extend(p));
+                marker.bindPopup(popupContent, { maxWidth: 400 });
+                marker.addTo(markerGroup);
+                markers.push(marker);
+                bounds.extend(latlng);
             });
             
-            if (bounds.isValid()) {
+            if (bounds.isValid() && !isZoomRender) {
                 map.fitBounds(bounds, { padding: [50, 50] });
             }
         }
+        
+        // Render placements as proximity-clustered bubbles at every zoom level
+        // Overlapping points always combine so nothing blocks anything
+        function renderPlacementBubbles(placements) {
+            if (!map || !markerGroup) return;
+            
+            markerGroup.clearLayers();
+            markers = [];
+            wallPolygons.forEach(p => p.remove());
+            wallPolygons = [];
+            
+            const validPlacements = placements.filter(p =>
+                p.latitude && p.longitude &&
+                p.latitude !== 0 && p.longitude !== 0
+            );
+            if (validPlacements.length === 0) return;
+            
+            const zoom = map.getZoom();
+            const clusterDist = getClusterDistance(zoom);
+            const geoClusters = clusterByProximity(validPlacements, clusterDist);
+            // Second pass: merge clusters that would visually overlap on screen
+            const clusters = mergeOverlappingClusters(geoClusters, 64);
+            const bounds = L.latLngBounds();
+            const uniqueMasons = [...new Set(validPlacements.map(p => p.mason_id || p.masonId))];
+            
+            clusters.forEach(cluster => {
+                renderPlacementClusterBubble(cluster, uniqueMasons, bounds);
+            });
+            
+            if (bounds.isValid() && !isZoomRender) {
+                map.fitBounds(bounds, { padding: [50, 50] });
+            }
+        }
+        
+        // Render a cluster of placements as a single bubble pin with brick icon + count
+        function renderPlacementClusterBubble(cluster, uniqueMasons, bounds) {
+            const avgLat = cluster.reduce((s, p) => s + p.latitude, 0) / cluster.length;
+            const avgLng = cluster.reduce((s, p) => s + p.longitude, 0) / cluster.length;
+            const latlng = [avgLat, avgLng];
+            const count = cluster.length;
+            const masons = [...new Set(cluster.map(p => p.mason_id || p.masonId))];
+            const primaryMason = masons[0];
+            const masonIndex = uniqueMasons.indexOf(primaryMason);
+            // Diagonal gradient when multiple masons, solid color for single mason
+            const bgStyle = getMasonGradient(cluster, uniqueMasons);
+            const popupColor = masonIndex >= 0 ? masonColors[masonIndex % masonColors.length] : '#CC0000';
+
+            // Log scale: 1→32, 5→40, 12→45, 50→56, 200→64 (max 64)
+            const bubbleSize = Math.max(32, Math.min(64, 28 + Math.log2(count + 1) * 8));
+            const halfSize = bubbleSize / 2;
+            const brickSvg = `<svg viewBox="0 0 24 18" width="${bubbleSize * 0.5}" height="${bubbleSize * 0.38}" style="opacity:0.9;"><rect x="0" y="0" width="11" height="5" rx="0.5" fill="white" opacity="0.9"/><rect x="13" y="0" width="11" height="5" rx="0.5" fill="white" opacity="0.9"/><rect x="0" y="6.5" width="5" height="5" rx="0.5" fill="white" opacity="0.9"/><rect x="7" y="6.5" width="10" height="5" rx="0.5" fill="white" opacity="0.9"/><rect x="19" y="6.5" width="5" height="5" rx="0.5" fill="white" opacity="0.9"/><rect x="0" y="13" width="11" height="5" rx="0.5" fill="white" opacity="0.9"/><rect x="13" y="13" width="11" height="5" rx="0.5" fill="white" opacity="0.9"/></svg>`;
+
+            const pinHeight = bubbleSize + 12;
+            const icon = L.divIcon({
+                className: 'pallet-bubble-marker',
+                html: `<div class="placement-pin-inner" style="
+                    display:flex;flex-direction:column;align-items:center;
+                    cursor:pointer;filter:drop-shadow(0 3px 6px rgba(0,0,0,0.35));
+                    transform:scale(0.5);transition:transform 0.2s ease;transform-origin:bottom center;
+                ">
+                    <div style="
+                        width:${bubbleSize}px;height:${bubbleSize}px;
+                        border-radius:6px;
+                        background:${bgStyle};
+                        border:3px solid white;
+                        display:flex;flex-direction:column;align-items:center;justify-content:center;
+                    ">
+                        ${brickSvg}
+                        <span style="color:white;font-weight:800;font-size:${count > 99 ? 10 : 12}px;line-height:1;margin-top:2px;text-shadow:0 1px 2px rgba(0,0,0,0.5);">${count}</span>
+                    </div>
+                    <div style="
+                        width:0;height:0;
+                        border-left:8px solid transparent;
+                        border-right:8px solid transparent;
+                        border-top:12px solid white;
+                        margin-top:-1px;
+                    "></div>
+                </div>`,
+                iconSize: [bubbleSize, pinHeight],
+                iconAnchor: [halfSize, pinHeight]
+            });
+
+            const marker = L.marker(latlng, { icon: icon });
+            marker.on('mouseover', function() {
+                const el = this._icon.querySelector('.placement-pin-inner');
+                if (el) { el.style.transform = 'scale(1)'; this._icon.style.zIndex = 9999; }
+            });
+            marker.on('mouseout', function() {
+                const el = this._icon.querySelector('.placement-pin-inner');
+                if (el) { el.style.transform = 'scale(0.5)'; this._icon.style.zIndex = ''; }
+            });
+
+            const avgAlt = cluster.reduce((s, p) => s + (p.altitude || 0), 0) / cluster.length;
+            const timeRange = cluster.length > 1
+                ? `${new Date(Math.min(...cluster.map(p => p.timestamp))).toLocaleString()} — ${new Date(Math.max(...cluster.map(p => p.timestamp))).toLocaleString()}`
+                : new Date(cluster[0].timestamp).toLocaleString();
+            const masonBreakdown = masons.map(m => {
+                const c = cluster.filter(p => (p.mason_id || p.masonId) === m).length;
+                const mi = uniqueMasons.indexOf(m);
+                const mc = mi >= 0 ? masonColors[mi % masonColors.length] : '#CC0000';
+                return `<span style="color:${mc};font-weight:bold;">${m}</span>: ${c} brick${c > 1 ? 's' : ''}`;
+            }).join('<br>');
+
+            const popupContent = `
+                <div style="padding:10px;font-family:Arial;min-width:220px;">
+                    <h3 style="margin:0 0 8px 0;color:${popupColor};">
+                        ${count} Placement${count > 1 ? 's' : ''}
+                    </h3>
+                    <p style="margin:4px 0;font-size:0.9em;"><strong>Location:</strong> ${avgLat.toFixed(6)}, ${avgLng.toFixed(6)}</p>
+                    <p style="margin:4px 0;font-size:0.9em;"><strong>Avg Altitude:</strong> ${avgAlt.toFixed(1)} m</p>
+                    <p style="margin:4px 0;font-size:0.9em;"><strong>Time:</strong> ${timeRange}</p>
+                    <div style="margin-top:8px;padding-top:8px;border-top:1px solid #ddd;">
+                        <strong>Masons:</strong><br>${masonBreakdown}
+                    </div>
+                    <div style="margin-top:8px;padding-top:8px;border-top:1px solid #ddd;max-height:150px;overflow-y:auto;">
+                        <strong>Scans (${count}):</strong>
+                        ${cluster.map((p, i) => `
+                            <div style="font-size:0.85em;margin:2px 0;">
+                                <strong>${i+1}.</strong> ${p.rfidTag || p.brickNumber} — ${(p.mason_id || p.masonId)} — ${new Date(p.timestamp).toLocaleTimeString()}
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+            marker.bindPopup(popupContent, { maxWidth: 400 });
+            marker.addTo(markerGroup);
+            markers.push(marker);
+            bounds.extend(latlng);
+        }
+        
         
         // Update map markers
         function updateMapMarkers(placements) {
@@ -1531,16 +1648,48 @@
                     masonColors[masonIndex % masonColors.length] : 
                     '#CC0000';
                 
-                // Create custom icon
+                // Create brick pin icon
+                const brickSvg = `<svg viewBox="0 0 24 18" width="22" height="16"><rect x="0" y="0" width="11" height="5" rx="0.5" fill="white" opacity="0.9"/><rect x="13" y="0" width="11" height="5" rx="0.5" fill="white" opacity="0.9"/><rect x="0" y="6.5" width="5" height="5" rx="0.5" fill="white" opacity="0.9"/><rect x="7" y="6.5" width="10" height="5" rx="0.5" fill="white" opacity="0.9"/><rect x="19" y="6.5" width="5" height="5" rx="0.5" fill="white" opacity="0.9"/><rect x="0" y="13" width="11" height="5" rx="0.5" fill="white" opacity="0.9"/><rect x="13" y="13" width="11" height="5" rx="0.5" fill="white" opacity="0.9"/></svg>`;
+                const pinSize = 36;
+                const pinHt = pinSize + 12;
                 const icon = L.divIcon({
-                    className: 'custom-marker',
-                    html: `<div style="background-color: ${color}; width: 16px; height: 16px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>`,
-                    iconSize: [16, 16],
-                    iconAnchor: [8, 8]
+                    className: 'pallet-bubble-marker',
+                    html: `<div class="placement-pin-inner" style="
+                        display:flex;flex-direction:column;align-items:center;
+                        cursor:pointer;filter:drop-shadow(0 3px 6px rgba(0,0,0,0.35));
+                        transform:scale(0.5);transition:transform 0.2s ease;transform-origin:bottom center;
+                    ">
+                        <div style="
+                            width:${pinSize}px;height:${pinSize}px;
+                            border-radius:6px;
+                            background:${color};
+                            border:3px solid white;
+                            display:flex;align-items:center;justify-content:center;
+                        ">
+                            ${brickSvg}
+                        </div>
+                        <div style="
+                            width:0;height:0;
+                            border-left:8px solid transparent;
+                            border-right:8px solid transparent;
+                            border-top:12px solid white;
+                            margin-top:-1px;
+                        "></div>
+                    </div>`,
+                    iconSize: [pinSize, pinHt],
+                    iconAnchor: [pinSize / 2, pinHt]
                 });
                 
                 // Create marker
                 const marker = L.marker(latlng, { icon: icon });
+                marker.on('mouseover', function() {
+                    const el = this._icon.querySelector('.placement-pin-inner');
+                    if (el) { el.style.transform = 'scale(1)'; this._icon.style.zIndex = 9999; }
+                });
+                marker.on('mouseout', function() {
+                    const el = this._icon.querySelector('.placement-pin-inner');
+                    if (el) { el.style.transform = 'scale(0.5)'; this._icon.style.zIndex = ''; }
+                });
                 
                 // Create popup content
                 const altitude = placement.altitude || 0;
@@ -1589,6 +1738,343 @@
         // Refresh map data
         function refreshMapData() {
             loadMapData();
+        }
+
+        // Map mode filter toggle
+        function setMapFilter(filter) {
+            mapFilter = filter;
+            ['All', 'Placement', 'Pallet'].forEach(name => {
+                const btn = document.getElementById('mapFilter' + name);
+                if (btn) {
+                    const isActive = name.toLowerCase() === filter || (name === 'All' && filter === 'all');
+                    btn.style.background = isActive ? '#2D3436' : 'transparent';
+                    btn.style.color = isActive ? 'white' : '#555';
+                }
+            });
+            loadMapData();
+        }
+
+        // Render pallet scans as clustered bubbles with pallet icon
+        function updateMapWithPalletBubbles(placements) {
+            if (!map || !markerGroup) return;
+
+            markerGroup.clearLayers();
+            markers = [];
+            wallPolygons.forEach(p => p.remove());
+            wallPolygons = [];
+
+            const validPlacements = placements.filter(p =>
+                p.latitude && p.longitude &&
+                p.latitude !== 0 && p.longitude !== 0
+            );
+
+            if (validPlacements.length === 0) {
+                return;
+            }
+
+            // Cluster pallet scans by proximity (zoom-based distance)
+            const palletClusterDist = getClusterDistance(map.getZoom()) * 1.5;
+            const clusters = [];
+            const visited = new Set();
+            const sorted = [...validPlacements].sort((a, b) => a.timestamp - b.timestamp);
+
+            sorted.forEach((placement, idx) => {
+                if (visited.has(idx)) return;
+                const cluster = [placement];
+                const queue = [placement];
+                visited.add(idx);
+
+                while (queue.length > 0) {
+                    const current = queue.shift();
+                    sorted.forEach((other, otherIdx) => {
+                        if (visited.has(otherIdx)) return;
+                        const dist = calculateDistance(
+                            current.latitude, current.longitude,
+                            other.latitude, other.longitude
+                        );
+                        if (dist <= palletClusterDist) {
+                            cluster.push(other);
+                            queue.push(other);
+                            visited.add(otherIdx);
+                        }
+                    });
+                }
+                clusters.push(cluster);
+            });
+
+            const bounds = L.latLngBounds();
+            const uniqueMasons = [...new Set(validPlacements.map(p => p.mason_id || p.masonId))];
+
+            // Second pass: merge clusters that would visually overlap on screen
+            const mergedClusters = mergeOverlappingClusters(clusters, 64);
+
+            mergedClusters.forEach(cluster => {
+                // Average position
+                const avgLat = cluster.reduce((s, p) => s + p.latitude, 0) / cluster.length;
+                const avgLng = cluster.reduce((s, p) => s + p.longitude, 0) / cluster.length;
+                const latlng = [avgLat, avgLng];
+
+                const count = cluster.length;
+                const masons = [...new Set(cluster.map(p => p.mason_id || p.masonId))];
+                const primaryMason = masons[0];
+                const masonIndex = uniqueMasons.indexOf(primaryMason);
+                // Diagonal gradient when multiple masons
+                const bgStyle = getMasonGradient(cluster, uniqueMasons);
+                const popupColor = masonIndex >= 0 ? masonColors[masonIndex % masonColors.length] : '#3b82f6';
+
+                // Log scale: 1→32, 5→40, 12→45, 50→56, 200→64 (max 64)
+                const bubbleSize = Math.max(32, Math.min(64, 28 + Math.log2(count + 1) * 8));
+                const halfSize = bubbleSize / 2;
+
+                // Pallet SVG icon (simplified top-down pallet)
+                const palletSvg = `<svg viewBox="0 0 32 32" width="${bubbleSize * 0.45}" height="${bubbleSize * 0.45}" style="opacity:0.9;">
+                    <rect x="1" y="3" width="30" height="4" rx="1" fill="white" opacity="0.9"/>
+                    <rect x="1" y="13" width="30" height="4" rx="1" fill="white" opacity="0.9"/>
+                    <rect x="1" y="23" width="30" height="4" rx="1" fill="white" opacity="0.9"/>
+                    <rect x="3" y="8" width="2" height="4" fill="white" opacity="0.5"/>
+                    <rect x="15" y="8" width="2" height="4" fill="white" opacity="0.5"/>
+                    <rect x="27" y="8" width="2" height="4" fill="white" opacity="0.5"/>
+                    <rect x="3" y="18" width="2" height="4" fill="white" opacity="0.5"/>
+                    <rect x="15" y="18" width="2" height="4" fill="white" opacity="0.5"/>
+                    <rect x="27" y="18" width="2" height="4" fill="white" opacity="0.5"/>
+                </svg>`;
+
+                const pinHeight = bubbleSize + 12;
+                const icon = L.divIcon({
+                    className: 'pallet-bubble-marker',
+                    html: `<div class="pallet-pin-inner" style="
+                        display:flex;flex-direction:column;align-items:center;
+                        cursor:pointer;filter:drop-shadow(0 3px 6px rgba(0,0,0,0.35));
+                        transform:scale(0.5);transition:transform 0.2s ease;transform-origin:bottom center;
+                    ">
+                        <div style="
+                            width:${bubbleSize}px;height:${bubbleSize}px;
+                            border-radius:6px;
+                            background:${bgStyle};
+                            border:3px solid white;
+                            display:flex;flex-direction:column;align-items:center;justify-content:center;
+                            position:relative;
+                        ">
+                            ${palletSvg}
+                            <span style="color:white;font-weight:800;font-size:${count > 99 ? 10 : 12}px;line-height:1;margin-top:1px;text-shadow:0 1px 2px rgba(0,0,0,0.5);">${count}</span>
+                        </div>
+                        <div style="
+                            width:0;height:0;
+                            border-left:8px solid transparent;
+                            border-right:8px solid transparent;
+                            border-top:12px solid white;
+                            margin-top:-1px;
+                        "></div>
+                    </div>`,
+                    iconSize: [bubbleSize, pinHeight],
+                    iconAnchor: [halfSize, pinHeight]
+                });
+
+                const marker = L.marker(latlng, { icon: icon });
+
+                marker.on('mouseover', function() {
+                    const el = this._icon.querySelector('.pallet-pin-inner');
+                    if (el) { el.style.transform = 'scale(1)'; this._icon.style.zIndex = 9999; }
+                });
+                marker.on('mouseout', function() {
+                    const el = this._icon.querySelector('.pallet-pin-inner');
+                    if (el) { el.style.transform = 'scale(0.5)'; this._icon.style.zIndex = ''; }
+                });
+
+                // Build popup
+                const avgAlt = cluster.reduce((s, p) => s + (p.altitude || 0), 0) / cluster.length;
+                const timeRange = cluster.length > 1
+                    ? `${new Date(Math.min(...cluster.map(p => p.timestamp))).toLocaleString()} — ${new Date(Math.max(...cluster.map(p => p.timestamp))).toLocaleString()}`
+                    : new Date(cluster[0].timestamp).toLocaleString();
+                const masonBreakdown = masons.map(m => {
+                    const c = cluster.filter(p => (p.mason_id || p.masonId) === m).length;
+                    const mi = uniqueMasons.indexOf(m);
+                    const mc = mi >= 0 ? masonColors[mi % masonColors.length] : '#3b82f6';
+                    return `<span style="color:${mc};font-weight:bold;">${m}</span>: ${c} block${c > 1 ? 's' : ''}`;
+                }).join('<br>');
+
+                const popupContent = `
+                    <div style="padding:10px;font-family:Arial;min-width:220px;">
+                        <h3 style="margin:0 0 8px 0;color:${popupColor};">
+                            <span style="background:#3b82f6;color:white;padding:2px 8px;border-radius:4px;font-size:0.75rem;font-weight:700;margin-right:6px;">PALLET</span>
+                            ${count} Block${count > 1 ? 's' : ''} Indexed
+                        </h3>
+                        <p style="margin:4px 0;font-size:0.9em;"><strong>Location:</strong> ${avgLat.toFixed(6)}, ${avgLng.toFixed(6)}</p>
+                        <p style="margin:4px 0;font-size:0.9em;"><strong>Avg Altitude:</strong> ${avgAlt.toFixed(1)} m</p>
+                        <p style="margin:4px 0;font-size:0.9em;"><strong>Time:</strong> ${timeRange}</p>
+                        <div style="margin-top:8px;padding-top:8px;border-top:1px solid #ddd;">
+                            <strong>Masons:</strong><br>${masonBreakdown}
+                        </div>
+                        <div style="margin-top:8px;padding-top:8px;border-top:1px solid #ddd;max-height:150px;overflow-y:auto;">
+                            <strong>Scans (${count}):</strong>
+                            ${cluster.map((p, i) => `
+                                <div style="font-size:0.85em;margin:2px 0;">
+                                    <strong>${i+1}.</strong> ${p.rfidTag || p.brickNumber} — ${(p.mason_id || p.masonId)} — ${new Date(p.timestamp).toLocaleTimeString()}
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+                marker.bindPopup(popupContent, { maxWidth: 400 });
+                marker.addTo(markerGroup);
+                markers.push(marker);
+                bounds.extend(latlng);
+            });
+
+            if (bounds.isValid() && !isZoomRender) {
+                map.fitBounds(bounds, { padding: [50, 50] });
+            }
+        }
+        
+        // Add pallet bubbles on top of existing map layers (for "All" mode)
+        function addPalletBubblesToMap(placements) {
+            if (!map || !markerGroup) return;
+
+            const validPlacements = placements.filter(p =>
+                p.latitude && p.longitude &&
+                p.latitude !== 0 && p.longitude !== 0
+            );
+            if (validPlacements.length === 0) return;
+
+            // Cluster pallet scans by proximity (zoom-based distance)
+            const palletClusterDist = getClusterDistance(map.getZoom()) * 1.5;
+            const clusters = [];
+            const visited = new Set();
+            const sorted = [...validPlacements].sort((a, b) => a.timestamp - b.timestamp);
+
+            sorted.forEach((placement, idx) => {
+                if (visited.has(idx)) return;
+                const cluster = [placement];
+                const queue = [placement];
+                visited.add(idx);
+
+                while (queue.length > 0) {
+                    const current = queue.shift();
+                    sorted.forEach((other, otherIdx) => {
+                        if (visited.has(otherIdx)) return;
+                        const dist = calculateDistance(
+                            current.latitude, current.longitude,
+                            other.latitude, other.longitude
+                        );
+                        if (dist <= palletClusterDist) {
+                            cluster.push(other);
+                            queue.push(other);
+                            visited.add(otherIdx);
+                        }
+                    });
+                }
+                clusters.push(cluster);
+            });
+
+            const uniqueMasons = [...new Set(validPlacements.map(p => p.mason_id || p.masonId))];
+            const bounds = markers.length > 0 ? L.latLngBounds(markers.map(m => m.getLatLng())) : L.latLngBounds();
+
+            // Second pass: merge clusters that would visually overlap on screen
+            const mergedClusters = mergeOverlappingClusters(clusters, 64);
+
+            mergedClusters.forEach(cluster => {
+                const avgLat = cluster.reduce((s, p) => s + p.latitude, 0) / cluster.length;
+                const avgLng = cluster.reduce((s, p) => s + p.longitude, 0) / cluster.length;
+                const latlng = [avgLat, avgLng];
+                const count = cluster.length;
+                const masons = [...new Set(cluster.map(p => p.mason_id || p.masonId))];
+                const primaryMason = masons[0];
+                const masonIndex = uniqueMasons.indexOf(primaryMason);
+                // Diagonal gradient when multiple masons
+                const bgStyle = getMasonGradient(cluster, uniqueMasons);
+                const popupColor = masonIndex >= 0 ? masonColors[masonIndex % masonColors.length] : '#3b82f6';
+
+                // Log scale: 1→32, 5→40, 12→45, 50→56, 200→64 (max 64)
+                const bubbleSize = Math.max(32, Math.min(64, 28 + Math.log2(count + 1) * 8));
+                const halfSize = bubbleSize / 2;
+
+                const palletSvg = `<svg viewBox="0 0 32 32" width="${bubbleSize * 0.45}" height="${bubbleSize * 0.45}" style="opacity:0.9;">
+                    <rect x="1" y="3" width="30" height="4" rx="1" fill="white" opacity="0.9"/>
+                    <rect x="1" y="13" width="30" height="4" rx="1" fill="white" opacity="0.9"/>
+                    <rect x="1" y="23" width="30" height="4" rx="1" fill="white" opacity="0.9"/>
+                    <rect x="3" y="8" width="2" height="4" fill="white" opacity="0.5"/>
+                    <rect x="15" y="8" width="2" height="4" fill="white" opacity="0.5"/>
+                    <rect x="27" y="8" width="2" height="4" fill="white" opacity="0.5"/>
+                    <rect x="3" y="18" width="2" height="4" fill="white" opacity="0.5"/>
+                    <rect x="15" y="18" width="2" height="4" fill="white" opacity="0.5"/>
+                    <rect x="27" y="18" width="2" height="4" fill="white" opacity="0.5"/>
+                </svg>`;
+
+                const pinHeight = bubbleSize + 12;
+                const icon = L.divIcon({
+                    className: 'pallet-bubble-marker',
+                    html: `<div class="pallet-pin-inner" style="
+                        display:flex;flex-direction:column;align-items:center;
+                        cursor:pointer;filter:drop-shadow(0 3px 6px rgba(0,0,0,0.35));
+                        transform:scale(0.5);transition:transform 0.2s ease;transform-origin:bottom center;
+                    ">
+                        <div style="
+                            width:${bubbleSize}px;height:${bubbleSize}px;
+                            border-radius:6px;
+                            background:${bgStyle};
+                            border:3px solid white;
+                            display:flex;flex-direction:column;align-items:center;justify-content:center;
+                        ">
+                            ${palletSvg}
+                            <span style="color:white;font-weight:800;font-size:${count > 99 ? 10 : 12}px;line-height:1;margin-top:1px;text-shadow:0 1px 2px rgba(0,0,0,0.5);">${count}</span>
+                        </div>
+                        <div style="
+                            width:0;height:0;
+                            border-left:8px solid transparent;
+                            border-right:8px solid transparent;
+                            border-top:12px solid white;
+                            margin-top:-1px;
+                        "></div>
+                    </div>`,
+                    iconSize: [bubbleSize, pinHeight],
+                    iconAnchor: [halfSize, pinHeight]
+                });
+
+                const marker = L.marker(latlng, { icon: icon });
+
+                marker.on('mouseover', function() {
+                    const el = this._icon.querySelector('.pallet-pin-inner');
+                    if (el) { el.style.transform = 'scale(1)'; this._icon.style.zIndex = 9999; }
+                });
+                marker.on('mouseout', function() {
+                    const el = this._icon.querySelector('.pallet-pin-inner');
+                    if (el) { el.style.transform = 'scale(0.5)'; this._icon.style.zIndex = ''; }
+                });
+
+                const avgAlt = cluster.reduce((s, p) => s + (p.altitude || 0), 0) / cluster.length;
+                const timeRange = cluster.length > 1
+                    ? `${new Date(Math.min(...cluster.map(p => p.timestamp))).toLocaleString()} \u2014 ${new Date(Math.max(...cluster.map(p => p.timestamp))).toLocaleString()}`
+                    : new Date(cluster[0].timestamp).toLocaleString();
+                const masonBreakdown = masons.map(m => {
+                    const c = cluster.filter(p => (p.mason_id || p.masonId) === m).length;
+                    const mi = uniqueMasons.indexOf(m);
+                    const mc = mi >= 0 ? masonColors[mi % masonColors.length] : '#3b82f6';
+                    return `<span style="color:${mc};font-weight:bold;">${m}</span>: ${c} block${c > 1 ? 's' : ''}`;
+                }).join('<br>');
+
+                const popupContent = `
+                    <div style="padding:10px;font-family:Arial;min-width:220px;">
+                        <h3 style="margin:0 0 8px 0;color:${popupColor};">
+                            <span style="background:#3b82f6;color:white;padding:2px 8px;border-radius:4px;font-size:0.75rem;font-weight:700;margin-right:6px;">PALLET</span>
+                            ${count} Block${count > 1 ? 's' : ''} Indexed
+                        </h3>
+                        <p style="margin:4px 0;font-size:0.9em;"><strong>Location:</strong> ${avgLat.toFixed(6)}, ${avgLng.toFixed(6)}</p>
+                        <p style="margin:4px 0;font-size:0.9em;"><strong>Avg Altitude:</strong> ${avgAlt.toFixed(1)} m</p>
+                        <p style="margin:4px 0;font-size:0.9em;"><strong>Time:</strong> ${timeRange}</p>
+                        <div style="margin-top:8px;padding-top:8px;border-top:1px solid #ddd;">
+                            <strong>Masons:</strong><br>${masonBreakdown}
+                        </div>
+                    </div>
+                `;
+                marker.bindPopup(popupContent, { maxWidth: 400 });
+                marker.addTo(markerGroup);
+                markers.push(marker);
+                bounds.extend(latlng);
+            });
+
+            if (bounds.isValid() && !isZoomRender) {
+                map.fitBounds(bounds, { padding: [50, 50] });
+            }
         }
         
         // ============================================
