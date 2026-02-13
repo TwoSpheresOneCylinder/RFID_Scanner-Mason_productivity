@@ -138,6 +138,52 @@ function generatePerformanceReport(masonId, startDate, endDate) {
 
             reportData.efficiencyData = efficiencyData;
 
+            // Get mason comparison data (top users by placement count)
+            const masonCompareQuery = `
+                SELECT 
+                    mason_id,
+                    COUNT(*) as total_placements,
+                    SUM(CASE WHEN scan_type = 'pallet' THEN 1 ELSE 0 END) as total_indexed,
+                    SUM(CASE WHEN scan_type != 'pallet' OR scan_type IS NULL THEN 1 ELSE 0 END) as placement_count
+                FROM placements
+                WHERE ${isAllMasons ? '1=1' : 'mason_id = ?'}
+                    AND timestamp >= ?
+                    AND timestamp <= ?
+                GROUP BY mason_id
+                ORDER BY total_placements DESC
+                LIMIT 20
+            `;
+            const masonCompareParams = isAllMasons ? [startDate, endDate] : [masonId, startDate, endDate];
+            const masonCompareData = await new Promise((res, rej) => {
+                db.all(masonCompareQuery, masonCompareParams, (err, rows) => {
+                    if (err) rej(err);
+                    else res(rows || []);
+                });
+            });
+            reportData.masonCompareData = masonCompareData;
+
+            // Get daily placed vs indexed breakdown
+            const placedVsIndexedQuery = `
+                SELECT 
+                    DATE(timestamp / 1000, 'unixepoch', 'localtime') as date,
+                    SUM(CASE WHEN scan_type != 'pallet' OR scan_type IS NULL THEN 1 ELSE 0 END) as placed,
+                    SUM(CASE WHEN scan_type = 'pallet' THEN 1 ELSE 0 END) as indexed
+                FROM placements
+                WHERE ${isAllMasons ? '1=1' : 'mason_id = ?'}
+                    AND timestamp >= ?
+                    AND timestamp <= ?
+                GROUP BY DATE(timestamp / 1000, 'unixepoch', 'localtime')
+                ORDER BY date ASC
+            `;
+            const pviParams = isAllMasons ? [startDate, endDate] : [masonId, startDate, endDate];
+            const placedVsIndexedData = await new Promise((res, rej) => {
+                db.all(placedVsIndexedQuery, pviParams, (err, rows) => {
+                    if (err) rej(err);
+                    else res(rows || []);
+                });
+            });
+            reportData.placedVsIndexedData = placedVsIndexedData;
+
             resolve(reportData);
         } catch (err) {
             reject(err);
@@ -145,14 +191,15 @@ function generatePerformanceReport(masonId, startDate, endDate) {
     });
 }
 
-function generateHTMLReport(reportData, sections) {
-    const { masonId, generatedAt, period, summary, dailyBreakdown, improvements, hourlyPattern, efficiencyData } = reportData;
+function generateHTMLReport(reportData, sections, meta) {
+    const { masonId, generatedAt, period, summary, dailyBreakdown, improvements, hourlyPattern, efficiencyData, masonCompareData, placedVsIndexedData } = reportData;
+    const { companyName, userName } = meta || {};
     
     // If no sections specified, show all (backwards-compatible)
-    const ALL_SECTIONS = ['daysWorked','totalPlacements','totalIndexed','avgPerDay','peakHour','currentEfficiency','activeMasons','totalScans','avgPerHourAllTime','uniqueBricks','dailyChart','hourlyChart'];
+    const ALL_SECTIONS = ['daysWorked','totalPlacements','totalIndexed','avgPerDay','peakHour','currentEfficiency','activeMasons','totalScans','avgPerHourAllTime','uniqueBricks','dailyChart','efficiencyChart','masonCompareChart','hourlyChart','placedVsIndexed'];
     const show = new Set(sections && sections.length > 0 ? sections : ALL_SECTIONS);
     const showAnyKpi = ['daysWorked','totalPlacements','totalIndexed','avgPerDay','peakHour','currentEfficiency','activeMasons','totalScans','avgPerHourAllTime','uniqueBricks'].some(k => show.has(k));
-    const showAnyChart = show.has('dailyChart') || show.has('hourlyChart');
+    const showAnyChart = ['dailyChart','hourlyChart','efficiencyChart','masonCompareChart','placedVsIndexed'].some(k => show.has(k));
     
     // XSS sanitization helper
     function escapeHtml(str) {
@@ -164,6 +211,20 @@ function generateHTMLReport(reportData, sections) {
             .replace(/"/g, '&quot;')
             .replace(/'/g, '&#039;');
     }
+    
+    // Build display strings
+    const isAllUsers = masonId === 'All Users';
+    const safeUserName = userName ? escapeHtml(userName) : escapeHtml(masonId);
+    const safeCompanyName = companyName ? escapeHtml(companyName) : '';
+    
+    // Subtitle line: "Company Name — All Users" or "Company Name — John Smith" or just the user
+    let subtitleParts = [];
+    if (safeCompanyName) subtitleParts.push(safeCompanyName);
+    subtitleParts.push(isAllUsers ? 'All Users' : safeUserName);
+    const subtitle = subtitleParts.join(' &mdash; ');
+    
+    // Accent bar: show the user/company context
+    const accentLabel = isAllUsers ? (safeCompanyName || 'All Users') : safeUserName;
     
     const safeMasonId = escapeHtml(masonId);
     
@@ -226,13 +287,28 @@ function generateHTMLReport(reportData, sections) {
         ? hourlyPattern.reduce((max, h) => h.placements > max.placements ? h : max, hourlyPattern[0])
         : null;
 
+    // Prepare efficiency chart data (sorted chronologically)
+    const efficiencyChartData = efficiencyData ? [...efficiencyData].reverse() : [];
+    const effDates = efficiencyChartData.map(d => d.date);
+    const effRates = efficiencyChartData.map(d => parseFloat(d.placements_per_hour.toFixed(1)));
+
+    // Prepare mason comparison data
+    const masonCompareLabels = (masonCompareData || []).map(m => m.mason_id);
+    const masonComparePlaced = (masonCompareData || []).map(m => m.placement_count);
+    const masonCompareIndexed = (masonCompareData || []).map(m => m.total_indexed);
+
+    // Prepare placed vs indexed data
+    const pviDates = (placedVsIndexedData || []).map(d => d.date);
+    const pviPlaced = (placedVsIndexedData || []).map(d => d.placed);
+    const pviIndexed = (placedVsIndexedData || []).map(d => d.indexed);
+
     return `
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Performance Review - ${safeMasonId}</title>
+    <title>Performance Review - ${subtitle.replace(/&mdash;/g, '-')}</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400;600;700;800&display=swap" rel="stylesheet">
     <style>
@@ -568,7 +644,7 @@ function generateHTMLReport(reportData, sections) {
         <div class="report-header">
             <div class="header-left">
                 <h1>Performance Review</h1>
-                <p>${safeMasonId}</p>
+                <p>${subtitle}</p>
             </div>
             <div class="header-right">
                 <span class="report-badge">Official Report</span>
@@ -577,7 +653,7 @@ function generateHTMLReport(reportData, sections) {
         
         <div class="accent-bar">
             <div>
-                <strong>${safeMasonId}</strong>
+                <strong>${accentLabel}</strong>
             </div>
             <div class="period">${periodLabel} &mdash; ${startDate.toLocaleDateString()} to ${endDate.toLocaleDateString()}</div>
         </div>
@@ -691,6 +767,39 @@ function generateHTMLReport(reportData, sections) {
                     <h2>Hourly Productivity Pattern</h2>
                     <div class="chart-wrapper">
                         <canvas id="hourlyChart"></canvas>
+                    </div>
+                </div>
+            </div>` : ''}
+            
+            ${show.has('efficiencyChart') ? `
+            <!-- Efficiency Over Time Chart -->
+            <div class="section page-break">
+                <div class="chart-box">
+                    <h2>Efficiency Over Time</h2>
+                    <div class="chart-wrapper">
+                        <canvas id="efficiencyChart"></canvas>
+                    </div>
+                </div>
+            </div>` : ''}
+            
+            ${show.has('masonCompareChart') ? `
+            <!-- User Comparison Chart -->
+            <div class="section page-break">
+                <div class="chart-box">
+                    <h2>User Comparison</h2>
+                    <div class="chart-wrapper">
+                        <canvas id="masonCompareChart"></canvas>
+                    </div>
+                </div>
+            </div>` : ''}
+            
+            ${show.has('placedVsIndexed') ? `
+            <!-- Placed vs Indexed Chart -->
+            <div class="section page-break">
+                <div class="chart-box">
+                    <h2>Placed vs Indexed</h2>
+                    <div class="chart-wrapper">
+                        <canvas id="placedVsIndexedChart"></canvas>
                     </div>
                 </div>
             </div>` : ''}
@@ -824,6 +933,101 @@ function generateHTMLReport(reportData, sections) {
             }
         });
         ` : '// Hourly chart not selected'}
+
+        // Efficiency Over Time Chart
+        ${show.has('efficiencyChart') ? `
+        new Chart(document.getElementById('efficiencyChart'), {
+            type: 'line',
+            data: {
+                labels: ${JSON.stringify(effDates)},
+                datasets: [{
+                    label: 'Placements / Hour',
+                    data: ${JSON.stringify(effRates)},
+                    borderColor: '#CC0000',
+                    backgroundColor: 'rgba(204, 0, 0, 0.1)',
+                    borderWidth: 3,
+                    tension: 0.4,
+                    fill: true,
+                    pointRadius: 4,
+                    pointBackgroundColor: '#CC0000'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { beginAtZero: true, title: { display: true, text: 'Placements / Hour', font: { family: "'Barlow Semi Condensed', sans-serif" } } },
+                    x: { title: { display: true, text: 'Date', font: { family: "'Barlow Semi Condensed', sans-serif" } } }
+                }
+            }
+        });
+        ` : '// Efficiency chart not selected'}
+
+        // User Comparison Chart
+        ${show.has('masonCompareChart') ? `
+        new Chart(document.getElementById('masonCompareChart'), {
+            type: 'bar',
+            data: {
+                labels: ${JSON.stringify(masonCompareLabels)},
+                datasets: [{
+                    label: 'Placed',
+                    data: ${JSON.stringify(masonComparePlaced)},
+                    backgroundColor: '#2D3436',
+                    borderRadius: 4
+                }, {
+                    label: 'Indexed',
+                    data: ${JSON.stringify(masonCompareIndexed)},
+                    backgroundColor: '#CC0000',
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                indexAxis: ${masonCompareLabels.length > 8 ? "'y'" : "'x'"},
+                plugins: {
+                    legend: { display: true, position: 'top', labels: { font: { family: "'Barlow Semi Condensed', sans-serif", weight: '600' } } }
+                },
+                scales: {
+                    y: { beginAtZero: true, title: { display: ${masonCompareLabels.length <= 8}, text: 'Count', font: { family: "'Barlow Semi Condensed', sans-serif" } } },
+                    x: { beginAtZero: true, title: { display: ${masonCompareLabels.length > 8}, text: 'Count', font: { family: "'Barlow Semi Condensed', sans-serif" } } }
+                }
+            }
+        });
+        ` : '// Mason compare chart not selected'}
+
+        // Placed vs Indexed Chart
+        ${show.has('placedVsIndexed') ? `
+        new Chart(document.getElementById('placedVsIndexedChart'), {
+            type: 'bar',
+            data: {
+                labels: ${JSON.stringify(pviDates)},
+                datasets: [{
+                    label: 'Placed',
+                    data: ${JSON.stringify(pviPlaced)},
+                    backgroundColor: '#2D3436',
+                    borderRadius: 4
+                }, {
+                    label: 'Indexed',
+                    data: ${JSON.stringify(pviIndexed)},
+                    backgroundColor: '#3b82f6',
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: true, position: 'top', labels: { font: { family: "'Barlow Semi Condensed', sans-serif", weight: '600' } } }
+                },
+                scales: {
+                    x: { stacked: true, title: { display: true, text: 'Date', font: { family: "'Barlow Semi Condensed', sans-serif" } } },
+                    y: { stacked: true, beginAtZero: true, title: { display: true, text: 'Scans', font: { family: "'Barlow Semi Condensed', sans-serif" } } }
+                }
+            }
+        });
+        ` : '// Placed vs indexed chart not selected'}
 
         function printReport() {
             // Convert all Chart.js canvases to images for print

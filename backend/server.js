@@ -333,9 +333,10 @@ app.get('/api/users', requireAuth, async (req, res) => {
             // Company admins see only their company's users
             users = await dbUsers.listByCompany(req.user.companyId);
         } else {
-            // Regular users see only their company's users
-            if (req.user.companyId) {
-                users = await dbUsers.listByCompany(req.user.companyId);
+            // Regular users see only themselves
+            if (req.user.masonId) {
+                const self = await dbUsers.getByMasonId(req.user.masonId);
+                users = self ? [self] : [];
             } else {
                 users = [];
             }
@@ -454,6 +455,105 @@ app.put('/api/users/:masonId/role', requireAuth, async (req, res) => {
     } catch (err) {
         console.error('Error updating role:', err);
         return res.status(400).json({ success: false, message: err.message });
+    }
+});
+
+// POST /api/admin/users - Create a new user (admin only)
+app.post('/api/admin/users', requireAuth, async (req, res) => {
+    const { username, password, mason_id, company_id, role } = req.body;
+    const requesterRole = req.user.role || 'user';
+    const isSuperAdmin = requesterRole === 'super_admin';
+    const isCompanyAdmin = requesterRole === 'company_admin';
+
+    if (!isSuperAdmin && !isCompanyAdmin) {
+        return res.status(403).json({ success: false, message: 'Only admins can create users' });
+    }
+
+    if (!username || !password || !mason_id) {
+        return res.status(400).json({ success: false, message: 'Username, password, and user ID are required' });
+    }
+    if (password.length < 6) {
+        return res.status(400).json({ success: false, message: 'Password must be at least 6 characters' });
+    }
+    if (!company_id) {
+        return res.status(400).json({ success: false, message: 'Company is required' });
+    }
+
+    // Company admins can only create users in their own company
+    if (isCompanyAdmin && company_id !== req.user.companyId) {
+        return res.status(403).json({ success: false, message: 'You can only create users in your own company' });
+    }
+    // Company admins cannot create super_admins
+    if (isCompanyAdmin && role === 'super_admin') {
+        return res.status(403).json({ success: false, message: 'Company admins cannot grant super_admin role' });
+    }
+
+    const assignedRole = role || 'user';
+    const validRoles = isSuperAdmin ? ['user', 'company_admin', 'super_admin'] : ['user', 'company_admin'];
+    if (!validRoles.includes(assignedRole)) {
+        return res.status(400).json({ success: false, message: `Invalid role: ${assignedRole}` });
+    }
+
+    try {
+        const result = await dbUsers.create(username, password, mason_id, company_id);
+        // Set role if not default
+        if (assignedRole !== 'user') {
+            await dbUsers.updateRole(mason_id, assignedRole);
+        }
+        console.log(`✓ User created by admin: ${username} -> ${mason_id} (role: ${assignedRole}, by ${req.user.username})`);
+        res.json({ success: true, message: 'User created successfully', username, masonId: mason_id, role: assignedRole });
+    } catch (err) {
+        if (err.message.includes('UNIQUE constraint')) {
+            return res.status(409).json({ success: false, message: 'Username or User ID already exists' });
+        }
+        console.error('Error creating user:', err);
+        return res.status(500).json({ success: false, message: 'Failed to create user' });
+    }
+});
+
+// DELETE /api/users/:masonId - Delete a user (admin only)
+app.delete('/api/users/:masonId', requireAuth, async (req, res) => {
+    const { masonId } = req.params;
+    const requesterRole = req.user.role || 'user';
+    const isSuperAdmin = requesterRole === 'super_admin';
+    const isCompanyAdmin = requesterRole === 'company_admin';
+
+    if (!isSuperAdmin && !isCompanyAdmin) {
+        return res.status(403).json({ success: false, message: 'Only admins can delete users' });
+    }
+
+    // Cannot delete yourself
+    if (masonId === req.user.masonId) {
+        return res.status(400).json({ success: false, message: 'You cannot delete your own account' });
+    }
+
+    try {
+        const targetUser = await dbUsers.getByMasonId(masonId);
+        if (!targetUser) {
+            return res.status(404).json({ success: false, message: 'User not found' });
+        }
+
+        // Company admins can only delete users in their own company (and not other admins)
+        if (isCompanyAdmin) {
+            if (targetUser.company_id !== req.user.companyId) {
+                return res.status(403).json({ success: false, message: 'You can only delete users in your own company' });
+            }
+            if (targetUser.role !== 'user') {
+                return res.status(403).json({ success: false, message: 'Company admins can only delete regular users' });
+            }
+        }
+
+        // Super admins cannot delete other super admins (safety)
+        if (!isSuperAdmin && targetUser.role === 'super_admin') {
+            return res.status(403).json({ success: false, message: 'Cannot delete a super admin' });
+        }
+
+        await dbUsers.deleteByMasonId(masonId);
+        console.log(`✓ User deleted: ${masonId} (by ${req.user.username})`);
+        res.json({ success: true, message: 'User deleted successfully' });
+    } catch (err) {
+        console.error('Error deleting user:', err);
+        return res.status(500).json({ success: false, message: 'Failed to delete user' });
     }
 });
 
@@ -656,6 +756,23 @@ app.get('/api/debug/users', requireAuth, async (req, res) => {
 app.get('/api/placements/mason/:masonId', requireAuth, async (req, res) => {
     const { masonId } = req.params;
     const { since } = req.query;
+    const role = req.user.role || 'user';
+    const isSuperAdmin = role === 'super_admin';
+    const isCompanyAdmin = role === 'company_admin';
+    
+    // Regular users can only see their own placements
+    if (!isSuperAdmin && !isCompanyAdmin && masonId !== req.user.masonId) {
+        return res.status(403).json({ success: false, message: 'Access denied' });
+    }
+    
+    // Company admins can only see their own company's masons
+    if (isCompanyAdmin && masonId !== req.user.masonId) {
+        const targetUser = await dbUsers.getByMasonId(masonId);
+        if (!targetUser || targetUser.company_id !== req.user.companyId) {
+            return res.status(403).json({ success: false, message: 'Access denied' });
+        }
+    }
+    
     console.log(`Get placements for mason: ${masonId}${since ? ` (since ${since})` : ''}`);
     
     try {
@@ -727,13 +844,24 @@ app.delete('/api/placements/mason/:masonId', requireAuth, async (req, res) => {
     }
 });
 
-// GET /api/placements/recent - Get recent placements across all masons
+// GET /api/placements/recent - Get recent placements (role-scoped)
 app.get('/api/placements/recent', requireAuth, async (req, res) => {
     const limit = parseInt(req.query.limit) || 50;
-    console.log(`Get recent placements (limit: ${limit})`);
+    const role = req.user.role || 'user';
+    const isSuperAdmin = role === 'super_admin';
+    const isCompanyAdmin = role === 'company_admin';
+    console.log(`Get recent placements (limit: ${limit}, role: ${role})`);
     
     try {
-        const placements = await dbPlacements.getRecent(limit);
+        let placements;
+        if (isSuperAdmin) {
+            placements = await dbPlacements.getRecent(limit);
+        } else if (isCompanyAdmin && req.user.companyId) {
+            placements = await dbPlacements.getRecentByCompany(req.user.companyId, limit);
+        } else {
+            // Regular user — only their own placements
+            placements = await dbPlacements.getRecentByMason(req.user.masonId, limit);
+        }
         res.json({
             success: true,
             count: placements.length,
@@ -770,12 +898,22 @@ app.get('/api/placements/recent', requireAuth, async (req, res) => {
     }
 });
 
-// GET /api/statistics - Get overall statistics
+// GET /api/statistics - Get overall statistics (role-scoped)
 app.get('/api/statistics', requireAuth, async (req, res) => {
-    console.log('Get statistics');
+    const role = req.user.role || 'user';
+    const isSuperAdmin = role === 'super_admin';
+    const isCompanyAdmin = role === 'company_admin';
+    console.log(`Get statistics (role: ${role})`);
     
     try {
-        const stats = await dbPlacements.getStatsByMason();
+        let stats;
+        if (isSuperAdmin) {
+            stats = await dbPlacements.getStatsByMason();
+        } else if (isCompanyAdmin && req.user.companyId) {
+            stats = await dbPlacements.getStatsByCompany(req.user.companyId);
+        } else {
+            stats = await dbPlacements.getStatsByMasonFiltered(req.user.masonId);
+        }
         const users = await dbUsers.getAll();
         
         res.json({
@@ -799,9 +937,26 @@ app.get('/api/statistics', requireAuth, async (req, res) => {
     }
 });
 
-// GET /api/statistics/efficiency/:masonId - Get mason efficiency metrics (session-based)
+// GET /api/statistics/efficiency/:masonId - Get mason efficiency metrics (session-based, role-scoped)
 app.get('/api/statistics/efficiency/:masonId', requireAuth, async (req, res) => {
     const { masonId } = req.params;
+    const role = req.user.role || 'user';
+    const isSuperAdmin = role === 'super_admin';
+    const isCompanyAdmin = role === 'company_admin';
+    
+    // Regular users can only see their own efficiency
+    if (!isSuperAdmin && !isCompanyAdmin && masonId !== req.user.masonId) {
+        return res.status(403).json({ success: false, message: 'Access denied' });
+    }
+    
+    // Company admins can only see their own company's masons
+    if (isCompanyAdmin && masonId !== req.user.masonId) {
+        const targetUser = await dbUsers.getByMasonId(masonId);
+        if (!targetUser || targetUser.company_id !== req.user.companyId) {
+            return res.status(403).json({ success: false, message: 'Access denied' });
+        }
+    }
+    
     console.log(`Get efficiency statistics for mason: ${masonId}`);
     
     try {
@@ -895,7 +1050,7 @@ app.get('/api/statistics/efficiency/:masonId', requireAuth, async (req, res) => 
     }
 });
 
-// GET /api/statistics/efficiency - Get mason efficiency comparison data (legacy - all masons)
+// GET /api/statistics/efficiency - Get mason efficiency comparison data (role-scoped)
 app.get('/api/statistics/efficiency', requireAuth, async (req, res) => {
     const { masonId } = req.query;
     
@@ -904,98 +1059,104 @@ app.get('/api/statistics/efficiency', requireAuth, async (req, res) => {
         return res.redirect(`/api/statistics/efficiency/${masonId}`);
     }
     
-    console.log('Get mason efficiency statistics (all masons)');
+    const role = req.user.role || 'user';
+    const isSuperAdmin = role === 'super_admin';
+    const isCompanyAdmin = role === 'company_admin';
+    console.log(`Get mason efficiency statistics (role: ${role})`);
     
     try {
         const { db } = require('./db');
         
-        // Simple test query first
-        db.all("SELECT mason_id, timestamp FROM placements LIMIT 5", [], (err, rows) => {
-            if (err) {
-                console.error('Simple query error:', err);
+        // Build role-scoped WHERE clause
+        let scopeWhere = '';
+        let scopeParams = [];
+        if (isSuperAdmin) {
+            // No filter — see all
+            scopeWhere = '';
+            scopeParams = [];
+        } else if (isCompanyAdmin && req.user.companyId) {
+            scopeWhere = 'AND mason_id IN (SELECT mason_id FROM users WHERE company_id = ?)';
+            scopeParams = [req.user.companyId];
+        } else {
+            // Regular user — own data only
+            scopeWhere = 'AND mason_id = ?';
+            scopeParams = [req.user.masonId];
+        }
+        
+        // Daily efficiency query — scoped
+        const query = `
+            SELECT 
+                mason_id,
+                COUNT(*) as total_placements,
+                MIN(timestamp) as first_placement,
+                MAX(timestamp) as last_placement,
+                MAX((MAX(timestamp) - MIN(timestamp)) / 3600000.0, 1.0) as hours_worked,
+                CAST(COUNT(*) AS FLOAT) / MAX((MAX(timestamp) - MIN(timestamp)) / 3600000.0, 1.0) as placements_per_hour,
+                DATE(timestamp / 1000, 'unixepoch', 'localtime') as work_date
+            FROM placements
+            WHERE (scan_type != 'pallet' OR scan_type IS NULL) ${scopeWhere}
+            GROUP BY mason_id, DATE(timestamp / 1000, 'unixepoch', 'localtime')
+            ORDER BY mason_id, work_date DESC
+        `;
+        
+        db.all(query, scopeParams, (err2, rows2) => {
+            if (err2) {
+                console.error('Complex query error:', err2);
                 return res.status(500).json({
                     success: false,
                     message: 'Database error',
-                    error: err.message
+                    error: err2.message
                 });
             }
             
-            console.log('Simple query worked, rows:', rows);
-            
-            // Now try the complex query - only count actual placements for efficiency
-            const query = `
+            // Summary query — scoped (uses WHERE 1=1 so we can append AND)
+            const summaryQuery = `
                 SELECT 
                     mason_id,
                     COUNT(*) as total_placements,
-                    MIN(timestamp) as first_placement,
-                    MAX(timestamp) as last_placement,
-                    MAX((MAX(timestamp) - MIN(timestamp)) / 3600000.0, 1.0) as hours_worked,
-                    CAST(COUNT(*) AS FLOAT) / MAX((MAX(timestamp) - MIN(timestamp)) / 3600000.0, 1.0) as placements_per_hour,
-                    DATE(timestamp / 1000, 'unixepoch', 'localtime') as work_date
+                    SUM(CASE WHEN scan_type = 'pallet' THEN 1 ELSE 0 END) as pallet_count,
+                    SUM(CASE WHEN scan_type != 'pallet' OR scan_type IS NULL THEN 1 ELSE 0 END) as placement_count,
+                    MIN(timestamp) as first_placement_ever,
+                    MAX(timestamp) as last_placement_ever,
+                    COUNT(DISTINCT DATE(timestamp / 1000, 'unixepoch', 'localtime')) as days_worked,
+                    CAST(COUNT(*) AS FLOAT) / COUNT(DISTINCT DATE(timestamp / 1000, 'unixepoch', 'localtime')) as avg_placements_per_day
                 FROM placements
-                WHERE scan_type != 'pallet' OR scan_type IS NULL
-                GROUP BY mason_id, DATE(timestamp / 1000, 'unixepoch', 'localtime')
-                ORDER BY mason_id, work_date DESC
+                WHERE 1=1 ${scopeWhere}
+                GROUP BY mason_id
+                ORDER BY total_placements DESC
             `;
             
-            db.all(query, [], (err2, rows2) => {
-                if (err2) {
-                    console.error('Complex query error:', err2);
+            db.all(summaryQuery, scopeParams, (err3, rows3) => {
+                if (err3) {
+                    console.error('Summary query error:', err3);
                     return res.status(500).json({
                         success: false,
                         message: 'Database error',
-                        error: err2.message
+                        error: err3.message
                     });
                 }
                 
-                // Get summary statistics
-                const summaryQuery = `
-                    SELECT 
-                        mason_id,
-                        COUNT(*) as total_placements,
-                        SUM(CASE WHEN scan_type = 'pallet' THEN 1 ELSE 0 END) as pallet_count,
-                        SUM(CASE WHEN scan_type != 'pallet' OR scan_type IS NULL THEN 1 ELSE 0 END) as placement_count,
-                        MIN(timestamp) as first_placement_ever,
-                        MAX(timestamp) as last_placement_ever,
-                        COUNT(DISTINCT DATE(timestamp / 1000, 'unixepoch', 'localtime')) as days_worked,
-                        CAST(COUNT(*) AS FLOAT) / COUNT(DISTINCT DATE(timestamp / 1000, 'unixepoch', 'localtime')) as avg_placements_per_day
-                    FROM placements
-                    GROUP BY mason_id
-                    ORDER BY total_placements DESC
-                `;
-                
-                db.all(summaryQuery, [], (err3, rows3) => {
-                    if (err3) {
-                        console.error('Summary query error:', err3);
-                        return res.status(500).json({
-                            success: false,
-                            message: 'Database error',
-                            error: err3.message
-                        });
-                    }
-                    
-                    res.json({
-                        success: true,
-                        dailyEfficiency: rows2.map(row => ({
-                            masonId: row.mason_id,
-                            date: row.work_date,
-                            totalPlacements: row.total_placements,
-                            hoursWorked: parseFloat(row.hours_worked.toFixed(2)),
-                            placementsPerHour: parseFloat(row.placements_per_hour.toFixed(2)),
-                            firstPlacement: row.first_placement,
-                            lastPlacement: row.last_placement
-                        })),
-                        masonSummary: rows3.map(row => ({
-                            masonId: row.mason_id,
-                            totalPlacements: row.total_placements,
-                            palletCount: row.pallet_count || 0,
-                            placementCount: row.placement_count || 0,
-                            daysWorked: row.days_worked,
-                            avgPlacementsPerDay: parseFloat(row.avg_placements_per_day.toFixed(2)),
-                            firstPlacementEver: row.first_placement_ever,
-                            lastPlacementEver: row.last_placement_ever
-                        }))
-                    });
+                res.json({
+                    success: true,
+                    dailyEfficiency: rows2.map(row => ({
+                        masonId: row.mason_id,
+                        date: row.work_date,
+                        totalPlacements: row.total_placements,
+                        hoursWorked: parseFloat(row.hours_worked.toFixed(2)),
+                        placementsPerHour: parseFloat(row.placements_per_hour.toFixed(2)),
+                        firstPlacement: row.first_placement,
+                        lastPlacement: row.last_placement
+                    })),
+                    masonSummary: rows3.map(row => ({
+                        masonId: row.mason_id,
+                        totalPlacements: row.total_placements,
+                        palletCount: row.pallet_count || 0,
+                        placementCount: row.placement_count || 0,
+                        daysWorked: row.days_worked,
+                        avgPlacementsPerDay: parseFloat(row.avg_placements_per_day.toFixed(2)),
+                        firstPlacementEver: row.first_placement_ever,
+                        lastPlacementEver: row.last_placement_ever
+                    }))
                 });
             });
         });
@@ -1161,8 +1322,10 @@ app.get('/api/report/mason/:masonId', requireAuth, async (req, res) => {
     const endDate = parseInt(req.query.endDate) || Date.now();
     const format = req.query.format || 'html'; // 'html' or 'json'
     const sections = req.query.sections ? req.query.sections.split(',') : null; // null = all
+    const companyName = req.query.companyName || '';
+    const userName = req.query.userName || '';
     
-    console.log(`[REPORT] Generate performance review for ${masonId}, sections: ${sections ? sections.join(',') : 'all'}`);
+    console.log(`[REPORT] Generate performance review for ${masonId}, company: ${companyName || 'N/A'}, sections: ${sections ? sections.join(',') : 'all'}`);
     
     try {
         const { generatePerformanceReport, generateHTMLReport } = require('./reportGenerator');
@@ -1177,7 +1340,7 @@ app.get('/api/report/mason/:masonId', requireAuth, async (req, res) => {
         }
         
         // Generate HTML report
-        const htmlReport = generateHTMLReport(reportData, sections);
+        const htmlReport = generateHTMLReport(reportData, sections, { companyName, userName });
         res.setHeader('Content-Type', 'text/html');
         res.send(htmlReport);
         

@@ -523,6 +523,20 @@ const dbUsers = {
                 reject(err);
             }
         });
+    },
+
+    // Delete user by mason_id
+    deleteByMasonId: (masonId) => {
+        return new Promise((resolve, reject) => {
+            db.run(
+                `DELETE FROM users WHERE mason_id = ?`,
+                [masonId],
+                function(err) {
+                    if (err) reject(err);
+                    else resolve(this.changes);
+                }
+            );
+        });
     }
 };
 
@@ -941,6 +955,44 @@ const dbPlacements = {
         });
     },
 
+    // Get recent placements for a single mason
+    getRecentByMason: (masonId, limit = 50) => {
+        return new Promise((resolve, reject) => {
+            db.all(
+                `SELECT p.*, u.username 
+                 FROM placements p 
+                 LEFT JOIN users u ON p.mason_id = u.mason_id 
+                 WHERE p.mason_id = ?
+                 ORDER BY p.timestamp DESC 
+                 LIMIT ?`,
+                [masonId, limit],
+                (err, rows) => {
+                    if (err) reject(err);
+                    else resolve(rows || []);
+                }
+            );
+        });
+    },
+
+    // Get recent placements for all masons in a company
+    getRecentByCompany: (companyId, limit = 50) => {
+        return new Promise((resolve, reject) => {
+            db.all(
+                `SELECT p.*, u.username 
+                 FROM placements p 
+                 LEFT JOIN users u ON p.mason_id = u.mason_id 
+                 WHERE p.mason_id IN (SELECT mason_id FROM users WHERE company_id = ?)
+                 ORDER BY p.timestamp DESC 
+                 LIMIT ?`,
+                [companyId, limit],
+                (err, rows) => {
+                    if (err) reject(err);
+                    else resolve(rows || []);
+                }
+            );
+        });
+    },
+
     // Get statistics by mason
     getStatsByMason: () => {
         return new Promise((resolve, reject) => {
@@ -949,6 +1001,42 @@ const dbPlacements = {
                  FROM placements 
                  GROUP BY mason_id 
                  ORDER BY count DESC`,
+                (err, rows) => {
+                    if (err) reject(err);
+                    else resolve(rows || []);
+                }
+            );
+        });
+    },
+
+    // Get statistics for a single mason
+    getStatsByMasonFiltered: (masonId) => {
+        return new Promise((resolve, reject) => {
+            db.all(
+                `SELECT mason_id, COUNT(*) as count 
+                 FROM placements 
+                 WHERE mason_id = ?
+                 GROUP BY mason_id 
+                 ORDER BY count DESC`,
+                [masonId],
+                (err, rows) => {
+                    if (err) reject(err);
+                    else resolve(rows || []);
+                }
+            );
+        });
+    },
+
+    // Get statistics for all masons in a company
+    getStatsByCompany: (companyId) => {
+        return new Promise((resolve, reject) => {
+            db.all(
+                `SELECT mason_id, COUNT(*) as count 
+                 FROM placements 
+                 WHERE mason_id IN (SELECT mason_id FROM users WHERE company_id = ?)
+                 GROUP BY mason_id 
+                 ORDER BY count DESC`,
+                [companyId],
                 (err, rows) => {
                     if (err) reject(err);
                     else resolve(rows || []);
