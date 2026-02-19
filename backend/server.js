@@ -71,7 +71,8 @@ function generateToken(user) {
             role: user.role || 'user',
             companyId: user.company_id || null,
             companyName: user.company_name || null,
-            companyCode: user.company_code || null
+            companyCode: user.company_code || null,
+            email: user.email || ''
         },
         JWT_SECRET,
         { expiresIn: JWT_EXPIRY }
@@ -208,7 +209,7 @@ app.post('/api/auth/login', async (req, res) => {
 
 // POST /api/auth/register - Register new user
 app.post('/api/auth/register', async (req, res) => {
-    const { username, password, mason_id, company_id } = req.body;
+    const { username, password, mason_id, company_id, email } = req.body;
     
     console.log(`Registration attempt: ${username}`);
     
@@ -235,7 +236,7 @@ app.post('/api/auth/register', async (req, res) => {
     }
     
     try {
-        await dbUsers.create(username, password, mason_id, company_id || null);
+        await dbUsers.create(username, password, mason_id, company_id || null, email || '');
         console.log(`✓ User registered: ${username} -> ${mason_id}`);
         
         // Generate token so user can immediately use the API
@@ -461,7 +462,7 @@ app.put('/api/users/:masonId/role', requireAuth, async (req, res) => {
 
 // POST /api/admin/users - Create a new user (admin only)
 app.post('/api/admin/users', requireAuth, async (req, res) => {
-    const { username, password, mason_id, company_id, role } = req.body;
+    const { username, password, mason_id, company_id, role, email } = req.body;
     const requesterRole = req.user.role || 'user';
     const isSuperAdmin = requesterRole === 'super_admin';
     const isCompanyAdmin = requesterRole === 'company_admin';
@@ -496,7 +497,7 @@ app.post('/api/admin/users', requireAuth, async (req, res) => {
     }
 
     try {
-        const result = await dbUsers.create(username, password, mason_id, company_id);
+        const result = await dbUsers.create(username, password, mason_id, company_id, email || '');
         // Set role if not default
         if (assignedRole !== 'user') {
             await dbUsers.updateRole(mason_id, assignedRole);
@@ -555,6 +556,128 @@ app.delete('/api/users/:masonId', requireAuth, async (req, res) => {
     } catch (err) {
         console.error('Error deleting user:', err);
         return res.status(500).json({ success: false, message: 'Failed to delete user' });
+    }
+});
+
+// POST /api/tutorial/seed-data - Generate fake placement data for the tutorial user
+app.post('/api/tutorial/seed-data', requireAuth, async (req, res) => {
+    const { masonId } = req.body;
+    if (!masonId) return res.status(400).json({ success: false, message: 'masonId required' });
+
+    try {
+        // Delete any existing tutorial placements first (idempotent)
+        await dbPlacements.deleteByMasonId(masonId);
+
+        const now = Date.now();
+        const DAY = 86400000;
+        const HOUR = 3600000;
+        const placements = [];
+        const sessionId = 'TUT-SESSION';
+
+        // Generate data across 5 work days (today + 4 previous days)
+        for (let d = 0; d < 5; d++) {
+            const dayStart = now - (d * DAY);
+            // Morning shift: 7 AM to 3 PM (8 hours)
+            const shiftStart = new Date(dayStart);
+            shiftStart.setHours(7, 0, 0, 0);
+            const shiftMs = shiftStart.getTime();
+
+            // Each day: 8-14 placements + 2-3 pallets
+            const placementCount = 8 + Math.floor(Math.random() * 7);  // 8-14
+            const palletCount = 2 + Math.floor(Math.random() * 2);     // 2-3
+
+            for (let i = 0; i < placementCount; i++) {
+                const minuteOffset = Math.floor((i / placementCount) * 8 * 60) + Math.floor(Math.random() * 15);
+                const ts = shiftMs + minuteOffset * 60000;
+                const seq = i + 1;
+                placements.push({
+                    brickNumber: `TUT-BRK-${String(d * 100 + seq).padStart(5, '0')}`,
+                    rfidTag: `TUT-RFID-${String(d * 100 + seq).padStart(5, '0')}`,
+                    timestamp: ts,
+                    latitude: 40.7128 + (Math.random() - 0.5) * 0.002,
+                    longitude: -74.0060 + (Math.random() - 0.5) * 0.002,
+                    altitude: 10 + Math.random() * 5,
+                    accuracy: 3 + Math.random() * 4,
+                    buildSessionId: `${sessionId}-D${d}`,
+                    eventSeq: seq,
+                    rssiAvg: -45 - Math.floor(Math.random() * 15),
+                    rssiPeak: -35 - Math.floor(Math.random() * 10),
+                    readsInWindow: 3 + Math.floor(Math.random() * 8),
+                    powerLevel: 30,
+                    decisionStatus: 'ACCEPTED',
+                    scanType: 'placement'
+                });
+            }
+
+            for (let i = 0; i < palletCount; i++) {
+                const minuteOffset = Math.floor(Math.random() * 8 * 60);
+                const ts = shiftMs + minuteOffset * 60000;
+                const seq = placementCount + i + 1;
+                placements.push({
+                    brickNumber: `TUT-PLT-${String(d * 10 + i).padStart(5, '0')}`,
+                    rfidTag: `TUT-RFID-PLT-${String(d * 10 + i).padStart(5, '0')}`,
+                    timestamp: ts,
+                    latitude: 40.7128 + (Math.random() - 0.5) * 0.002,
+                    longitude: -74.0060 + (Math.random() - 0.5) * 0.002,
+                    altitude: 10 + Math.random() * 5,
+                    accuracy: 3 + Math.random() * 4,
+                    buildSessionId: `${sessionId}-D${d}`,
+                    eventSeq: seq,
+                    rssiAvg: -45 - Math.floor(Math.random() * 15),
+                    rssiPeak: -35 - Math.floor(Math.random() * 10),
+                    readsInWindow: 3 + Math.floor(Math.random() * 8),
+                    powerLevel: 30,
+                    decisionStatus: 'ACCEPTED',
+                    scanType: 'pallet'
+                });
+            }
+        }
+
+        // Bulk insert via existing addBatch (wrap in the expected format)
+        const toInsert = placements.map(p => ({
+            brickNumber: p.brickNumber,
+            timestamp: p.timestamp,
+            latitude: p.latitude,
+            longitude: p.longitude,
+            altitude: p.altitude,
+            accuracy: p.accuracy,
+            buildSessionId: p.buildSessionId,
+            eventSeq: p.eventSeq,
+            rssiAvg: p.rssiAvg,
+            rssiPeak: p.rssiPeak,
+            readsInWindow: p.readsInWindow,
+            powerLevel: p.powerLevel,
+            decisionStatus: p.decisionStatus,
+            eventId: `${p.buildSessionId}-${p.eventSeq}`,
+            scanType: p.scanType
+        }));
+
+        await dbPlacements.addBatch(masonId, { toInsert, toUpdate: [] });
+
+        console.log(`✓ Tutorial seed data: ${placements.length} placements created for ${masonId}`);
+        res.json({ success: true, count: placements.length });
+    } catch (err) {
+        console.error('Error seeding tutorial data:', err);
+        res.status(500).json({ success: false, message: 'Failed to seed data' });
+    }
+});
+
+// DELETE /api/tutorial/seed-data/:masonId - Clean up tutorial placement data
+app.delete('/api/tutorial/seed-data/:masonId', requireAuth, async (req, res) => {
+    const { masonId } = req.params;
+    try {
+        const deleted = await dbPlacements.deleteByMasonId(masonId);
+        // Also clean history
+        await new Promise((resolve, reject) => {
+            db.run('DELETE FROM placement_history WHERE mason_id = ?', [masonId], function(err) {
+                if (err) reject(err); else resolve(this.changes);
+            });
+        });
+        console.log(`✓ Tutorial data cleaned: ${deleted} placements removed for ${masonId}`);
+        res.json({ success: true, deleted });
+    } catch (err) {
+        console.error('Error cleaning tutorial data:', err);
+        res.status(500).json({ success: false, message: 'Failed to clean data' });
     }
 });
 
@@ -1432,6 +1555,43 @@ app.post('/api/support-ticket', requireAuth, async (req, res) => {
     console.log(`[SUPPORT] ──────────────────────────────`);
 
     res.json({ success: true, ticketId, message: 'Your ticket has been submitted. We\'ll get back to you soon!' });
+
+    // Send confirmation email to the user (fire-and-forget)
+    const userEmail = user.email;
+    if (userEmail && process.env.SUPPORT_EMAIL && process.env.SUPPORT_EMAIL_PASS) {
+        const confirmHtml = `
+            <div style="font-family:Segoe UI,sans-serif;max-width:600px;margin:0 auto">
+                <div style="background:#2D3436;color:white;padding:20px 24px;border-radius:8px 8px 0 0">
+                    <h2 style="margin:0;font-size:1.3rem">We received your ticket!</h2>
+                </div>
+                <div style="background:#CC0000;color:white;padding:10px 24px;font-size:0.85rem">
+                    <strong>Ticket ID:</strong> ${ticketId} &nbsp;|&nbsp; <strong>Type:</strong> ${typeLabels[type] || type} &nbsp;|&nbsp; <strong>Priority:</strong> ${priorityLabels[priority] || 'Medium'}
+                </div>
+                <div style="background:white;padding:24px;border:1px solid #e0e0e0;border-top:none;border-radius:0 0 8px 8px">
+                    <p style="color:#333;margin:0 0 12px;font-size:1rem">Hi <strong>${user.username}</strong>,</p>
+                    <p style="color:#555;line-height:1.6">Thank you for reaching out. We've received your <strong>${(typeLabels[type] || type).toLowerCase()}</strong> and our team will review it shortly.</p>
+                    <div style="background:#f8f9fa;border-radius:8px;padding:16px;margin:16px 0;border:1px solid #e0e0e0">
+                        <p style="margin:0 0 6px;color:#888;font-size:0.8rem;text-transform:uppercase;letter-spacing:0.5px">Your message</p>
+                        <p style="margin:0 0 8px;color:#333;font-weight:600">${subject}</p>
+                        <p style="margin:0;color:#555;font-size:0.9rem;white-space:pre-wrap">${description.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</p>
+                    </div>
+                    <p style="color:#555;line-height:1.6">If you need to follow up, simply reply to this email or reference your ticket ID: <strong>${ticketId}</strong></p>
+                    <hr style="border:none;border-top:1px solid #eee;margin:20px 0">
+                    <p style="color:#999;font-size:0.8rem;margin:0">Efficiency Tracker Support<br>This is an automated confirmation.</p>
+                </div>
+            </div>
+        `;
+        supportTransporter.sendMail({
+            from: `"Efficiency Tracker Support" <${process.env.SUPPORT_EMAIL}>`,
+            to: userEmail,
+            subject: `Ticket Received: ${subject} — ${ticketId}`,
+            html: confirmHtml
+        }).then(() => {
+            console.log(`[SUPPORT] Confirmation email sent to ${userEmail} for ${ticketId}`);
+        }).catch(err => {
+            console.error(`[SUPPORT] Failed to send confirmation to ${userEmail}:`, err.message);
+        });
+    }
 });
 
 // 404 handler - must be after all other routes

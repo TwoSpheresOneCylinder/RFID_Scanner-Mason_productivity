@@ -114,6 +114,14 @@ function createTables(resolve, reject) {
                         console.log('✓ Migrated users table: added preferences column');
                     }
                 });
+                // Migrate: add email column if missing
+                db.run(`ALTER TABLE users ADD COLUMN email TEXT DEFAULT ''`, (alterErr) => {
+                    if (alterErr && !alterErr.message.includes('duplicate column')) {
+                        console.error('Warning: Could not add email column:', alterErr.message);
+                    } else if (!alterErr) {
+                        console.log('✓ Migrated users table: added email column');
+                    }
+                });
                 // Seed default super admin accounts
                 seedDefaultSuperAdmins();
                 checkComplete();
@@ -402,17 +410,17 @@ const dbUsers = {
     },
 
     // Create new user with hashed password
-    create: async (username, password, masonId, companyId) => {
+    create: async (username, password, masonId, companyId, email) => {
         return new Promise(async (resolve, reject) => {
             // Hash password before storing
             const hashedPassword = await bcrypt.hash(password, 10);
             
             db.run(
-                `INSERT INTO users (username, password, mason_id, company_id) VALUES (?, ?, ?, ?)`,
-                [username, hashedPassword, masonId, companyId || null],
+                `INSERT INTO users (username, password, mason_id, company_id, email) VALUES (?, ?, ?, ?, ?)`,
+                [username, hashedPassword, masonId, companyId || null, email || ''],
                 function(err) {
                     if (err) reject(err);
-                    else resolve({ id: this.lastID, username, masonId, companyId });
+                    else resolve({ id: this.lastID, username, masonId, companyId, email });
                 }
             );
         });

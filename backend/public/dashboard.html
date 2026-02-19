@@ -101,6 +101,162 @@
             display: none !important;
         }
 
+        /* ═══ INTERACTIVE CLICK-BASED TUTORIAL ═══ */
+        .tutorial-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 50000;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.35s;
+        }
+        .tutorial-overlay.active {
+            opacity: 1;
+        }
+        .tutorial-overlay.active .tutorial-backdrop,
+        .tutorial-overlay.active .tutorial-tooltip,
+        .tutorial-overlay.active .tutorial-click-zone {
+            pointer-events: auto;
+        }
+        .tutorial-backdrop {
+            position: fixed;
+            inset: 0;
+            /* Visual dimming is handled by spotlight box-shadow; backdrop is just a click-blocker */
+        }
+        .tutorial-spotlight {
+            position: fixed;
+            border-radius: 14px;
+            box-shadow: 0 0 0 4px rgba(255,210,0,0.7), 0 0 30px 8px rgba(255,210,0,0.25), 0 0 0 9999px rgba(0,0,0,0.62);
+            transition: left 0.4s cubic-bezier(.4,0,.2,1), top 0.4s cubic-bezier(.4,0,.2,1), width 0.4s cubic-bezier(.4,0,.2,1), height 0.4s cubic-bezier(.4,0,.2,1);
+            pointer-events: none;
+            z-index: 50001;
+            animation: tutorialBreathe 2s ease-in-out infinite;
+        }
+        /* Stronger pulse on clickable targets */
+        .tutorial-spotlight.clickable {
+            animation: tutorialPulseClick 1.5s ease-in-out infinite;
+        }
+        @keyframes tutorialBreathe {
+            0%, 100% { box-shadow: 0 0 0 4px rgba(255,210,0,0.65), 0 0 20px 6px rgba(255,210,0,0.2), 0 0 0 9999px rgba(0,0,0,0.62); }
+            50% { box-shadow: 0 0 0 8px rgba(255,210,0,0.4), 0 0 45px 16px rgba(255,210,0,0.12), 0 0 0 9999px rgba(0,0,0,0.62); }
+        }
+        @keyframes tutorialPulseClick {
+            0%, 100% { box-shadow: 0 0 0 4px rgba(255,210,0,0.7), 0 0 20px 8px rgba(255,210,0,0.25), 0 0 0 9999px rgba(0,0,0,0.62); }
+            50% { box-shadow: 0 0 0 12px rgba(255,210,0,0.45), 0 0 60px 22px rgba(255,210,0,0.15), 0 0 0 9999px rgba(0,0,0,0.62); }
+        }
+        /* Click-through zone that sits over the target element */
+        .tutorial-click-zone {
+            position: fixed;
+            z-index: 50003;
+            cursor: pointer;
+            border-radius: 14px;
+            transition: all 0.4s cubic-bezier(.4,0,.2,1);
+        }
+        .tutorial-tooltip {
+            position: fixed;
+            z-index: 50002;
+            background: white;
+            border-radius: 14px;
+            padding: 24px 26px 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.22), 0 2px 8px rgba(0,0,0,0.08);
+            max-width: 400px;
+            width: 90vw;
+            transition: all 0.4s cubic-bezier(.4,0,.2,1);
+            font-family: 'Barlow Semi Condensed', 'Segoe UI', sans-serif;
+        }
+        .tutorial-tooltip .tt-step {
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            color: #CC0000;
+            margin-bottom: 6px;
+        }
+        .tutorial-tooltip h3 {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #2D3436;
+            margin: 0 0 8px;
+        }
+        .tutorial-tooltip p {
+            font-size: 0.92rem;
+            color: #636E72;
+            line-height: 1.5;
+            margin: 0 0 6px;
+        }
+        .tutorial-tooltip .tt-action-hint {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #FFF5F5;
+            border: 1px solid #FFCCCC;
+            border-radius: 8px;
+            padding: 10px 14px;
+            margin: 12px 0 16px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #CC0000;
+        }
+        .tutorial-tooltip .tt-action-hint svg {
+            flex-shrink: 0;
+            width: 18px;
+            height: 18px;
+        }
+        .tutorial-tooltip .tt-actions {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+        }
+        .tutorial-tooltip .tt-dots {
+            flex: 1;
+            min-width: 0;
+            height: 4px;
+            background: #eee;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .tutorial-tooltip .tt-progress {
+            height: 100%;
+            background: #CC0000;
+            border-radius: 4px;
+            transition: width 0.35s ease;
+        }
+        .tutorial-tooltip .tt-buttons {
+            display: flex;
+            gap: 8px;
+        }
+        .tt-btn {
+            border: none;
+            border-radius: 8px;
+            padding: 8px 18px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.15s;
+        }
+        .tt-btn:active { transform: scale(0.97); }
+        .tt-btn-skip {
+            background: transparent;
+            color: #999;
+        }
+        .tt-btn-skip:hover { color: #555; }
+        .tt-btn-next {
+            background: #CC0000;
+            color: white;
+        }
+        .tt-btn-next:hover { background: #a00; }
+        .tt-btn-done {
+            background: #2D3436;
+            color: white;
+        }
+        .tt-btn-done:hover { background: #1a1f20; }
+        @media (max-width: 600px) {
+            .tutorial-tooltip { max-width: 92vw; padding: 18px 16px 14px; }
+            .tutorial-tooltip h3 { font-size: 1.05rem; }
+        }
+
         /* Help FAB — fades into background */
         .help-fab {
             position: fixed;
@@ -559,15 +715,61 @@
             background: white;
             padding: 24px 20px 20px 20px;
             border-radius: 0;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            margin-top: -10px;
+            margin-top: 0;
             margin-bottom: 0;
             display: flex;
             gap: 15px;
             flex-wrap: wrap;
             align-items: center;
             position: relative;
-            z-index: 8;
+        }
+
+        /* Collapsible controls banner – always visible thin strip */
+        .controls-collapse {
+            background: white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.10);
+            position: relative;
+            z-index: 101;
+            margin-top: -10px;
+        }
+        .controls-collapse .controls-inner {
+            overflow: hidden;
+            max-height: 0;
+            transition: max-height 0.4s ease;
+        }
+        .controls-collapse.open .controls-inner {
+            max-height: 120px;
+        }
+        .controls-collapse .controls {
+            box-shadow: none;
+        }
+
+        /* Arrow – always at the bottom of the banner */
+        .controls-toggle {
+            display: none; /* shown by JS for admins */
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 4px 48px;
+            margin: 0 auto;
+            line-height: 0;
+        }
+        .controls-toggle svg {
+            width: 32px;
+            height: 22px;
+            fill: #bbb;
+            transition: transform 0.35s ease, fill 0.2s;
+        }
+        .controls-toggle.open svg {
+            transform: rotate(180deg);
+        }
+        .controls-toggle:hover svg {
+            fill: #888;
+        }
+        .controls-toggle-row {
+            display: flex;
+            justify-content: center;
+            padding: 4px 0;
         }
         
         .tabs {
@@ -925,6 +1127,30 @@
         .gallery-item.already-added .gallery-desc {
             color: #2e7d32;
             font-weight: 600;
+        }
+        .gallery-item.tut-highlight {
+            border-color: #FF6B35;
+            background: #fff3e0;
+            animation: tutPulseGallery 1.2s ease-in-out infinite;
+            position: relative;
+        }
+        .gallery-item.tut-highlight::after {
+            content: '\2190 Add this back!';
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #FF6B35;
+            color: #fff;
+            font-size: 0.65rem;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 8px;
+            white-space: nowrap;
+            pointer-events: none;
+        }
+        @keyframes tutPulseGallery {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(255,107,53,0.45); }
+            50%       { box-shadow: 0 0 0 8px rgba(255,107,53,0); }
         }
         .gallery-item .gallery-icon {
             display: flex;
@@ -1557,6 +1783,10 @@
                         <svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
                         Manage Users
                     </button>
+                    <button onclick="replayTutorial()">
+                        <svg viewBox="0 0 24 24"><path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/></svg>
+                        Replay Tour
+                    </button>
                     <button onclick="logout()" class="danger">
                         <svg viewBox="0 0 24 24"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg>
                         Sign Out
@@ -1565,6 +1795,8 @@
             </div>
         </div>
         
+        <div class="controls-collapse" id="controlsCollapse">
+        <div class="controls-inner">
         <div class="controls" id="controlsBar">
             <div class="company-select-group" id="companySelectGroup" style="display:none;">
                 <label for="companySelect">Company</label>
@@ -1583,6 +1815,13 @@
                 Create Performance Review
             </button>
         </div>
+        </div><!-- /controls-inner -->
+        <div class="controls-toggle-row">
+            <button class="controls-toggle" id="controlsToggle" onclick="toggleControlsPanel()" title="Show filters & reports">
+                <svg viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
+            </button>
+        </div>
+        </div><!-- /controls-collapse -->
         
         <!-- Widget Gallery Modal -->
         <div id="widgetGalleryModal" class="modal" onclick="if(event.target===this)closeWidgetGallery()">
@@ -1738,6 +1977,11 @@
                 <input type="text" id="newMasonId" placeholder="e.g. MASON_JSMITH">
                 <div class="field-hint">Unique identifier used by the RFID scanner</div>
             </div>
+            <div class="modal-field">
+                <label for="newEmail">Email <span style="font-weight:400;color:#999">(optional)</span></label>
+                <input type="email" id="newEmail" placeholder="e.g. jsmith@company.com">
+                <div class="field-hint">Used for support ticket confirmations</div>
+            </div>
             <div class="modal-divider"></div>
             <div class="modal-field">
                 <label for="newCompany">Company</label>
@@ -1824,7 +2068,8 @@
 
         const DEFAULT_LAYOUT = [
             'totalPlacements', 'totalIndexed', 'daysWorked', 'avgPerDay', 'currentEfficiency',
-            'liveChart', 'dailyChart'
+            'activeMasons', 'totalScans', 'avgPerHourAllTime',
+            'liveChart', 'dailyChart', 'efficiencyChart'
         ];
 
         function getWidgetLayout() {
@@ -2032,51 +2277,77 @@
 
         function getDropInfo(e) {
             const widgets = [...dragState.grid.querySelectorAll('.widget')];
+            let closest = null;
+            let closestDist = Infinity;
+
             for (const w of widgets) {
                 if (w === dragState.widget) continue;
                 const r = w.getBoundingClientRect();
-                if (e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom) {
-                    const midY = r.top + r.height / 2;
-                    const before = e.clientY < midY;
-                    // Snap to row boundary: before → first in row, after → last in row
-                    const row = getVisualRow(w);
-                    if (row.length > 1) {
-                        const snapTarget = before ? row[0] : row[row.length - 1];
-                        return { target: snapTarget, before, row };
+                // Expand hit area by gap/2 so gaps between cards are active
+                const pad = 10;
+                if (e.clientX >= r.left - pad && e.clientX <= r.right + pad &&
+                    e.clientY >= r.top - pad && e.clientY <= r.bottom + pad) {
+                    const cx = r.left + r.width / 2;
+                    const cy = r.top + r.height / 2;
+                    const dist = Math.hypot(e.clientX - cx, e.clientY - cy);
+                    if (dist < closestDist) {
+                        closestDist = dist;
+                        closest = w;
                     }
-                    return { target: w, before, row };
                 }
             }
-            return null;
+
+            if (!closest) return null;
+
+            const r = closest.getBoundingClientRect();
+            const row = getVisualRow(closest);
+            const isFullWidth = closest.classList.contains('widget-chart');
+
+            if (isFullWidth || row.length <= 1) {
+                // Vertical: above or below
+                const before = e.clientY < r.top + r.height / 2;
+                return { target: closest, before, row, direction: 'vertical' };
+            }
+
+            // For KPI rows: determine left/right of the specific card
+            const midX = r.left + r.width / 2;
+            const before = e.clientX < midX;
+            return { target: closest, before, row, direction: 'horizontal' };
         }
 
-        function showDropIndicator(targetWidget, before, row) {
+        function showDropIndicator(targetWidget, before, row, direction) {
             removeDropIndicator();
             const indicator = document.createElement('div');
             indicator.className = 'drop-indicator';
 
             const grid = dragState.grid;
             const gridRect = grid.getBoundingClientRect();
+            const tRect = targetWidget.getBoundingClientRect();
 
-            // Span full grid width for rows with multiple widgets
-            if (row && row.length > 1) {
-                const firstRect = row[0].getBoundingClientRect();
-                const lastRect = row[row.length - 1].getBoundingClientRect();
-                indicator.style.left = (firstRect.left - gridRect.left) + 'px';
-                indicator.style.width = (lastRect.right - firstRect.left) + 'px';
+            if (direction === 'horizontal') {
+                // Vertical bar between cards
+                indicator.style.width = '4px';
+                indicator.style.height = tRect.height + 'px';
+                indicator.style.top = (tRect.top - gridRect.top) + 'px';
                 if (before) {
-                    indicator.style.top = (firstRect.top - gridRect.top - 6) + 'px';
+                    indicator.style.left = (tRect.left - gridRect.left - 6) + 'px';
                 } else {
-                    indicator.style.top = (lastRect.bottom - gridRect.top + 2) + 'px';
+                    indicator.style.left = (tRect.right - gridRect.left + 2) + 'px';
                 }
             } else {
-                const tRect = targetWidget.getBoundingClientRect();
-                indicator.style.left = (tRect.left - gridRect.left) + 'px';
-                indicator.style.width = tRect.width + 'px';
-                if (before) {
-                    indicator.style.top = (tRect.top - gridRect.top - 6) + 'px';
+                // Horizontal bar above/below (full-width charts or single-card rows)
+                if (row && row.length > 1) {
+                    const firstRect = row[0].getBoundingClientRect();
+                    const lastRect = row[row.length - 1].getBoundingClientRect();
+                    indicator.style.left = (firstRect.left - gridRect.left) + 'px';
+                    indicator.style.width = (lastRect.right - firstRect.left) + 'px';
+                    indicator.style.top = (before ? firstRect.top - gridRect.top - 6 : lastRect.bottom - gridRect.top + 2) + 'px';
+                    indicator.style.height = '4px';
                 } else {
-                    indicator.style.top = (tRect.bottom - gridRect.top + 2) + 'px';
+                    indicator.style.left = (tRect.left - gridRect.left) + 'px';
+                    indicator.style.width = tRect.width + 'px';
+                    indicator.style.top = (before ? tRect.top - gridRect.top - 6 : tRect.bottom - gridRect.top + 2) + 'px';
+                    indicator.style.height = '4px';
                 }
             }
 
@@ -2097,7 +2368,7 @@
             // Show drop indicator line
             const info = getDropInfo(e);
             if (info) {
-                showDropIndicator(info.target, info.before, info.row);
+                showDropIndicator(info.target, info.before, info.row, info.direction);
                 dragState.dropInfo = info;
             } else {
                 removeDropIndicator();
@@ -2161,7 +2432,7 @@
             const gallery = document.getElementById('widgetGallery');
             gallery.innerHTML = Object.entries(WIDGET_REGISTRY).map(([key, w]) => {
                 const added = layout.includes(key);
-                return `<div class="gallery-item${added ? ' already-added' : ''}" onclick="toggleWidget('${key}')">
+                return `<div class="gallery-item${added ? ' already-added' : ''}" data-widget-key="${key}" onclick="toggleWidget('${key}')">
                     <div class="gallery-icon">${w.icon}</div>
                     <div class="gallery-name">${w.label}</div>
                     <div class="gallery-desc">${added ? '✓ Added' : w.description}</div>
@@ -2183,8 +2454,8 @@
                 // Remove widget
                 layout.splice(idx, 1);
             } else {
-                // Add widget at end — user can drag it wherever they want
-                layout.push(key);
+                // Add widget at the top so it's immediately visible
+                layout.unshift(key);
             }
             saveWidgetLayout(layout);
             renderWidgets();
@@ -2255,6 +2526,13 @@
             document.getElementById('settingsDropdown').classList.toggle('open');
         }
 
+        // Replay the guided tour
+        function replayTutorial() {
+            document.getElementById('settingsDropdown').classList.remove('open');
+            localStorage.removeItem('tutorial_completed');
+            setTimeout(() => startTutorial(), 200);
+        }
+
         // Open Manage Users tab from cog menu
         function openManageUsers() {
             document.getElementById('settingsDropdown').classList.remove('open');
@@ -2262,6 +2540,9 @@
         }
 
         document.addEventListener('click', function(e) {
+            // Don't auto-close dropdown during tutorial (tutorial manages it)
+            const tutOverlay = document.getElementById('tutorialOverlay');
+            if (tutOverlay && tutOverlay.classList.contains('active')) return;
             const wrapper = document.querySelector('.settings-wrapper');
             if (wrapper && !wrapper.contains(e.target)) {
                 document.getElementById('settingsDropdown').classList.remove('open');
@@ -3508,6 +3789,7 @@
             document.getElementById('newUsername').value = '';
             document.getElementById('newPassword').value = '';
             document.getElementById('newMasonId').value = '';
+            document.getElementById('newEmail').value = '';
             errDiv.style.display = 'none';
             errDiv.textContent = '';
 
@@ -3576,6 +3858,7 @@
             const username = document.getElementById('newUsername').value.trim();
             const password = document.getElementById('newPassword').value;
             const masonId = document.getElementById('newMasonId').value.trim();
+            const email = document.getElementById('newEmail').value.trim();
             let companyId = document.getElementById('newCompany').value;
             const role = document.getElementById('newRole').value;
 
@@ -3620,7 +3903,7 @@
                 const response = await authFetch(`${API_BASE}/api/admin/users`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username, password, mason_id: masonId, company_id: parseInt(companyId), role })
+                    body: JSON.stringify({ username, password, mason_id: masonId, company_id: parseInt(companyId), role, email })
                 });
                 const data = await response.json();
 
@@ -3660,6 +3943,9 @@
                 await refreshData();
                 await loadPlacements();
                 
+                // Trigger tutorial for first-time users
+                maybeTriggerTutorial();
+                
                 // Auto-refresh stats every 30 seconds (reduced from 10)
                 refreshInterval = setInterval(() => {
                     refreshData();
@@ -3682,13 +3968,19 @@
                 const isRegularUser = !isAnyAdmin;
                 
                 if (isRegularUser) {
-                    // Regular users: hide the entire controls bar
-                    const controlsBar = document.getElementById('controlsBar');
-                    if (controlsBar) controlsBar.style.display = 'none';
+                    // Regular users: hide the entire controls collapse + toggle
+                    const controlsCollapse = document.getElementById('controlsCollapse');
+                    if (controlsCollapse) controlsCollapse.style.display = 'none';
+                    const controlsToggle = document.getElementById('controlsToggle');
+                    if (controlsToggle) controlsToggle.style.display = 'none';
                     currentMasonId = loggedInMasonId;
                     allMasons = (data.success && data.users) ? data.users : [];
                     return;
                 }
+
+                // Admin: show the toggle arrow
+                const controlsToggle = document.getElementById('controlsToggle');
+                if (controlsToggle) controlsToggle.style.display = 'flex';
                 
                 if (data.success && data.users && data.users.length > 0) {
                     allMasons = data.users;
@@ -4761,6 +5053,22 @@
         }
 
         // Show performance review modal
+        function toggleControlsPanel(forceOpen) {
+            const collapse = document.getElementById('controlsCollapse');
+            const toggle = document.getElementById('controlsToggle');
+            if (!collapse) return;
+            if (forceOpen === true) {
+                collapse.classList.add('open');
+                toggle && toggle.classList.add('open');
+            } else if (forceOpen === false) {
+                collapse.classList.remove('open');
+                toggle && toggle.classList.remove('open');
+            } else {
+                collapse.classList.toggle('open');
+                toggle && toggle.classList.toggle('open');
+            }
+        }
+
         function showReportModal() {
             const modal = document.getElementById('reportModal');
             const modalMasonSelect = document.getElementById('modalMasonSelect');
@@ -4952,6 +5260,26 @@
     </script>
     <button class="help-fab" id="helpFab" title="Help & Support" onclick="openHelpModal()">?</button>
 
+    <!-- Interactive Tutorial Overlay -->
+    <div class="tutorial-overlay" id="tutorialOverlay">
+        <div class="tutorial-backdrop" id="tutorialBackdrop"></div>
+        <div class="tutorial-spotlight" id="tutorialSpotlight"></div>
+        <div class="tutorial-click-zone" id="tutorialClickZone"></div>
+        <div class="tutorial-tooltip" id="tutorialTooltip">
+            <div class="tt-step" id="ttStep"></div>
+            <h3 id="ttTitle"></h3>
+            <p id="ttDesc"></p>
+            <div class="tt-action-hint" id="ttActionHint" style="display:none;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 15l-2 5L9 9l11 4-5 2z"/><path d="M15 15l4 4"/></svg>
+                <span id="ttActionText"></span>
+            </div>
+            <div class="tt-actions">
+                <div class="tt-dots" id="ttDots"></div>
+                <div class="tt-buttons" id="ttButtons"></div>
+            </div>
+        </div>
+    </div>
+
     <!-- Help Ticket Modal -->
     <div class="help-modal-overlay" id="helpModalOverlay" onclick="if(event.target===this)closeHelpModal()">
         <div class="help-modal">
@@ -5001,6 +5329,1014 @@
     <button class="scroll-to-top" id="scrollToTop" title="Scroll to top" onclick="window.scrollTo({top:0,behavior:'smooth'})">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
     </button>
+
+    <script>
+    // ═══════════════════════════════════════════
+    // === INTERACTIVE CLICK-BASED TUTORIAL ===
+    // ═══════════════════════════════════════════
+    (function() {
+        /*  Step types:
+         *  'intro'  – simple continue button, no click target
+         *  'click'  – user must click the highlighted element
+         *  'observe'– shows result of previous click, then auto-advances or has continue
+         */
+        const TUTORIAL_STEPS = [
+            // ── 1. Welcome ──
+            {
+                type: 'intro',
+                title: 'Welcome to the Efficiency Dashboard!',
+                desc: 'This interactive tour will walk you through every feature. You\'ll click on real elements to learn how they work.',
+                selector: '.header',
+                position: 'bottom',
+                buttonText: 'Let\'s Go!'
+            },
+            // ── 2. Settings gear ──
+            {
+                type: 'click',
+                title: 'Your Account Settings',
+                desc: 'This gear icon opens your account menu where you can manage users, replay this tour, or sign out.',
+                action: 'Click the gear icon to open the menu',
+                selector: '.btn-settings',
+                position: 'left',
+                beforeShow: () => {
+                    document.getElementById('settingsDropdown').classList.remove('open');
+                },
+                onTargetClick: (el) => {
+                    el.click();
+                }
+            },
+            // ── 3. Settings dropdown ──
+            {
+                type: 'observe',
+                title: 'Settings Menu',
+                desc: 'Here you can manage users (admins only), replay this tour, or sign out.',
+                selector: '#settingsDropdown',
+                position: 'left',
+                beforeShow: () => {
+                    document.getElementById('settingsDropdown').classList.add('open');
+                },
+                onLeave: () => {
+                    // Keep dropdown open for admins — next step targets Manage Users button inside it
+                    if (!isAnyAdmin) {
+                        document.getElementById('settingsDropdown').classList.remove('open');
+                    }
+                }
+            },
+            // ═══════════════════════════════════════
+            // ── MANAGE USERS SECTION (admin only) ──
+            // ═══════════════════════════════════════
+            // ── Click Manage Users in the dropdown ──
+            {
+                type: 'click',
+                title: 'Open User Management',
+                desc: 'As an admin you have access to user management. Click it to see the full user list.',
+                action: 'Click "Manage Users"',
+                selector: '#manageUsersBtn',
+                position: 'left',
+                skip: () => !isAnyAdmin,
+                beforeShow: () => {
+                    document.getElementById('settingsDropdown').classList.add('open');
+                    const btn = document.getElementById('manageUsersBtn');
+                    if (btn) btn.style.display = '';
+                },
+                onTargetClick: (el) => {
+                    el.click();
+                }
+            },
+            // ── User Management overview ──
+            {
+                type: 'observe',
+                title: 'User Management',
+                desc: 'This is where you can view all users, create new ones, change roles, and remove accounts. Let\'s walk through the key actions.',
+                selector: '#manage-users-tab',
+                position: 'top',
+                skip: () => !isAnyAdmin,
+                beforeShow: () => {
+                    document.getElementById('settingsDropdown').classList.remove('open');
+                    switchTab('manage-users');
+                }
+            },
+            // ── Search bar ──
+            {
+                type: 'observe',
+                title: 'Search Users',
+                desc: 'Quickly find users by typing a name, ID, company, or role in this search bar.',
+                selector: '#umSearch',
+                position: 'bottom',
+                skip: () => !isAnyAdmin
+            },
+            // ── Add User button → creates fake Tutorial user ──
+            {
+                type: 'click',
+                title: 'Add a New User',
+                desc: 'Let\'s create a demo user called "TutorialUser" to see how user management works. We\'ll clean it up at the end.',
+                action: 'Click "Add User" to create a demo user',
+                selector: '.btn-add-user',
+                position: 'bottom',
+                skip: () => !isAnyAdmin,
+                onTargetClick: async () => {
+                    // Create a fake tutorial user via API
+                    try {
+                        const companyId = userCompany ? userCompany.id : 1;
+                        const resp = await authFetch(`${API_BASE}/api/admin/users`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                username: 'TutorialUser',
+                                password: 'tutorial123456',
+                                mason_id: 'TUTORIAL_USER',
+                                company_id: companyId,
+                                role: 'user'
+                            })
+                        });
+                        const data = await resp.json();
+                        if (data.success || resp.status === 409) {
+                            window._tutFakeUserId = 'TUTORIAL_USER';
+                            // Seed realistic placement data so KPIs and charts look populated
+                            try {
+                                await authFetch(`${API_BASE}/api/tutorial/seed-data`, {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ masonId: 'TUTORIAL_USER' })
+                                });
+                            } catch (se) {
+                                console.warn('Tutorial: seed data failed', se);
+                            }
+                            // Reload user table
+                            if (typeof loadMasons === 'function') await loadMasons();
+                        }
+                    } catch (e) {
+                        console.warn('Tutorial: could not create fake user', e);
+                    }
+                }
+            },
+            // ── Show the new user row ──
+            {
+                type: 'observe',
+                title: 'New User Created',
+                desc: 'The "TutorialUser" now appears in the table. Notice the role badge shows "User" — let\'s promote them.',
+                selector: '#userManagementBody tr[data-masonid="tutorial_user"]',
+                position: 'top',
+                skip: () => !isAnyAdmin,
+                beforeShow: () => {
+                    // Scroll the tutorial user row into view
+                    const row = document.querySelector('#userManagementBody tr[data-masonid="tutorial_user"]');
+                    if (row) row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            },
+            // ── Promote button ──
+            {
+                type: 'click',
+                title: 'Promote a User',
+                desc: 'The "Promote to Admin" button elevates a regular user to Company Admin, giving them access to user management and reporting.',
+                action: 'Click "Promote to Admin" on the tutorial user',
+                selector: '#userManagementBody tr[data-masonid="tutorial_user"] .um-btn.promote',
+                position: 'top',
+                skip: () => !isAnyAdmin,
+                onTargetClick: async () => {
+                    try {
+                        await authFetch(`${API_BASE}/api/users/TUTORIAL_USER/role`, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ role: 'company_admin' })
+                        });
+                        if (typeof loadMasons === 'function') await loadMasons();
+                    } catch (e) {
+                        console.warn('Tutorial: could not promote fake user', e);
+                    }
+                }
+            },
+            // ── Show promoted role ──
+            {
+                type: 'observe',
+                title: 'User Promoted!',
+                desc: 'Notice the role badge changed to "Company Admin". You can also demote them back or make them a Super Admin (if you\'re a super admin).',
+                selector: '#userManagementBody tr[data-masonid="tutorial_user"]',
+                position: 'top',
+                skip: () => !isAnyAdmin,
+                beforeShow: () => {
+                    const row = document.querySelector('#userManagementBody tr[data-masonid="tutorial_user"]');
+                    if (row) row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            },
+            // ── Demote back to user ──
+            {
+                type: 'click',
+                title: 'Demote a User',
+                desc: 'You can also remove admin privileges. Let\'s demote TutorialUser back to a regular user. We\'ll keep them around to demo filtering next.',
+                action: 'Click "Remove Admin" on the tutorial user',
+                selector: '#userManagementBody tr[data-masonid="tutorial_user"] .um-btn.demote',
+                position: 'top',
+                skip: () => !isAnyAdmin,
+                onTargetClick: async () => {
+                    try {
+                        await authFetch(`${API_BASE}/api/users/TUTORIAL_USER/role`, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ role: 'user' })
+                        });
+                        if (typeof loadMasons === 'function') await loadMasons();
+                    } catch (e) {
+                        console.warn('Tutorial: could not demote fake user', e);
+                    }
+                },
+                onLeave: () => {
+                    switchTab('overview');
+                }
+            },
+            // ── Dashboard overview ──
+            {
+                type: 'observe',
+                title: 'Your Dashboard',
+                desc: 'This is your main dashboard — real-time stats, customizable widgets, and powerful filtering. Let\'s walk through each piece.',
+                selector: '#dashboard',
+                position: 'bottom',
+                scrollTop: true,
+                beforeShow: () => {
+                    switchTab('overview');
+                }
+            },
+            // ── Dashboard widgets ──
+            {
+                type: 'observe',
+                title: 'Your Dashboard Widgets',
+                desc: 'These cards show real-time KPIs — blocks placed, efficiency, days worked, and more. They update automatically every 30 seconds.',
+                selector: '#widgetGrid .widget',
+                position: 'top'
+            },
+            // ── Enter edit mode ──
+            {
+                type: 'click',
+                title: 'Enter Edit Mode',
+                desc: 'Edit mode lets you rearrange, add, or remove dashboard widgets.',
+                action: 'Click "Edit" to enter edit mode',
+                selector: '#widgetEditBtn',
+                position: 'bottom',
+                onTargetClick: (el) => {
+                    el.click();
+                }
+            },
+            // ── Show drag handle ──
+            {
+                type: 'observe',
+                title: 'Drag Handle',
+                desc: 'Each widget has a drag handle at the top. Grab it to move the widget to a new position.',
+                selector: '#widgetGrid .widget:first-child .drag-handle',
+                position: 'top',
+                beforeShow: () => {
+                    const grid = document.getElementById('widgetGrid');
+                    if (!grid.classList.contains('editing')) toggleWidgetEdit();
+                }
+            },
+            // ── Move a widget (real drag) ──
+            {
+                type: 'drag',
+                title: 'Try It — Drag a Widget',
+                desc: 'Grab a drag handle (⋮⋮⋮) and drag a widget to a new position. The overlay will disappear so you can interact freely.',
+                action: 'Drag any widget to rearrange it',
+                selector: '#widgetGrid .widget:first-child .drag-handle',
+                position: 'top',
+                beforeShow: () => {
+                    const grid = document.getElementById('widgetGrid');
+                    if (!grid.classList.contains('editing')) toggleWidgetEdit();
+                }
+            },
+            // ── Click remove button ──
+            {
+                type: 'click',
+                title: 'Remove a Widget',
+                desc: 'The red \u2212 button removes a widget from your dashboard. Don\'t worry \u2014 you can always add it back!',
+                action: 'Click the \u2212 button to remove this widget',
+                selector: '#widgetGrid .widget:first-child .widget-remove',
+                position: 'top',
+                beforeShow: () => {
+                    const grid = document.getElementById('widgetGrid');
+                    if (!grid.classList.contains('editing')) toggleWidgetEdit();
+                    // Remember which widget is first so we can restore it
+                    window._tutRemovedWidget = getWidgetLayout()[0] || null;
+                },
+                onTargetClick: (el) => {
+                    el.click(); // triggers removeWidget()
+                }
+            },
+            // ── Open widget gallery ──
+            {
+                type: 'click',
+                title: 'Edit Widgets',
+                desc: 'Open the widget gallery to add back the widget you just removed, or browse all available widgets.',
+                action: 'Click "Edit Widgets" to open the gallery',
+                selector: '#widgetAddBtn',
+                position: 'bottom',
+                beforeShow: () => {
+                    const grid = document.getElementById('widgetGrid');
+                    if (!grid.classList.contains('editing')) toggleWidgetEdit();
+                    const btn = document.getElementById('widgetAddBtn');
+                    if (btn) btn.classList.add('visible');
+                },
+                onTargetClick: (el) => {
+                    el.click();
+                }
+            },
+            // ── Widget gallery — highlight removed widget & click to re-add ──
+            {
+                type: 'click',
+                title: 'Add It Back',
+                get desc() {
+                    return window._tutRemovedWidget
+                        ? 'See the highlighted widget? That\'s the one you just removed. Click it to add it back to your dashboard.'
+                        : 'Click any widget without a \u2713 to add it to your dashboard.';
+                },
+                get action() {
+                    const name = window._tutRemovedWidget && WIDGET_REGISTRY[window._tutRemovedWidget]
+                        ? WIDGET_REGISTRY[window._tutRemovedWidget].label : 'a widget';
+                    return 'Click "' + name + '" to add it back';
+                },
+                get selector() {
+                    if (window._tutRemovedWidget) {
+                        return '#widgetGallery .gallery-item[data-widget-key="' + window._tutRemovedWidget + '"]';
+                    }
+                    return '#widgetGallery .gallery-item:not(.already-added)';
+                },
+                position: 'right',
+                beforeShow: () => {
+                    const modal = document.getElementById('widgetGalleryModal');
+                    if (!modal.classList.contains('show')) openWidgetGallery();
+                    // Highlight the removed widget
+                    if (window._tutRemovedWidget) {
+                        const el = document.querySelector(
+                            '#widgetGallery .gallery-item[data-widget-key="' + window._tutRemovedWidget + '"]'
+                        );
+                        if (el) {
+                            el.classList.add('tut-highlight');
+                            el.scrollIntoView({ block: 'nearest' });
+                        }
+                    }
+                },
+                onTargetClick: (el) => {
+                    el.click(); // toggleWidget() — re-adds it
+                }
+            },
+            // ── Widget gallery — customization explanation ──
+            {
+                type: 'observe',
+                title: 'Customize Your Dashboard',
+                desc: 'You can add or remove any widget here so your dashboard shows exactly what you want to see. Widgets marked with \u2713 are currently on your board.',
+                selector: '#widgetGalleryModal .modal-content',
+                position: 'right',
+                beforeShow: () => {
+                    const modal = document.getElementById('widgetGalleryModal');
+                    if (!modal.classList.contains('show')) openWidgetGallery();
+                    // Remove highlight class from all gallery items
+                    document.querySelectorAll('.gallery-item.tut-highlight').forEach(el => el.classList.remove('tut-highlight'));
+                },
+                onLeave: () => {
+                    window._tutRemovedWidget = null;
+                    closeWidgetGallery();
+                    const grid = document.getElementById('widgetGrid');
+                    if (grid.classList.contains('editing')) toggleWidgetEdit();
+                }
+            },
+            // ── Expand the controls panel ──
+            {
+                type: 'click',
+                title: 'Expand Controls',
+                desc: 'Filters and reports live behind this arrow. Click to expand the controls panel.',
+                action: 'Click the arrow to expand',
+                selector: '#controlsToggle',
+                position: 'bottom',
+                skip: () => !isAnyAdmin,
+                beforeShow: () => {
+                    switchTab('overview');
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                    toggleControlsPanel(false); // ensure collapsed so user can open it
+                },
+                onTargetClick: () => {
+                    toggleControlsPanel(true);
+                }
+            },
+            // ── Filters – explain the dropdown ──
+            {
+                type: 'observe',
+                title: 'Filter by User',
+                desc: 'This dropdown lets you filter the entire dashboard to a single user — stats, charts, and placements all update instantly.',
+                selector: '#masonSelect',
+                position: 'bottom',
+                skip: () => !isAnyAdmin,
+                beforeShow: () => {
+                    // Make sure controls panel is expanded and we're on the overview tab
+                    toggleControlsPanel(true);
+                    switchTab('overview');
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                }
+            },
+            // ── Filters – select TutorialUser ──
+            {
+                type: 'click',
+                title: 'Try It — Filter',
+                desc: 'Let\'s try it out! Select "TutorialUser" from the dropdown to see the dashboard filter to just that user.',
+                action: 'Select "TutorialUser" from the dropdown',
+                selector: '#masonSelect',
+                position: 'bottom',
+                skip: () => !isAnyAdmin,
+                beforeShow: () => {
+                    toggleControlsPanel(true);
+                    // Ensure TutorialUser option exists
+                    const select = document.getElementById('masonSelect');
+                    if (!select.querySelector('option[value="TUTORIAL_USER"]')) {
+                        const opt = document.createElement('option');
+                        opt.value = 'TUTORIAL_USER';
+                        opt.textContent = 'TutorialUser';
+                        select.appendChild(opt);
+                    }
+                },
+                onTargetClick: () => {
+                    const select = document.getElementById('masonSelect');
+                    select.value = 'TUTORIAL_USER';
+                    select.dispatchEvent(new Event('change'));
+                }
+            },
+            // ── Filters – observe filtered state ──
+            {
+                type: 'observe',
+                title: 'Filtered Dashboard',
+                desc: 'The dashboard is now showing data for TutorialUser only. Every widget, chart, and stat updates to reflect just this user\'s activity.',
+                selector: '#widgetGrid',
+                position: 'top',
+                scrollTop: true,
+                skip: () => !isAnyAdmin
+            },
+            // ── Filters – reset to All Users ──
+            {
+                type: 'click',
+                title: 'Reset Filter',
+                desc: 'Now let\'s switch back to "All Users" so you can see everyone\'s data again.',
+                action: 'Select "All Users" from the dropdown',
+                selector: '#masonSelect',
+                position: 'bottom',
+                skip: () => !isAnyAdmin,
+                beforeShow: () => { toggleControlsPanel(true); },
+                onTargetClick: () => {
+                    const select = document.getElementById('masonSelect');
+                    select.value = '';
+                    select.dispatchEvent(new Event('change'));
+                }
+            },
+            // ── Performance report button ──
+            {
+                type: 'click',
+                title: 'Generate Reports',
+                desc: 'Create detailed performance review PDFs for any user over any time period.',
+                action: 'Click "Create Performance Review"',
+                selector: '#controlsBar button[onclick*="showReportModal"]',
+                position: 'bottom',
+                skip: () => !isAnyAdmin,
+                beforeShow: () => { toggleControlsPanel(true); },
+                onTargetClick: (el) => {
+                    el.click();
+                }
+            },
+            // ── Report modal overview ──
+            {
+                type: 'observe',
+                title: 'Performance Review Builder',
+                desc: 'This is where you configure and generate detailed performance reports. Let\'s walk through each option.',
+                selector: '#reportModal .modal-content',
+                position: 'right',
+                skip: () => !isAnyAdmin,
+                beforeShow: () => {
+                    showReportModal();
+                }
+            },
+            // ── Report modal – user selection ──
+            {
+                type: 'observe',
+                title: 'Select a User',
+                desc: 'Choose which user\'s performance data to include in the report — or select "All Users" for a team overview.',
+                selector: '#modalMasonSelect',
+                position: 'right',
+                skip: () => !isAnyAdmin
+            },
+            // ── Report modal – time period ──
+            {
+                type: 'observe',
+                title: 'Choose a Time Period',
+                desc: 'Pick how far back the report should go — from today only, all the way back to all time.',
+                selector: '#modalPeriodSelect',
+                position: 'right',
+                skip: () => !isAnyAdmin
+            },
+            // ── Report modal – sections ──
+            {
+                type: 'observe',
+                title: 'Report Sections',
+                desc: 'Select which sections to include. Use the "All" or "Same as Dashboard" presets, or pick individual sections.',
+                selector: '#reportSections',
+                position: 'right',
+                skip: () => !isAnyAdmin
+            },
+            // ── Report modal – generate button ──
+            {
+                type: 'observe',
+                title: 'Generate the Report',
+                desc: 'Once you\'re happy with the settings, click "Generate Report" to create a printable PDF in a new tab.',
+                selector: '.btn-generate',
+                position: 'top',
+                skip: () => !isAnyAdmin,
+                onLeave: () => {
+                    closeReportModal();
+                    toggleControlsPanel(false);
+                }
+            },
+            // ── Delete the tutorial user (cleanup) ──
+            {
+                type: 'observe',
+                title: 'Cleaning Up',
+                desc: 'We\'re removing the demo "TutorialUser" now — your real user list is untouched.',
+                selector: '#widgetGrid',
+                position: 'top',
+                scrollTop: true,
+                skip: () => !isAnyAdmin,
+                beforeShow: async () => {
+                    try {
+                        // Clean up seed placement data first
+                        await authFetch(`${API_BASE}/api/tutorial/seed-data/TUTORIAL_USER`, {
+                            method: 'DELETE'
+                        });
+                        // Then delete the user
+                        await authFetch(`${API_BASE}/api/users/TUTORIAL_USER`, {
+                            method: 'DELETE'
+                        });
+                        window._tutFakeUserId = null;
+                        if (typeof loadMasons === 'function') await loadMasons();
+                        // Refresh dashboard to restore real data
+                        if (typeof refreshData === 'function') refreshData();
+                    } catch (e) {
+                        console.warn('Tutorial: could not delete fake user', e);
+                    }
+                }
+            },
+            // ── Map tab ──
+            {
+                type: 'click',
+                title: 'Map View',
+                desc: 'The Map shows exactly where bricks were placed, with color-coded pins for each mason.',
+                action: 'Click the "Map" tab to explore it',
+                selector: '.tab-button[onclick*="map"]',
+                position: 'bottom',
+                onTargetClick: (el) => {
+                    el.click();
+                }
+            },
+            // ── 14. Map overview ──
+            {
+                type: 'observe',
+                title: 'Placement Map',
+                desc: 'This map shows exactly where bricks were placed with color-coded pins for each mason. Let\'s look at the controls.',
+                selector: '#map-tab',
+                position: 'top',
+                beforeShow: () => {
+                    switchTab('map');
+                }
+            },
+            // ── 15. Map controls ──
+            {
+                type: 'observe',
+                title: 'Map Controls',
+                desc: 'Use these buttons to fit all markers in view, refresh data, or toggle fullscreen mode.',
+                selector: '.map-controls',
+                position: 'bottom'
+            },
+            // ── 15. Map filters ──
+            {
+                type: 'observe',
+                title: 'Map Filters',
+                desc: 'Filter map pins by type — All, Placements only, or Pallet pickups only.',
+                selector: '#mapFilterAll',
+                position: 'bottom'
+            },
+            // ── Help FAB ──
+            {
+                type: 'click',
+                title: 'Help & Support',
+                desc: 'If you ever run into issues or have ideas, the help button is always here in the corner.',
+                action: 'Click the "?" button to open it',
+                selector: '#helpFab',
+                position: 'top-right',
+                beforeShow: () => {
+                    switchTab('overview');
+                },
+                onTargetClick: (el) => {
+                    el.click();
+                }
+            },
+            // ── 18. Help modal overview ──
+            {
+                type: 'observe',
+                title: 'Submit a Ticket',
+                desc: 'This is where you can report bugs, get support, or suggest new features. Let\'s walk through the options.',
+                selector: '.help-modal',
+                position: 'left',
+                beforeShow: () => {
+                    openHelpModal();
+                }
+            },
+            // ── 19. Help modal – ticket types ──
+            {
+                type: 'observe',
+                title: 'Choose a Ticket Type',
+                desc: 'Pick what kind of request you\'re submitting: Report a Bug, Get Support, or Suggest a Feature.',
+                selector: '.help-type-selector',
+                position: 'left'
+            },
+            // ── 18. Help modal – form ──
+            {
+                type: 'observe',
+                title: 'Fill in the Details',
+                desc: 'Add a subject, description, and priority level. Then hit "Submit Ticket" — your team will be notified.',
+                selector: '#helpSubject',
+                position: 'left',
+                onLeave: () => {
+                    closeHelpModal();
+                }
+            },
+            // ── 19. Done ──
+            {
+                type: 'intro',
+                title: 'Tutorial Complete! \uD83C\uDF89',
+                desc: 'You\'ve successfully finished the tour. You can replay it anytime from the \u2699\uFE0F settings menu.',
+                selector: '.header',
+                position: 'bottom',
+                buttonText: 'Finish'
+            }
+        ];
+
+        let currentStep = 0;
+        let activeSteps = [];
+        let clickHandler = null;
+        let autoAdvanceTimer = null;
+
+        const overlay    = document.getElementById('tutorialOverlay');
+        const backdrop   = document.getElementById('tutorialBackdrop');
+        const spotlight  = document.getElementById('tutorialSpotlight');
+        const clickZone  = document.getElementById('tutorialClickZone');
+        const tooltip    = document.getElementById('tutorialTooltip');
+        const ttStep     = document.getElementById('ttStep');
+        const ttTitle    = document.getElementById('ttTitle');
+        const ttDesc     = document.getElementById('ttDesc');
+        const ttActionHint = document.getElementById('ttActionHint');
+        const ttActionText = document.getElementById('ttActionText');
+        const ttDots     = document.getElementById('ttDots');
+        const ttButtons  = document.getElementById('ttButtons');
+
+        function buildActiveSteps() {
+            activeSteps = TUTORIAL_STEPS.filter(s => {
+                if (s.skip && s.skip()) return false;
+                return true;
+            });
+        }
+
+        let dragLayoutWatcher = null;
+
+        function cleanupStep() {
+            if (clickHandler) {
+                clickZone.removeEventListener('click', clickHandler);
+                clickHandler = null;
+            }
+            if (autoAdvanceTimer) {
+                clearTimeout(autoAdvanceTimer);
+                autoAdvanceTimer = null;
+            }
+            if (dragLayoutWatcher) {
+                clearInterval(dragLayoutWatcher);
+                dragLayoutWatcher = null;
+                // Re-lock scroll and restore overlay interactivity
+                tutorialLockScroll();
+                backdrop.style.pointerEvents = '';
+                spotlight.style.display = '';
+                overlay.style.pointerEvents = '';
+                tooltip.style.pointerEvents = '';
+            }
+            clickZone.style.display = 'none';
+            spotlight.classList.remove('clickable');
+        }
+
+        function positionTooltip(rect, pos) {
+            const tt = tooltip;
+            const gap = 16;
+            tt.style.removeProperty('top');
+            tt.style.removeProperty('bottom');
+            tt.style.removeProperty('left');
+            tt.style.removeProperty('right');
+
+            const ttW = tt.offsetWidth;
+            const ttH = tt.offsetHeight;
+            const vw = window.innerWidth;
+            const vh = window.innerHeight;
+
+            let top, left;
+
+            if (pos === 'bottom') {
+                top = rect.bottom + gap;
+                left = rect.left + rect.width / 2 - ttW / 2;
+            } else if (pos === 'top') {
+                top = rect.top - ttH - gap;
+                left = rect.left + rect.width / 2 - ttW / 2;
+            } else if (pos === 'top-right') {
+                top = rect.top - ttH - gap;
+                left = rect.right + gap;
+            } else if (pos === 'left') {
+                top = rect.top + rect.height / 2 - ttH / 2;
+                left = rect.left - ttW - gap;
+            } else { // right
+                top = rect.top + rect.height / 2 - ttH / 2;
+                left = rect.right + gap;
+            }
+
+            // Clamp to viewport
+            if (left < 10) left = 10;
+            if (left + ttW > vw - 10) left = vw - ttW - 10;
+            if (top < 10) top = rect.bottom + gap;
+            if (top + ttH > vh - 10) top = rect.top - ttH - gap;
+            if (top < 10) top = 10;
+
+            tt.style.top = top + 'px';
+            tt.style.left = left + 'px';
+        }
+
+        async function showStep(idx) {
+            if (idx < 0 || idx >= activeSteps.length) return;
+            cleanupStep();
+
+            // Run onLeave for previous step
+            if (idx !== currentStep) {
+                const prev = activeSteps[currentStep];
+                if (prev && prev.onLeave) prev.onLeave();
+            }
+            currentStep = idx;
+            const step = activeSteps[idx];
+
+            // Run beforeShow (support async)
+            if (step.beforeShow) {
+                const result = step.beforeShow();
+                if (result && typeof result.then === 'function') await result;
+            }
+
+            const el = document.querySelector(step.selector);
+            if (!el) {
+                // Skip this step if element missing
+                if (idx < activeSteps.length - 1) { showStep(idx + 1); return; }
+                tutorialDone(); return;
+            }
+
+            // Scroll element into view (programmatic scroll isn't blocked by event listeners)
+            if (step.scrollTop) {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            } else {
+                el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+
+            setTimeout(() => {
+                const rect = el.getBoundingClientRect();
+                const pad = 8;
+
+                const sx = rect.left - pad;
+                const sy = rect.top - pad;
+                const sw = rect.width + pad * 2;
+                const sh = rect.height + pad * 2;
+
+                // Spotlight
+                spotlight.style.left = sx + 'px';
+                spotlight.style.top = sy + 'px';
+                spotlight.style.width = sw + 'px';
+                spotlight.style.height = sh + 'px';
+
+                // Tooltip content
+                ttStep.textContent = '';
+                ttTitle.textContent = step.title;
+                // Handle newlines in desc
+                ttDesc.innerHTML = escapeHtml(step.desc).replace(/\n/g, '<br>');
+
+                // Action hint
+                if ((step.type === 'click' || step.type === 'drag') && step.action) {
+                    ttActionHint.style.display = 'flex';
+                    ttActionText.textContent = step.action;
+                } else {
+                    ttActionHint.style.display = 'none';
+                }
+
+                // Progress bar
+                const pct = Math.round(((idx + 1) / activeSteps.length) * 100);
+                ttDots.innerHTML = `<div class="tt-progress" style="width:${pct}%"></div>`;
+
+                // Buttons
+                let btns = '';
+                if (step.type === 'click') {
+                    // No next button — user must click the target
+                    btns += `<button class="tt-btn tt-btn-skip" onclick="tutorialSkip()">Skip tour</button>`;
+                } else if (step.type === 'drag') {
+                    btns += `<button class="tt-btn tt-btn-skip" onclick="tutorialSkip()">Skip tour</button>`;
+                    btns += `<button class="tt-btn tt-btn-next" onclick="tutorialAdvance()">Skip this step</button>`;
+                } else if (step.type === 'intro' || step.type === 'observe') {
+                    btns += `<button class="tt-btn tt-btn-skip" onclick="tutorialSkip()">Skip</button>`;
+                    if (idx === activeSteps.length - 1) {
+                        btns += `<button class="tt-btn tt-btn-done" onclick="tutorialDone()">${step.buttonText || 'Finish'}</button>`;
+                    } else {
+                        btns += `<button class="tt-btn tt-btn-next" onclick="tutorialAdvance()">${step.buttonText || 'Next'}</button>`;
+                    }
+                }
+                ttButtons.innerHTML = btns;
+
+                // Click zone for 'click' steps
+                if (step.type === 'click') {
+                    spotlight.classList.add('clickable');
+                    clickZone.style.display = 'block';
+                    clickZone.style.left = sx + 'px';
+                    clickZone.style.top = sy + 'px';
+                    clickZone.style.width = sw + 'px';
+                    clickZone.style.height = sh + 'px';
+
+                    clickHandler = async function(e) {
+                        e.stopPropagation();
+                        cleanupStep();
+                        if (step.onTargetClick) await step.onTargetClick(el);
+                        // Advance after a beat
+                        setTimeout(() => {
+                            if (step.onLeave) step.onLeave();
+                            if (currentStep < activeSteps.length - 1) {
+                                showStep(currentStep + 1);
+                            } else {
+                                tutorialDone();
+                            }
+                        }, 500);
+                    };
+                    clickZone.addEventListener('click', clickHandler);
+
+                    // Auto-advance for special elements like <select>
+                    if (step.autoAdvanceMs) {
+                        autoAdvanceTimer = setTimeout(() => {
+                            cleanupStep();
+                            if (step.onLeave) step.onLeave();
+                            if (currentStep < activeSteps.length - 1) {
+                                showStep(currentStep + 1);
+                            } else {
+                                tutorialDone();
+                            }
+                        }, step.autoAdvanceMs);
+                    }
+                }
+
+                // Drag step — hide spotlight, allow direct interaction, watch for layout change
+                if (step.type === 'drag') {
+                    spotlight.style.display = 'none';
+                    // Make entire overlay pass-through, only tooltip stays interactive
+                    overlay.style.pointerEvents = 'none';
+                    backdrop.style.pointerEvents = 'none';
+                    tooltip.style.pointerEvents = 'auto';
+                    tutorialUnlockScroll();
+                    const startLayout = getWidgetLayout().join(',');
+                    dragLayoutWatcher = setInterval(() => {
+                        const now = getWidgetLayout().join(',');
+                        if (now !== startLayout) {
+                            cleanupStep();
+                            setTimeout(() => {
+                                if (step.onLeave) step.onLeave();
+                                if (currentStep < activeSteps.length - 1) {
+                                    showStep(currentStep + 1);
+                                } else {
+                                    tutorialDone();
+                                }
+                            }, 400);
+                        }
+                    }, 200);
+                }
+
+                positionTooltip(rect, step.position);
+            }, 350);
+        }
+
+        let _tutScrollLock = null;
+        function tutorialLockScroll() {
+            if (_tutScrollLock) return;
+            const prevent = (e) => e.preventDefault();
+            window.addEventListener('wheel', prevent, { passive: false });
+            window.addEventListener('touchmove', prevent, { passive: false });
+            _tutScrollLock = prevent;
+        }
+        function tutorialUnlockScroll() {
+            if (!_tutScrollLock) return;
+            window.removeEventListener('wheel', _tutScrollLock);
+            window.removeEventListener('touchmove', _tutScrollLock);
+            _tutScrollLock = null;
+        }
+
+        window.startTutorial = function() {
+            buildActiveSteps();
+            if (activeSteps.length === 0) return;
+            currentStep = 0;
+            // Always start on the dashboard tab
+            if (typeof switchTab === 'function') switchTab('overview');
+            tutorialLockScroll();
+            overlay.classList.add('active');
+            showStep(0);
+        };
+
+        window.tutorialAdvance = function() {
+            const step = activeSteps[currentStep];
+            if (step && step.onLeave) step.onLeave();
+            if (currentStep < activeSteps.length - 1) {
+                showStep(currentStep + 1);
+            } else {
+                tutorialDone();
+            }
+        };
+
+        window.tutorialSkip = function() {
+            const step = activeSteps[currentStep];
+            if (step && step.onLeave) step.onLeave();
+            cleanupStep();
+            tutorialDone();
+        };
+
+        window.tutorialDone = function() {
+            cleanupStep();
+            tutorialUnlockScroll();
+            overlay.classList.remove('active');
+            // Close any open modals/dropdowns that might be lingering
+            document.getElementById('settingsDropdown').classList.remove('open');
+            // Clean up fake tutorial user if it still exists
+            if (window._tutFakeUserId) {
+                const uid = encodeURIComponent(window._tutFakeUserId);
+                // Remove seed placement data first, then the user
+                authFetch(`${API_BASE}/api/tutorial/seed-data/${uid}`, { method: 'DELETE' })
+                    .catch(() => {})
+                    .then(() => authFetch(`${API_BASE}/api/users/${uid}`, { method: 'DELETE' }))
+                    .then(() => {
+                        window._tutFakeUserId = null;
+                        if (typeof loadMasons === 'function') loadMasons();
+                        if (typeof refreshData === 'function') refreshData();
+                    }).catch(() => {
+                        window._tutFakeUserId = null;
+                    });
+            }
+            // Switch back to overview
+            if (typeof switchTab === 'function') switchTab('overview');
+            localStorage.setItem('tutorial_completed', 'true');
+            // Persist to server
+            if (typeof authFetch === 'function' && typeof authToken !== 'undefined' && authToken) {
+                authFetch('/api/user/preferences', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ preferences: { tutorialSeen: true } })
+                }).catch(() => {});
+            }
+        };
+
+        // Reposition on resize
+        window.addEventListener('resize', () => {
+            if (overlay.classList.contains('active')) {
+                const step = activeSteps[currentStep];
+                if (step) {
+                    const el = document.querySelector(step.selector);
+                    if (el) {
+                        const rect = el.getBoundingClientRect();
+                        const pad = 8;
+                        const sx = rect.left - pad;
+                        const sy = rect.top - pad;
+                        const sw = rect.width + pad * 2;
+                        const sh = rect.height + pad * 2;
+                        spotlight.style.left = sx + 'px';
+                        spotlight.style.top = sy + 'px';
+                        spotlight.style.width = sw + 'px';
+                        spotlight.style.height = sh + 'px';
+                        if (clickZone.style.display === 'block') {
+                            clickZone.style.left = sx + 'px';
+                            clickZone.style.top = sy + 'px';
+                            clickZone.style.width = sw + 'px';
+                            clickZone.style.height = sh + 'px';
+                        }
+                        positionTooltip(rect, step.position);
+                    }
+                }
+            }
+        });
+
+        // Check whether to auto-start after dashboard loads
+        window.maybeTriggerTutorial = async function() {
+            if (localStorage.getItem('tutorial_completed') === 'true') return;
+            try {
+                const resp = await authFetch('/api/user/preferences');
+                if (resp.ok) {
+                    const data = await resp.json();
+                    if (data.success && data.preferences && data.preferences.tutorialSeen) {
+                        localStorage.setItem('tutorial_completed', 'true');
+                        return;
+                    }
+                }
+            } catch (e) {}
+            setTimeout(() => startTutorial(), 900);
+        };
+    })();
+    </script>
     <script>
     // ── Scroll lock for modals ──
     let _scrollLockY = 0;

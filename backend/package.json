@@ -1,6 +1,6 @@
 {
   "name": "mason-brick-api",
-  "version": "0.1.0-alpha",
+  "version": "0.2.0-alpha",
   "description": "Backend API for Efficiency Tracker",
   "main": "server.js",
   "scripts": {
